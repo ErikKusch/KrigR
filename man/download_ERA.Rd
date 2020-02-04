@@ -42,7 +42,10 @@ A NETCDF (.nc) file in the specified directory.
 This function generates a shell script to query downloading of ERA5(Land) data from the ECMWF servers as specified by user input. The actual time to download is dependant on ECMWF download queues. Users need an ECMWF account (https://apps.ecmwf.int/registration/) as well as an API key (https://api.ecmwf.int/v1/key/) to be set up.
 }
 \examples{
-# Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for the entire year of 1951 for the entire earth.
-download_ERA(Variable = 'Tair', Measure = 'Reanalysis', DataSet = 'ERA5Land', DateStart = '1950-01-01', DateStop = '1950-12-31', TResolution = 'Hour', TStep = 12)
+# Downloading ERA5-Land air temperature reanalysis data in
+# 12-hour intervals for the entire year of 1951 for the entire earth.
+download_ERA(Variable = 'Tair', Measure = 'Reanalysis', DataSet = 'ERA5Land',
+DateStart = '1950-01-01', DateStop = '1950-12-31',
+TResolution = 'Hour', TStep = 12)
 
 }

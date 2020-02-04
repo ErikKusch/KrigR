@@ -13,14 +13,17 @@
 #' @param Dir Directory specifying where to download data to.
 #' @return A NETCDF (.nc) file in the specified directory.
 #' @examples
-#' # Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for the entire year of 1951 for the entire earth.
-#' download_ERA(Variable = 'Tair', Measure = 'Reanalysis', DataSet = 'ERA5Land', DateStart = '1950-01-01', DateStop = '1950-12-31', TResolution = 'Hour', TStep = 12)
+#' # Downloading ERA5-Land air temperature reanalysis data in
+#' # 12-hour intervals for the entire year of 1951 for the entire earth.
+#' download_ERA(Variable = 'Tair', Measure = 'Reanalysis', DataSet = 'ERA5Land',
+#' DateStart = '1950-01-01', DateStop = '1950-12-31',
+#' TResolution = 'Hour', TStep = 12)
 #'
 download_ERA <- function(Variable = NULL, Measure = "Reanalysis", DataSet = "ERA5Land",
                          DateStart = "1950-01-01", DateStop = Sys.Date(),
                          TResolution = "Month", TStep = 1, Extent = NULL,
                          Dir = getwd()) {
-
+  print("Test")
 }
 
 #' Downloading HWSD data from FAO servers
@@ -33,11 +36,15 @@ download_ERA <- function(Variable = NULL, Measure = "Reanalysis", DataSet = "ERA
 #' @param Dir Directory specifying where to download data to.
 #' @return Two NETCDF (.nc) files in the specified directory.
 #' @examples
-#' # Downloading HWSD-data at resolutions of 0.08333333 x 0.08333333 (NDVI/target resolution) and 0.2810168 x 0.2810168 (ERA5/training resolution) within the box shaped between -50E, -34E, and -23N, 0N (the Caatinga in Brazil).
-#' download_HWSD(Train_res = c(0.28125, 0.2810168), Target_res = c(0.08333333, 0.08333333), Extent = extent(-50,-34,-23,0))
+#' # Downloading HWSD-data at resolutions of 0.08333333 x 0.08333333 (NDVI/target resolution)
+#' # and 0.2810168 x 0.2810168 (ERA5/training resolution) within the box shaped
+#' # between -50E, -34E, and -23N, 0N (the Caatinga in Brazil).
+#' download_HWSD(Train_res = c(0.28125, 0.2810168),
+#' Target_res = c(0.08333333, 0.08333333),
+#' Extent = extent(-50,-34,-23,0))
 #'
 download_HWSD <- function(Train_res = NULL,
                           Target_res = NULL,
                           Extent = NULL, Dir = getwd()) {
-
+print("Test")
 }

@@ -27,7 +27,11 @@ Two NETCDF (.nc) files in the specified directory.
 This function downloads and rescales Harmonized World Soil Database v1.2 (HWSD) data from the severs of the Food and Agriculture Organization of the United Nations (FAO). This data is the default for kriging within this package.
 }
 \examples{
-# Downloading HWSD-data at resolutions of 0.08333333 x 0.08333333 (NDVI/target resolution) and 0.2810168 x 0.2810168 (ERA5/training resolution) within the box shaped between -50E, -34E, and -23N, 0N (the Caatinga in Brazil).
-download_HWSD(Train_res = c(0.28125, 0.2810168), Target_res = c(0.08333333, 0.08333333), Extent = extent(-50,-34,-23,0))
+# Downloading HWSD-data at resolutions of 0.08333333 x 0.08333333 (NDVI/target resolution)
+# and 0.2810168 x 0.2810168 (ERA5/training resolution) within the box shaped
+# between -50E, -34E, and -23N, 0N (the Caatinga in Brazil).
+download_HWSD(Train_res = c(0.28125, 0.2810168),
+Target_res = c(0.08333333, 0.08333333),
+Extent = extent(-50,-34,-23,0))
 
 }
