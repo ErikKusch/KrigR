@@ -1,0 +1,110 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ DEPENDENCIES
+Data (included in package distribution) #########
+ERA5_VariableList	-	Table of full variables names and shortened variable names for ERA5 data set (define which variables can be selected)
+ERA5Land_VariableList	-	Table of full variables names and shortened variable names for ERA5 Land data set (define which variables can be selected)
+CountryList		-	Table of full country names and shortened country names according to ISO3166
+
+These may be too big data-wise and thus optional in download function: ########
+Covariates_30		-	Raster of DEM covariates at 30x30km resolution (Native ERA5)
+Covariates_9		-	Raster of DEM covariates at 9x9km resolution (Native ERA5 Land)
+
+Programs ########################################
+- CDO
+- Python
+- shell
+
+RPackages #######################################
+automap		-	Statistical Downscaling of ERA5 5 data
+doParallel	-	Paralell processing
+foreach		-	Paralell processing
+ncdf4		-	Namespace for NetCDF files
+raster		-	Rasterising NetCDF data
+rgdal		-	Loading and using shapefiles
+
+Miscellaneous #######################################
+- ECMWF-API-KEY
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ PARAMETERS
+ERA5 ################################################
+Variable = NULL				-	ERA5(Land)-contained shortened variable name, possible values to be found in ERA5_VariableList or ERA5Land_VariableList depending on vaue of DataSet
+Measure = "Reanalysis"			-	Which ensemble measurement to use from the reanalysis, possible values: "Mean", "Spread", "Reanalysis"
+DataSet = "ERA5"			-	Which ERA-dataset to pull data from, possible values: "ERA5", "ERA5Land"
+
+Time ################################################
+DateStart = "1950-01-01"		-	Starting date for data aggregation and downscaling (i.e. first day to be considered in time series), possible values: Any date from 01/January/1950 ("1950-01-01") to current date (format: "YYYY-MM-DD")
+DateStop = Sys.Date()			-	Stopping date for data aggregation and downscaling (i.e. last day to be considered in time series), possible values: Any date from 01/January/1950 ("1950-01-01") to current date (format: "YYYY-MM-DD")
+TResolution = "Month"			-	Temporal resolution at which to aggregate data, possible values: "Hour", "Day", "Month", "Year", "Decade"
+TStep = 1				-	Which time steps to consider for temporal resolution
+
+Space ###############################################
+SResolution = c(NULL, NULL)		-	Spatial target resolution of kriging specified according to the res() function within the raster package
+Shape = NULL				-	Vector of two-letter abbreviations of country names, possible values: NULL, entries in CountryList
+Extent = extent(-180, 180, -90, 90)	-	Spatial extent for rectangular bounding box as specified by extent() function within raster package
+
+Miscellaneous #######################################
+KeepFiles = FALSE			-	Whether to store temporary and intermediate files next to downscaling output, possible values: TRUE, FALSE
+CovariatesCoarse = "DEM"		- 	Specification of where training resolution covariates are stored, possible values: "DEM" (default package distribution according to value of DataSet), paths to raster files containing layers of covariates
+CovariatesFine = "DEM"			- 	Specification of where target resolution covariates are stored, possible values: "DEM" (Covariate_Download output), paths to raster files containing layers of covariates
+KrigingEquation = NULL			-	Specification of Kriging function, possible values: NULL (results in default use of default covariates), Character type equation based on layer names of covariate raster files
+Verbatim				-	Logical, if TRUE output kriging updates
+ProgBar					-	Logical, if TRUE generate progress bar
+Estimate				-	Logical, if TRUE display estimated runtime	
+Dir					-	Directory for specific function
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ FUNCTIONS
+I. Allocating Data ############################### Function to pull ERA5-data from ECMWF servers
+I.1.  ERA_Download
+	- Parameters: Variable, Measure, DataSet, DateStart, DateStop, TResolution, TSteps, Extent, Dir
+	- Download ERA5(Land) data according to user specifications. Shape or Extent are used to identify rectangular box for which to download the data (use extent of shapefile according to shape if specified).
+	- shell to call Python script and run
+
+I.2. Covariate_Download
+	- Parameters: CovariatesFine, SResolution, Shape, Extent
+	- Download covariate data at chosen target resolution for specified region (Shape or Extent are used to identify rectangular box for which to download the data (use extent of shapefile according to shape if specified).
+	- shell
+
+II. Pre-Processing ############################### Functions to prepare downscaling and error checking
+II.1. Covariate_Prep
+	- Parameters: CovariatesCoarse, CovariatesFine, Shape, Extent, DataSet
+	- Fix possible mismatches between raster coordinate systems of covariates and ERA data
+	- CDO
+
+II.2. Kriging_Check
+	- Parameters: SResolution, DataSet, Variable, CovariatesCoarse, CovariatesFine
+	- Check that none of these are true:
+		- SResolution < res(DataSet)/10 (if so, throw warning message)
+		- res(CovariatesCoarse) =! res(DataSet) (if so, throw error message and break operation)
+		- extent(CovariatesCoarse) =! extent(DataSet) | extent(CovariatesCoarse) != extent(CovariatesFine) (if so, throw error message and break operation)
+		- Specified DataSet contains no data (if so, throw error message and break operation)
+		- CovariatesCoarse contains no data (if so, throw error message and break operation)
+		- CovariatesFine contains no data (if so, throw error message and break operation)
+		- Shape == NULL & Extent = extent(-180, 180, -90, 90) (if so, throw warning message that user is attempting global kriging)
+		- KrigingEquation = NULL & CovariatesCoarse != "DEM" (if so, throw warning message that Krigingequation by default requires covariatescoarse and fine to be "DEM")
+		- CovariatesCoarse != CovariatesFine & "DEM" %in% unique(c(CovariatesCoarse, CovariatesFine)) (if so, throw warning message default covariates set has been used with user defined other covariate set and layer names must match)
+
+III. Kriging ##################################### Function to downscale using Kriging
+III.1. ERA_Kriging
+	- Parameters: Variable, DataSet, Layers, CovariatesCoarse, CovariatesFine, KrigingEquation
+	- Krig ERA5 variable from chosen dataset for all layers according to KrigingEquation which draws on CovariatesCoarse and CovariatesFine
+
+IV. Miscellaneous Functions ###################### Functions for accesability purposes
+IV.1. Variable_List
+	- Parameters: DataSet
+	- Show data frame of variable names and abbreviations belonging to chosen ERA dataset
+
+IV.2. Country_List
+	- Parameters: NULL
+	- Show ISO3166 country names and abbreviations data frame
+
+IV.3. Layer_Names
+	- Parameters: DateStart, DateStop, TResolution
+	- Create names of raster layers in final product
+	--> Layers <- Names for layers depending on DateStart, DateStop, and TResolution, output of: Layer_Names
+
+IV.4. Region_Selection
+	- Parameters: Shape, Extent
+	- Identify shapefile and/or crop to extent
+
+IV.5. Clean_Fun
+	- Parameters: KeepFiles
+	- Whether to delete all temporary and intermediate kriging files from hard drive
