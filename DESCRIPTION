@@ -1,12 +1,22 @@
 Package: KrigR
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Downloading, Aggregating, and Kriging of ERA5(Land)-Data
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: as.person(c(
+    "Erik Kusch <erik@i-solution.de> [aut, cre]", 
+    "Richard Davy <Richard.Davy@nersc.no> [aut]"
+  ))
+Description: The description of a package is usually long,
+    spanning multiple lines. The second and subsequent lines
+    should be indented, usually with four spaces.
+License: GPL-2
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.0.2
+Imports: 
+    raster,
+    rgdal,
+    doParallel,
+    foreach,
+    ncdf4,
+    automap
