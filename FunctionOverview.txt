@@ -1,4 +1,4 @@
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ DEPENDENCIES
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ DEPENDENCIES
 Data (included in package distribution) #########
 ERA5_VariableList	-	Table of full variables names and shortened variable names for ERA5 data set (define which variables can be selected)
 ERA5Land_VariableList	-	Table of full variables names and shortened variable names for ERA5 Land data set (define which variables can be selected)
@@ -24,7 +24,7 @@ rgdal		-	Loading and using shapefiles
 Miscellaneous #######################################
 - ECMWF-API-KEY
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ PARAMETERS
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ PARAMETERS
 ERA5 ################################################
 Variable = NULL				-	ERA5(Land)-contained shortened variable name, possible values to be found in ERA5_VariableList or ERA5Land_VariableList depending on vaue of DataSet
 Measure = "Reanalysis"			-	Which ensemble measurement to use from the reanalysis, possible values: "Mean", "Spread", "Reanalysis"
@@ -51,7 +51,7 @@ ProgBar					-	Logical, if TRUE generate progress bar
 Estimate				-	Logical, if TRUE display estimated runtime	
 Dir					-	Directory for specific function
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ FUNCTIONS
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ FUNCTIONS
 I. Allocating Data ############################### Function to pull ERA5-data from ECMWF servers
 I.1.  ERA_Download
 	- Parameters: Variable, Measure, DataSet, DateStart, DateStop, TResolution, TSteps, Extent, Dir
