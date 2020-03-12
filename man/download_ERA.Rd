@@ -6,46 +6,57 @@
 \usage{
 download_ERA(
   Variable = NULL,
-  Measure = "Reanalysis",
-  DataSet = "ERA5Land",
-  DateStart = "1950-01-01",
+  Type = "reanalysis",
+  DataSet = "era5-land",
+  DateStart = "1979-01-01",
   DateStop = Sys.Date(),
   TResolution = "Month",
   TStep = 1,
-  Extent = NULL,
-  Dir = getwd()
+  Extent = "90/-180/-90/180",
+  Dir = getwd(),
+  FileName = NULL,
+  API_User = NULL,
+  API_Key = NULL
 )
 }
 \arguments{
 \item{Variable}{ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.}
 
-\item{Measure}{Whether to download reanalysis ('Reanalysis') or ensemble ('Ensemble') data.}
+\item{Type}{Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data.}
 
-\item{DataSet}{Which ERA5 data set to download data from. 'ERA5' or 'ERA5Land'.}
+\item{DataSet}{Which ERA5 data set to download data from. 'era5' or 'era5-land'.}
 
 \item{DateStart}{Date ('YYYY-MM-DD') at which to start time series of downloaded data.}
 
 \item{DateStop}{Date ('YYYY-MM-DD') at which to stop time series of downloaded data.}
 
-\item{TResolution}{Temporal resolution of final product. 'Hour', 'Day', 'Month', 'Year', 'Decade'}
+\item{TResolution}{Temporal resolution of final product. hour', 'day', 'month'}
 
 \item{TStep}{Which time steps (numeric) to consider for temporal resolution.}
 
-\item{Extent}{Optional, download data according to rectangular bounding box (speed up downloading and processing)}
+\item{Extent}{Optional, download data according to rectangular bounding box. Specify as "ymax/xmin/ymin/xmax" (a global extent would read "90/-180/-90/180"). Alternatively, an Extent object obtained via raster::extent().}
 
 \item{Dir}{Directory specifying where to download data to.}
+
+\item{FileName}{A file name for the netcdf produced. Default is a combination parameters in the function call.}
+
+\item{API_User}{ECMWF cds user number}
+
+\item{API_Key}{ECMWF cds API key}
 }
 \value{
-A NETCDF (.nc) file in the specified directory.
+A NETCDF (.nc) file in the specified directory as well as a raster object containing the specified data.
 }
 \description{
-This function generates a shell script to query downloading of ERA5(Land) data from the ECMWF servers as specified by user input. The actual time to download is dependant on ECMWF download queues. Users need an ECMWF account (https://apps.ecmwf.int/registration/) as well as an API key (https://api.ecmwf.int/v1/key/) to be set up.
+This function generates a shell script to query downloading of ERA5(Land) data from the ECMWF servers as specified by user input. The actual time to download is dependant on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
 }
 \examples{
+\dontrun{
 # Downloading ERA5-Land air temperature reanalysis data in
 # 12-hour intervals for the entire year of 1951 for the entire earth.
-download_ERA(Variable = 'Tair', Measure = 'Reanalysis', DataSet = 'ERA5Land',
-DateStart = '1950-01-01', DateStop = '1950-12-31',
-TResolution = 'Hour', TStep = 12)
+download_ERA(Variable = '2m_temperature', Measure = 'reanalysis', DataSet = 'era5-land',
+DateStart = '2000-01-01', DateStop = '2000-12-31',
+TResolution = 'hour', TStep = 12, API_User = 12345, API_Key = 1234567891012345678910)
+}
 
 }
