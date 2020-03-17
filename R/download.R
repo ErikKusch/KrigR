@@ -9,7 +9,7 @@
 #' @param DateStop Date ('YYYY-MM-DD') at which to stop time series of downloaded data.
 #' @param TResolution Temporal resolution of final product. hour', 'day', 'month'
 #' @param TStep Which time steps (numeric) to consider for temporal resolution.
-#' @param Extent Optional, download data according to rectangular bounding box. Specify as "ymax/xmin/ymin/xmax" (a global extent would read "90/-180/-90/180"). Alternatively, an Extent object obtained via raster::extent().
+#' @param Extent Optional, download data according to rectangular bounding box. Specify as "ymax/xmin/ymin/xmax" (a global extent would read "90/-180/-90/180"). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile.
 #' @param Dir Directory specifying where to download data to.
 #' @param FileName A file name for the netcdf produced. Default is a combination parameters in the function call.
 #' @param API_Key ECMWF cds API key
@@ -17,37 +17,27 @@
 #' @return A NETCDF (.nc) file in the specified directory as well as a raster object containing the specified data.
 #' @examples
 #' \dontrun{
-#' # Downloading ERA5-Land air temperature reanalysis data in
-#' # 12-hour intervals for the entire year of 1951 for the entire earth.
-#' download_ERA(Variable = '2m_temperature', Measure = 'reanalysis', DataSet = 'era5-land',
-#' DateStart = '2000-01-01', DateStop = '2000-12-31',
-#' TResolution = 'hour', TStep = 12, API_User = 12345, API_Key = 1234567891012345678910)
+#' # Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for the entire year of 1951 for Germany.
+#' download_ERA(Variable = '2m_temperature', Type = 'reanalysis', DataSet = 'era5-land', DateStart = '2000-01-01', DateStop = '2000-12-31', TResolution = 'hour', TStep = 12, Extent = "55/5/47/16", API_User = 12345, API_Key = 1234567891012345678910)
 #' }
 #'
 download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-land",
-                         DateStart = "1979-01-01", DateStop = Sys.Date(),
+                         DateStart = "1981-01-01", DateStop = Sys.Date(),
                          TResolution = "Month", TStep = 1, Extent = "90/-180/-90/180",
                          Dir = getwd(), FileName = NULL,
                          API_User = NULL, API_Key = NULL) {
-  # Placeholder for real list!
-  Variables_ls <- data.frame(ClearName = "2m temperature",
-                            DownloadName = '2m_temperature')
 
-
-  ### sETTING UP API ----
+  ### SETTING UP API ----
   # Setting the API key for later retrieval by wf_request()
   API_Service = "cds"
   wf_set_key(user=as.character(API_User),
              key=as.character(API_Key),
              service=as.character(API_Service))
 
-  ### HANDLING USER INPUT ----
-  # # Variable
-  # if(Variable %in% Variables_ls$ClearName){ # sanity check: whether variable is available
-  #   Variable <- as.character(Variables_ls$DownloadName[which(Variables_ls$ClearName == Variable)]) # return the download name as new Variable argument
-  # }else{ # if sanity check is failed, stop function and inform user
-  #   stop("The variable you specified is not available as per the variable list. See Variable_List() for further information.")
-  # } # end of sanity check
+  # Type
+  if(DataSet == "era5-land"){ # product check
+    Type <- NA # set Type to NA for later omission from request list when downloading era5-land data
+  } # end of product check
 
   # Data Set
   if(DataSet == "era5"){ # only append "single-levels" to era5 specification
@@ -81,10 +71,14 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 
   # Extent, fix for global
   if(class(Extent) != "character"){ # character check: whether already specified as character string
-    if(class(Extent) == "Extent"){ # sanity check: ensure it is an Extent object if not character
-      Extent <- try(paste(Extent[4], Extent[1], Extent[3], Extent[2], sep="/")) # break Extent opbject down into character
+    if(class(Extent) == "Raster" | class(Extent) == "SpatialPolygonsDataFrame"){ # sanity check: ensure it is an Extent object if not character
+      if(class(Extent) == "SpatialPolygonsDataFrame"){ # shape check
+        Shape <- Extent
+      }# end of shape check
+      Extent <- extent(Extent) # extract extent
+      Extent <- try(paste(Extent[4], Extent[1], Extent[3], Extent[2], sep="/")) # break Extent object down into character
     }else{ # if sanity check is failed, stop function and inform user
-      stop('The Extent argument provided by you is neither formatted as a character of "xmin/xmax/ymin/ymax" nor an Extent object derived via raster::extent(). Please correct this.')
+      stop('The Extent argument provided by you is neither formatted as a character of "xmin/xmax/ymin/ymax" nor a Raster or SpatialPolygonsDataFrame object. Please correct this.')
     } # end of sanity check
   } # end of character check
 
@@ -112,13 +106,14 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
                      "area"           = Extent,
                      "format"         = "netcdf",
                      "target"         = paste0(FileName, ".nc"))
+  Request_ls <- Request_ls[-which(is.na(Request_ls))] # removing NA type if era5-land is targeted
 
   ### EXECUTING REQUEST ----
   wf_request(user = as.character(API_User),
-            request = Request_ls,
-            transfer = TRUE,
-            path = Dir,
-            verbose = TRUE)
+             request = Request_ls,
+             transfer = TRUE,
+             path = Dir,
+             verbose = TRUE)
 
 
   ### LOAD DATA BACK IN ----
@@ -142,31 +137,170 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
   Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun='mean') # do the calculation
 
+  ### MASKING ----
+  if(exists("Shape")){ # Shape check
+    Era5_ras <- mask(Era5_ras, Shape)
+  }# end of Shape check
+
   ### SAVING DATA ----
-  retunr(Era5_ras)
-  writeRaster(x = Era5_ras, filename = paste0(Dir, "/", FileName, ".nc"))
+  return(Era5_ras)
+  writeRaster(x = Era5_ras, filename = paste0(Dir, "/", FileName, ".nc"), overwrite = TRUE)
 }
 
 #' Downloading HWSD data from FAO servers
 #'
-#' This function downloads and rescales Harmonized World Soil Database v1.2 (HWSD) data from the severs of the Food and Agriculture Organization of the United Nations (FAO). This data is the default for kriging within this package.
+#' This function downloads and rescales the median statistic of the Global Multi-resolution Terrain Elevation Data (GMTED2010) data from the severs of the U.S. Geological Survey (USGS) available at \url{https://topotools.cr.usgs.gov/gmted_viewer/gmted2010_global_grids.php}. The data is downloaded at 30 arc-sec latitude/longitude grid cells and subsequently resampled to match Train_res and Target_res. This data is the default for kriging within this package.
 #'
 #' @param Train_res The training resolution for the kriging step (i.e. wich resolution to downscale from). An object as specified/produced by raster::res().
 #' @param Target_res The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res().
-#' @param Extent Optional, download data according to rectangular bounding box. An object of type extent (i.e. raster::extent()).
+#' @param Extent Optional, download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile.
 #' @param Dir Directory specifying where to download data to.
+#' @param Keep_Temporary Logical, whether to delete individual, global, 30 arc-sec files to be reused in later analyses.
 #' @return Two NETCDF (.nc) files in the specified directory.
 #' @examples
-#' # Downloading HWSD-data at resolutions of 0.08333333 x 0.08333333 (NDVI/target resolution)
-#' # and 0.2810168 x 0.2810168 (ERA5/training resolution) within the box shaped
-#' # between -50E, -34E, and -23N, 0N (the Caatinga in Brazil).
-#' download_HWSD(Train_res = c(0.28125, 0.2810168),
-#' Target_res = c(0.08333333, 0.08333333),
-#' Extent = extent(-50,-34,-23,0))
+#' \dontrun{
+#' # Downloading HWSD-data at resolutions of 0.01 x 0.01 (~30 arc-sec/target resolution) and 0.1 x 0.1 (ERA5-land/training resolution) across Germany.
+#' download_HWSD(Train_res = c(0.1, 0.1), Target_res = c(0.01, 0.01), Extent = extent(5, 16, 47, 55))
+#' }
 #'
 download_HWSD <- function(Train_res = NULL,
                           Target_res = NULL,
-                          Extent = NULL, Dir = getwd()) {
+                          Extent = NULL, Dir = getwd(), Keep_Temporary = FALSE) {
 
-print("Test")
+  ### PREPARATION -----
+  ## Extent
+  if(class(Extent) == "Raster" | class(Extent) == "SpatialPolygonsDataFrame"){ # sanity check: ensure it is an Extent object
+    if(class(Extent) == "SpatialPolygonsDataFrame"){ # shape check
+      Shape <- Extent
+    }# end of shape check
+    Extent <- extent(Extent) # extract extent
+  } # end of sanity check
+
+  ## Downloading
+  # Link to GMTED2010
+  Link <- "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/md30_grd.zip"
+
+  ### DOWNLOADING & UNPACKING -----
+  Dir.Data <- paste(Dir, "GMTED2010", sep ="/")
+  dir.create(Dir.Data)
+  if(!file.exists(paste0(Dir.Data, "/GMTED2010.zip"))){ # file check: check if file is not already downloaded
+    download.file(Link, # product for donload
+                  destfile = paste0(Dir.Data, "/GMTED2010.zip")) # destination file
+  } # end of file check
+  unzip(paste0(Dir.Data, "/GMTED2010.zip"), # which file to unzip
+        exdir = Dir.Data) # where to unzip to
+
+  ### RASTERIZING & CROPPING -----
+  GMTED2010_ras <- raster(paste0(Dir.Data, "/md30_grd/w001001.adf")) # rasterising elevetation data
+  if(!is.null(Extent)){ # cropping check
+    GMTED2010_ras <- crop(GMTED2010_ras, Extent) # crop data
+  } # end of cropping check
+
+  ### MASKING ----
+  if(exists("Shape")){ # Shape check
+    GMTED2010_ras <- mask(GMTED2010_ras, Shape)
+  }# end of Shape check
+
+  ### RESAMPLING TO SPECIFIED RESOLUTIONS -----
+  if(Target_res < res(GMTED2010_ras) | Train_res < res(GMTED2010_ras)){ # sanity check
+    stop(paste0("You have specified Target_res, or Train_res to be finer than ", res(GMTED2010_ras), " (native GMTED2010 reslution). Please download higher-resolution DEM data instead."))
+  } # end of sanity check
+
+  res()
+
+  GMTED2010Train_ras <- resample(x = GMTED2010_ras, y = Train_res)
+  GMTED2010Target_ras <- resample()
+
+  ### SAVING DATA ----
+
+  ### REMOVE FILES FROM HARD DRIVE -----
+  if(Keep_Temporary == FALSE){ # cleanup check
+    for(Iter_download in 1:length(Links_ls)){ # variable loop: go over all HWSD variable
+      unlink() ## UNLINKING!!
+    } # end of variable loop
+  }  # end of cleanup check
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
