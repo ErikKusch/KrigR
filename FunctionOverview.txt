@@ -28,7 +28,7 @@ Miscellaneous #######################################
 ERA5 ################################################
 Variable = NULL				-	ERA5(Land)-contained shortened variable name, possible values to be found in ERA5_VariableList or ERA5Land_VariableList depending on vaue of DataSet
 Measure = "Reanalysis"			-	Which ensemble measurement to use from the reanalysis, possible values: "Mean", "Spread", "Reanalysis"
-DataSet = "ERA5"			-	Which ERA-dataset to pull data from, possible values: "ERA5", "ERA5Land"
+DataSet = "era5"			-	Which ERA-dataset to pull data from, possible values: "era5", "era5-land"
 
 Time ################################################
 DateStart = "1950-01-01"		-	Starting date for data aggregation and downscaling (i.e. first day to be considered in time series), possible values: Any date from 01/January/1950 ("1950-01-01") to current date (format: "YYYY-MM-DD")
