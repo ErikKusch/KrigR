@@ -205,102 +205,17 @@ download_HWSD <- function(Train_res = NULL,
   if(Target_res < res(GMTED2010_ras) | Train_res < res(GMTED2010_ras)){ # sanity check
     stop(paste0("You have specified Target_res, or Train_res to be finer than ", res(GMTED2010_ras), " (native GMTED2010 reslution). Please download higher-resolution DEM data instead."))
   } # end of sanity check
-
-  res()
-
-  GMTED2010Train_ras <- resample(x = GMTED2010_ras, y = Train_res)
-  GMTED2010Target_ras <- resample()
+  # resampling by aggregation
+  GMTED2010Train_ras <- aggregate(GMTED2010_ras, fact = Train_res[1]/res(GMTED2010_ras)[1])
+  GMTED2010Target_ras <- aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1])
 
   ### SAVING DATA ----
+  writeRaster(x = GMTED2010Train_ras, filename = paste0(Dir, "/GMTED2010_Train.nc"), overwrite = TRUE)
+  writeRaster(x = GMTED2010Target_ras, filename = paste0(Dir, "/GMTED2010_arget.nc"), overwrite = TRUE)
+  return(list(GMTED2010Train_ras, GMTED2010Target_ras))
 
   ### REMOVE FILES FROM HARD DRIVE -----
   if(Keep_Temporary == FALSE){ # cleanup check
-    for(Iter_download in 1:length(Links_ls)){ # variable loop: go over all HWSD variable
-      unlink() ## UNLINKING!!
-    } # end of variable loop
+      unlink(Dir.Data, recursive = TRUE)
   }  # end of cleanup check
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

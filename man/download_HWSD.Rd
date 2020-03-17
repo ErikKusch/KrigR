@@ -8,7 +8,8 @@ download_HWSD(
   Train_res = NULL,
   Target_res = NULL,
   Extent = NULL,
-  Dir = getwd()
+  Dir = getwd(),
+  Keep_Temporary = FALSE
 )
 }
 \arguments{
@@ -16,22 +17,22 @@ download_HWSD(
 
 \item{Target_res}{The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res().}
 
-\item{Extent}{Optional, download data according to rectangular bounding box. An object of type extent (i.e. raster::extent()).}
+\item{Extent}{Optional, download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile.}
 
 \item{Dir}{Directory specifying where to download data to.}
+
+\item{Keep_Temporary}{Logical, whether to delete individual, global, 30 arc-sec files to be reused in later analyses.}
 }
 \value{
 Two NETCDF (.nc) files in the specified directory.
 }
 \description{
-This function downloads and rescales Harmonized World Soil Database v1.2 (HWSD) data from the severs of the Food and Agriculture Organization of the United Nations (FAO). This data is the default for kriging within this package.
+This function downloads and rescales the median statistic of the Global Multi-resolution Terrain Elevation Data (GMTED2010) data from the severs of the U.S. Geological Survey (USGS) available at \url{https://topotools.cr.usgs.gov/gmted_viewer/gmted2010_global_grids.php}. The data is downloaded at 30 arc-sec latitude/longitude grid cells and subsequently resampled to match Train_res and Target_res. This data is the default for kriging within this package.
 }
 \examples{
-# Downloading HWSD-data at resolutions of 0.08333333 x 0.08333333 (NDVI/target resolution)
-# and 0.2810168 x 0.2810168 (ERA5/training resolution) within the box shaped
-# between -50E, -34E, and -23N, 0N (the Caatinga in Brazil).
-download_HWSD(Train_res = c(0.28125, 0.2810168),
-Target_res = c(0.08333333, 0.08333333),
-Extent = extent(-50,-34,-23,0))
+\dontrun{
+# Downloading HWSD-data at resolutions of 0.01 x 0.01 (~30 arc-sec/target resolution) and 0.1 x 0.1 (ERA5-land/training resolution) across Germany.
+download_HWSD(Train_res = c(0.1, 0.1), Target_res = c(0.01, 0.01), Extent = extent(5, 16, 47, 55))
+}
 
 }

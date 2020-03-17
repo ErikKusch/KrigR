@@ -8,7 +8,7 @@ download_ERA(
   Variable = NULL,
   Type = "reanalysis",
   DataSet = "era5-land",
-  DateStart = "1979-01-01",
+  DateStart = "1981-01-01",
   DateStop = Sys.Date(),
   TResolution = "Month",
   TStep = 1,
@@ -34,7 +34,7 @@ download_ERA(
 
 \item{TStep}{Which time steps (numeric) to consider for temporal resolution.}
 
-\item{Extent}{Optional, download data according to rectangular bounding box. Specify as "ymax/xmin/ymin/xmax" (a global extent would read "90/-180/-90/180"). Alternatively, an Extent object obtained via raster::extent().}
+\item{Extent}{Optional, download data according to rectangular bounding box. Specify as "ymax/xmin/ymin/xmax" (a global extent would read "90/-180/-90/180"). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile.}
 
 \item{Dir}{Directory specifying where to download data to.}
 
@@ -52,11 +52,8 @@ This function generates a shell script to query downloading of ERA5(Land) data f
 }
 \examples{
 \dontrun{
-# Downloading ERA5-Land air temperature reanalysis data in
-# 12-hour intervals for the entire year of 1951 for the entire earth.
-download_ERA(Variable = '2m_temperature', Measure = 'reanalysis', DataSet = 'era5-land',
-DateStart = '2000-01-01', DateStop = '2000-12-31',
-TResolution = 'hour', TStep = 12, API_User = 12345, API_Key = 1234567891012345678910)
+# Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for the entire year of 1951 for Germany.
+download_ERA(Variable = '2m_temperature', Type = 'reanalysis', DataSet = 'era5-land', DateStart = '2000-01-01', DateStop = '2000-12-31', TResolution = 'hour', TStep = 12, Extent = "55/5/47/16", API_User = 12345, API_Key = 1234567891012345678910)
 }
 
 }
