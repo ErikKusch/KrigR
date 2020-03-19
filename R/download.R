@@ -147,7 +147,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   writeRaster(x = Era5_ras, filename = paste0(Dir, "/", FileName, ".nc"), overwrite = TRUE)
 }
 
-#' Downloading HWSD data from FAO servers
+#' Downloading DEM data from USGS servers
 #'
 #' This function downloads and rescales the median statistic of the Global Multi-resolution Terrain Elevation Data (GMTED2010) data from the severs of the U.S. Geological Survey (USGS) available at \url{https://topotools.cr.usgs.gov/gmted_viewer/gmted2010_global_grids.php}. The data is downloaded at 30 arc-sec latitude/longitude grid cells and subsequently resampled to match Train_res and Target_res. This data is the default for kriging within this package.
 #'
@@ -163,7 +163,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 #' download_HWSD(Train_res = c(0.1, 0.1), Target_res = c(0.01, 0.01), Extent = extent(5, 16, 47, 55))
 #' }
 #'
-download_HWSD <- function(Train_res = NULL,
+download_DEM <- function(Train_res = NULL,
                           Target_res = NULL,
                           Extent = NULL, Dir = getwd(), Keep_Temporary = FALSE) {
 
@@ -186,9 +186,9 @@ download_HWSD <- function(Train_res = NULL,
   if(!file.exists(paste0(Dir.Data, "/GMTED2010.zip"))){ # file check: check if file is not already downloaded
     download.file(Link, # product for donload
                   destfile = paste0(Dir.Data, "/GMTED2010.zip")) # destination file
-  } # end of file check
-  unzip(paste0(Dir.Data, "/GMTED2010.zip"), # which file to unzip
-        exdir = Dir.Data) # where to unzip to
+    unzip(paste0(Dir.Data, "/GMTED2010.zip"), # which file to unzip
+          exdir = Dir.Data) # where to unzip to
+  } # end of file chec
 
   ### RASTERIZING & CROPPING -----
   GMTED2010_ras <- raster(paste0(Dir.Data, "/md30_grd/w001001.adf")) # rasterising elevetation data
