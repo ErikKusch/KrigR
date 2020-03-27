@@ -165,9 +165,5 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
     KrigingEquation <- as.formula(paste0("Data ~ ", paste(Terms_Present, collapse = "+")))
     warning(paste("Not all of the terms specified in your KrigingEquation are present in the covariate data sets. The KrigingEquation has been altered to include all available and specified terms in a linear model:", KrigingEquation))
   }
-
   return(list(KrigingEquation, DataSkips))
 }
-
-
-
