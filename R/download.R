@@ -131,7 +131,6 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
                      "area"           = Extent,
                      "format"         = "netcdf",
                      "target"         = paste0(FileName))
-  print(Request_ls)
 
   ### EXECUTING REQUEST ----
   wf_request(user = as.character(API_User),
