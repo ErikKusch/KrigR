@@ -9,7 +9,7 @@ download_ERA(
   Type = "reanalysis",
   DataSet = "era5-land",
   DateStart = "1981-01-01",
-  DateStop = Sys.Date(),
+  DateStop = Sys.Date() - 62,
   TResolution = "Month",
   TStep = 1,
   Extent = "90/-180/-90/180",
