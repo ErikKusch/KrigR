@@ -22,7 +22,7 @@
 #' }
 #'
 download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-land",
-                         DateStart = "1981-01-01", DateStop = Sys.Date(),
+                         DateStart = "1981-01-01", DateStop = Sys.Date()-62,
                          TResolution = "Month", TStep = 1, Extent = "90/-180/-90/180",
                          Dir = getwd(), FileName = NULL,
                          API_User = NULL, API_Key = NULL) {
@@ -93,6 +93,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   if(is.null(FileName)){
     FileName <- paste(Variable, DateStart, DateStop, TResolution, sep="_")
   }
+  FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
 
   ### BUILDING REQUEST ----
   # Setting parameters of desired downloaded netcdf file according to user input
@@ -105,7 +106,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
                      "time"           = Times,
                      "area"           = Extent,
                      "format"         = "netcdf",
-                     "target"         = paste0(FileName, ".nc"))
+                     "target"         = paste0(FileName))
   Request_ls <- Request_ls[-which(is.na(Request_ls))] # removing NA type if era5-land is targeted
 
   ### EXECUTING REQUEST ----
@@ -117,7 +118,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 
 
   ### LOAD DATA BACK IN ----
-  Era5_ras <- brick(paste0(Dir, "/", FileName, ".nc")) # loading the data
+  Era5_ras <- brick(file.path(Dir, "/", FileName)) # loading the data
 
   ### DAY/YEAR MEANS ----
   if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months)
@@ -144,7 +145,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 
   ### SAVING DATA ----
   return(Era5_ras)
-  writeRaster(x = Era5_ras, filename = paste0(Dir, "/", FileName, ".nc"), overwrite = TRUE)
+  writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE)
 }
 
 #' Downloading DEM data from USGS servers
@@ -181,17 +182,17 @@ download_DEM <- function(Train_res = NULL,
   Link <- "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/md30_grd.zip"
 
   ### DOWNLOADING & UNPACKING -----
-  Dir.Data <- paste(Dir, "GMTED2010", sep ="/")
+  Dir.Data <- file.path(Dir, "GMTED2010")
   dir.create(Dir.Data)
-  if(!file.exists(paste0(Dir.Data, "/GMTED2010.zip"))){ # file check: check if file is not already downloaded
+  if(!file.exists(file.path(Dir.Data, "GMTED2010.zip"))){ # file check: check if file is not already downloaded
     download.file(Link, # product for donload
-                  destfile = paste0(Dir.Data, "/GMTED2010.zip")) # destination file
-    unzip(paste0(Dir.Data, "/GMTED2010.zip"), # which file to unzip
+                  destfile = file.path(Dir.Data, "GMTED2010.zip")) # destination file
+    unzip(file.path(Dir.Data, "GMTED2010.zip"), # which file to unzip
           exdir = Dir.Data) # where to unzip to
   } # end of file chec
 
   ### RASTERIZING & CROPPING -----
-  GMTED2010_ras <- raster(paste0(Dir.Data, "/md30_grd/w001001.adf")) # rasterising elevetation data
+  GMTED2010_ras <- raster(file.path(Dir.Data, "md30_grd/w001001.adf")) # rasterising elevetation data
   if(!is.null(Extent)){ # cropping check
     GMTED2010_ras <- crop(GMTED2010_ras, Extent) # crop data
   } # end of cropping check
@@ -210,8 +211,8 @@ download_DEM <- function(Train_res = NULL,
   GMTED2010Target_ras <- aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1])
 
   ### SAVING DATA ----
-  writeRaster(x = GMTED2010Train_ras, filename = paste0(Dir, "/GMTED2010_Train.nc"), overwrite = TRUE)
-  writeRaster(x = GMTED2010Target_ras, filename = paste0(Dir, "/GMTED2010_arget.nc"), overwrite = TRUE)
+  writeRaster(x = GMTED2010Train_ras, filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE)
+  writeRaster(x = GMTED2010Target_ras, filename = file.path(Dir, "GMTED2010_arget.nc"), overwrite = TRUE)
   return(list(GMTED2010Train_ras, GMTED2010Target_ras))
 
   ### REMOVE FILES FROM HARD DRIVE -----
