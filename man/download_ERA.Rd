@@ -9,10 +9,10 @@ download_ERA(
   Type = "reanalysis",
   DataSet = "era5-land",
   DateStart = "1981-01-01",
-  DateStop = Sys.Date() - 62,
+  DateStop = Sys.Date() - 100,
   TResolution = "Month",
   TStep = 1,
-  Extent = "90/-180/-90/180",
+  Extent = extent(-180, 180, -90, 90),
   Dir = getwd(),
   FileName = NULL,
   API_User = NULL,
@@ -22,7 +22,7 @@ download_ERA(
 \arguments{
 \item{Variable}{ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.}
 
-\item{Type}{Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data.}
+\item{Type}{Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread' - only implemented for era5 data) data.}
 
 \item{DataSet}{Which ERA5 data set to download data from. 'era5' or 'era5-land'.}
 
@@ -30,30 +30,30 @@ download_ERA(
 
 \item{DateStop}{Date ('YYYY-MM-DD') at which to stop time series of downloaded data.}
 
-\item{TResolution}{Temporal resolution of final product. hour', 'day', 'month'}
+\item{TResolution}{Temporal resolution of final product. 'hour', 'day', 'month', or 'year'.}
 
-\item{TStep}{Which time steps (numeric) to consider for temporal resolution.}
+\item{TStep}{Which time steps (numeric) to consider for temporal resolution. For example, specify bi-monthly data records by setting TResolution to 'month' and TStep to 2.}
 
-\item{Extent}{Optional, download data according to rectangular bounding box. Specify as "ymax/xmin/ymin/xmax" (a global extent would read "90/-180/-90/180"). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile.}
+\item{Extent}{Optional, download data according to rectangular bounding box. specify as extent() object or as a raster or a SpatialPolygonsDataFrame object. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile.}
 
 \item{Dir}{Directory specifying where to download data to.}
 
 \item{FileName}{A file name for the netcdf produced. Default is a combination parameters in the function call.}
 
-\item{API_User}{ECMWF cds user number}
+\item{API_User}{ECMWF cds user number.}
 
-\item{API_Key}{ECMWF cds API key}
+\item{API_Key}{ECMWF cds API key.}
 }
 \value{
-A NETCDF (.nc) file in the specified directory as well as a raster object containing the specified data.
+A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory as well as a raster object containing the specified data.
 }
 \description{
 This function generates a shell script to query downloading of ERA5(Land) data from the ECMWF servers as specified by user input. The actual time to download is dependant on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
 }
 \examples{
 \dontrun{
-# Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for the entire year of 1951 for Germany.
-download_ERA(Variable = '2m_temperature', Type = 'reanalysis', DataSet = 'era5-land', DateStart = '2000-01-01', DateStop = '2000-12-31', TResolution = 'hour', TStep = 12, Extent = "55/5/47/16", API_User = 12345, API_Key = 1234567891012345678910)
+# Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for the entire year of 2000 for Germany. API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
+download_ERA(Variable = '2m_temperature', Type = 'reanalysis', DataSet = 'era5-land', DateStart = '2000-01-01', DateStop = '2000-12-31', TResolution = 'hour', TStep = 12, Extent = extent(6,15,47,55), API_User = NULL, API_Key = NULL)
 }
 
 }
