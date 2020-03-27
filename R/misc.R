@@ -117,15 +117,15 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   if(res(CovariatesFine)[1] < res(Data)[1]/10){
     warning("It is not recommended to use kriging for statistical downscaling of more than one order of magnitude. You are currently attempting this. Kriging will proceed.")
   }
-  if(res(CovariatesCoarse) != res(Data)){
+  if(res(CovariatesCoarse)[1] != res(Data)[1]){
     stop(paste0("The resolution of your data (", res(Data)[1], ") does not match the resolution of your covariate data (", res(CovariatesCoarse)[1], ") used for training the kriging model. Kriging can't be performed!" ))
   }
   ### EXTENTS ----
   if(extent(Data) == extent(-180, 180, -90, 90)){
     warning("You are attempting to use kriging at a global extent. For reasons of computational expense, this is not recommended. Instead, try kriging of latitude bands if global kriging is really your goal.")
   }
-  if(extent(CovariatesCoarse) != extent(Data) | extent(CovariatesCoarse) != extent(CovariatesFine)){
-    stop("The extents of your data and covariates don't match. Kriging can't be performed!")
+  if(extent(CovariatesCoarse) != extent(Data)){
+    stop("The extents of your data and training covariates don't match. Kriging can't be performed!")
   }
   ### DATA AVAILABILITY ----
   DataSkips <- NULL # data layers without enough data to be skipped in kriging
