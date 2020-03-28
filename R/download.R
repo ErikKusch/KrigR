@@ -178,7 +178,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 #' This function downloads and rescales the median statistic of the Global Multi-resolution Terrain Elevation Data (GMTED2010) data from the servers of the U.S. Geological Survey (USGS) available at \url{https://topotools.cr.usgs.gov/gmted_viewer/gmted2010_global_grids.php}. The data is downloaded at 30 arc-sec latitude/longitude grid cells and subsequently resampled to match Train_ras and Target_res. This data is the default for kriging within this package.
 #'
 #' @param Train_ras A raster file containing the data which is to be downscaled. GMTED2010 data is then resampled to match this.
-#' @param Target_res The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res() or a single number.
+#' @param Target_res The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res() or a single number (GMTED2010 data will be aggregated) or a raster which the data should be comparable to after kriging (GMTED2010 data will be resampled).
 #' @param Shape Optional, a SpatialPolygonsDataFrame object. This will be treated as a shapefile and the output will be masked to this shapefile.
 #' @param Dir Directory specifying where to download data to.
 #' @param Keep_Temporary Logical, whether to delete individual, global, 30 arc-sec files or keep them to be reused in later analyses.
@@ -196,6 +196,12 @@ download_DEM <- function(Train_ras = NULL,
   ### PREPARATION -----
   Extent <- extent(Train_ras) # extract extent for later cropping
   Link <- "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/md30_grd.zip" # Link to GMTED2010
+  # handling Target_res
+  ## distinguishing if Target_res is a raster or a resolution, this will change whether GMTED2010 is aggregated or resampled
+  if(class(Target_res) == "Raster"){
+    Target_ras <- Target_res
+    Target_res <- res(Target_ras)
+  }
 
   ### DOWNLOADING & UNPACKING -----
   Dir.Data <- file.path(Dir, "GMTED2010") # identify folder for GMTED2010 data
@@ -214,14 +220,18 @@ download_DEM <- function(Train_ras = NULL,
 
   ### RESAMPLING TO SPECIFIED RESOLUTIONS -----
   if(Target_res[1] < res(GMTED2010_ras)[[1]] |
-     res(Train_ras)[1] < res(GMTED2010_ras)[1]){ # sanity check
+     res(Train_ras)[1] < res(GMTED2010_ras)[1] | Train_res[1] < res(GMTED2010_ras)[1]){ # sanity check
     stop(paste0("You have specified resolution(s) to be finer than ", res(GMTED2010_ras), " (native GMTED2010 reslution). Please download higher-resolution DEM data instead."))
   } # end of sanity check
   # resampling training data
   GMTED2010Train_ras <- resample(GMTED2010_ras, Train_ras)
   names(GMTED2010Train_ras) <- "DEM" # setting layer name for later use in KrigingEquation
-  # resampling by aggregation
-  GMTED2010Target_ras <- aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1])
+  # resampling target data
+  if(exists(Target_ras)){
+    GMTED2010Target_ras <- resample(GMTED2010_ras, Target_ras) # resample if output raster was given
+  }else{
+    GMTED2010Target_ras <- aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1]) # aggregate if output resolution was given
+  }
   names(GMTED2010Target_ras) <- "DEM" # setting layer name for later use in KrigingEquation
 
   ### MASKING ----
