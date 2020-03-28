@@ -220,14 +220,14 @@ download_DEM <- function(Train_ras = NULL,
 
   ### RESAMPLING TO SPECIFIED RESOLUTIONS -----
   if(Target_res[1] < res(GMTED2010_ras)[[1]] |
-     res(Train_ras)[1] < res(GMTED2010_ras)[1] | Train_res[1] < res(GMTED2010_ras)[1]){ # sanity check
+     res(Train_ras)[1] < res(GMTED2010_ras)[1] | Target_res[1] < res(GMTED2010_ras)[1]){ # sanity check
     stop(paste0("You have specified resolution(s) to be finer than ", res(GMTED2010_ras), " (native GMTED2010 reslution). Please download higher-resolution DEM data instead."))
   } # end of sanity check
   # resampling training data
   GMTED2010Train_ras <- resample(GMTED2010_ras, Train_ras)
   names(GMTED2010Train_ras) <- "DEM" # setting layer name for later use in KrigingEquation
   # resampling target data
-  if(exists(Target_ras)){
+  if(exists("Target_ras")){
     GMTED2010Target_ras <- resample(GMTED2010_ras, Target_ras) # resample if output raster was given
   }else{
     GMTED2010Target_ras <- aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1]) # aggregate if output resolution was given
