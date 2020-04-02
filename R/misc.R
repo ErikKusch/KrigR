@@ -127,6 +127,7 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   if(extent(CovariatesCoarse) != extent(Data)){
     stop("The extents of your data and training covariates don't match. Kriging can't be performed!")
   }
+
   ### DATA AVAILABILITY ----
   DataSkips <- NULL # data layers without enough data to be skipped in kriging
   Data_vals <- base::colSums(matrix(!is.na(values(Data)), ncol = nlayers(Data))) # a value of 0 indicates a layer only made of NAs
@@ -160,10 +161,29 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   Terms <- unlist(strsplit(labels(terms(KrigingEquation)), split = ":")) # identify parameters called to in formula
   Terms_Required <- unique(Terms) # isolate double-references (e.g. due to ":" indexing for interactions)
   Terms_Present <- Reduce(intersect, list(Terms_Required, names(CovariatesCoarse), names(CovariatesFine))) # identify the terms that are available and required
-
   if(sum(Terms_Required %in% Terms_Present) != length(Terms_Required)){
-    KrigingEquation <- as.formula(paste0("Data ~ ", paste(Terms_Present, collapse = "+")))
-    warning(paste("Not all of the terms specified in your KrigingEquation are present in the covariate data sets. The KrigingEquation has been altered to include all available and specified terms in a linear model:", KrigingEquation))
+    if(length(Terms_Present) == 0){ # if none of the specified terms were found
+      KrigingEquation <- paste0("Data ~ ", paste(names(CovariatesCoarse), collapse = "+"))
+      warn <- paste("None of the terms specified in your KrigingEquation are present in the covariate data sets. The KrigingEquation has been altered to include all available terms in a linear model:", KrigingEquation)
+    }else{ # at least some of the specified terms were found
+      KrigingEquation <- paste0("Data ~ ", paste(Terms_Present, collapse = "+"))
+      warn <- paste("Not all of the terms specified in your KrigingEquation are present in the covariate data sets. The KrigingEquation has been altered to include all available and specified terms in a linear model:", KrigingEquation)
+    }
+    Cotinue <- menu(c("Yes", "No"), title=paste(warn, "Do you wish to continue using the new formula?"))
+    if(Cotinue == 2){ # break operation if user doesn't want this
+      stop("Kriging terminated by user due to formula issues.")
+    }
   }
-  return(list(KrigingEquation, DataSkips))
+
+  ### NA DATA IN LAYERS ----
+  CovariatesFine <- CovariatesFine[[which(names(Covariates_fine) %in% Terms_Present)]] # only look at layers that the krigignequation targets
+  if(nlayers(CovariatesFine) > 1){
+    MaskedPix <- length(which(values(sum(CovariatesFine, na.rm = TRUE)) != 0)) # number of non-masked pixels in which data is present in at least one layer
+    MissingPix <- length(which(!is.na(values(sum(CovariatesFine, na.rm = FALSE))))) # number of pixels in which all layers have data
+    if(MissingPix < MaskedPix){ # when there are any pixels for which data is absent for at least one layer
+      stop("One more more of your target covariate layers is missing data in locations where data is present for other layers. Please either fill these pixels with data or omit terms targeting these layers from your Kriging equation.")
+    }
+  }
+
+  return(list(as.formula(KrigingEquation), DataSkips))
 }

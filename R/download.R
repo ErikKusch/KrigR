@@ -37,9 +37,9 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   ### SETTING UP PARAMETERS FOR DOWNLOAD CALL ----
   # Extent Modifiers (needed for download product to produce square cells which are needed for Kriging to work)
   if(DataSet == "era5-land"){
-    DecimalSquare <- 0.2 # this still doesn't result in square era5-cells!!!!
+    Grid <- "0.100000000000000000000000001/0.100000000000000000000000001" # "0.100000000000000006/0.099999999999999992"
   }else{
-    DecimalSquare <- .5 # era5-modifier
+    Grid <- ".5/.5" # era5-modifier
   }
 
   # Type (era5-land only provides reanalysis data and doesn't require a type argument, setting it to NA let's us ignore it further down the pipeline)
@@ -83,27 +83,20 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   } # end of equality check
 
   # Extent (prepare rectangular bounding box for download from user input)
-    if(class(Extent) == "Extent"){ # Extent check: whether already specified as Extent object
-      ExtentSquare <- Extent # used for later cropping to get output as close to input extent as possible
-      Extent <- try(paste(ceiling(Extent[4])+DecimalSquare,
-                          floor(Extent[1])-DecimalSquare,
-                          floor(Extent[3])-DecimalSquare,
-                          ceiling(Extent[2])+DecimalSquare, sep="/")) # break Extent object down into character
-    }else{
-      if(class(Extent) == "Raster" | class(Extent) == "SpatialPolygonsDataFrame"){ # sanity check: ensure it is a raster of Spatialpolygonsdataframe object if not an extent object
-        if(class(Extent) == "SpatialPolygonsDataFrame"){ # shape check
-          Shape <- Extent # save the shapefile for later masking
-        } # end of shape check
-        Extent <- extent(Extent) # extract extent
-        ExtentSquare <- Extent # used for later cropping to get output as close to input extent as possible
-        Extent <- try(paste(ceiling(Extent[4])+DecimalSquare,
-                            floor(Extent[1])-DecimalSquare,
-                            floor(Extent[3])-DecimalSquare,
-                            ceiling(Extent[2])+DecimalSquare, sep="/")) # break Extent object down into character
-      }else{ # if sanity check is failed, stop function and inform user
-        stop('The Extent argument provided by you is neither formatted as an Extent nor a Raster or SpatialPolygonsDataFrame object. Please correct this.')
-      } # end of sanity check
-    } # end of Extent check
+  if(class(Extent) == "Raster" | class(Extent) == "SpatialPolygonsDataFrame"){ # sanity check: ensure it is a raster of Spatialpolygonsdataframe object if not an extent object
+    if(class(Extent) == "SpatialPolygonsDataFrame"){ # shape check
+      Shape <- Extent # save the shapefile for later masking
+    } # end of shape check
+    Extent <- extent(Extent) # extract extent
+  } # end of sanity check
+  if(class(Extent) != "Extent"){ # Extent check: whether already specified as Extent object
+    stop('The Extent argument provided by you is neither formatted as an Extent nor a Raster or SpatialPolygonsDataFrame object. Please correct this.')
+  } # # end of Extent check
+  Extent <- extent(Extent) # extract extent
+  Extent <- try(paste(ceiling(Extent[4]),
+                      floor(Extent[1]),
+                      floor(Extent[3]),
+                      ceiling(Extent[2]), sep="/")) # break Extent object down into character
 
   # Time (set time for download depending on temporal resolution)
   if(TResolution == "hour" | TResolution == "day"){ # time check: if we need sub-daily data
@@ -130,7 +123,8 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
                      "time"           = Times,
                      "area"           = Extent,
                      "format"         = "netcdf",
-                     "target"         = paste0(FileName))
+                     "target"         = paste0(FileName),
+                     "grid"           = Grid)
 
   ### EXECUTING REQUEST ----
   wf_request(user = as.character(API_User),
@@ -140,7 +134,10 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
              verbose = TRUE)
 
   ### LOAD DATA BACK IN ----
-  Era5_ras <- brick(file.path(Dir, "/", FileName)) # loading the data
+  Era5_ras <- stack(file.path(Dir, "/", FileName)) # loading the data
+  if(Grid != ".5/.5"){ # grid check: if we are looking at era5-land
+    res(Era5_ras) <- round(res(Era5_ras), 2) # slightly alter resolution of data to make it perfectly square
+  } # end of grid check
 
   ### DAY/YEAR MEANS ----
   if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months)
@@ -160,16 +157,13 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
   Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun='mean') # do the calculation
 
-  ### CROPPING ----
-  Era5_ras <- crop(Era5_ras, ExtentSquare) # era5(-land)-download doesn't result in the exact extent specified due to the need for square cells in kriging, this step brings the output as close to the specified extent as possible
-
   ### MASKING ----
   if(exists("Shape")){ # Shape check
     Era5_ras <- mask(Era5_ras, Shape) # mask if shapefile was provided
   }# end of Shape check
 
   ### SAVING DATA ----
-  writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE)
+  writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF")
   return(Era5_ras)
 }
 
@@ -190,8 +184,8 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 #' }
 #'
 download_DEM <- function(Train_ras = NULL,
-                          Target_res = NULL,
-                          Shape = NULL, Dir = getwd(), Keep_Temporary = FALSE) {
+                         Target_res = NULL,
+                         Shape = NULL, Dir = getwd(), Keep_Temporary = FALSE) {
 
   ### PREPARATION -----
   Extent <- extent(Train_ras) # extract extent for later cropping
@@ -230,7 +224,7 @@ download_DEM <- function(Train_ras = NULL,
   if(exists("Target_ras")){
     GMTED2010Target_ras <- resample(GMTED2010_ras, Target_ras) # resample if output raster was given
   }else{
-    GMTED2010Target_ras <- aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1]) # aggregate if output resolution was given
+    GMTED2010Target_ras <- suppressWarnings(aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1])) # aggregate if output resolution was given
   }
   names(GMTED2010Target_ras) <- "DEM" # setting layer name for later use in KrigingEquation
 
@@ -240,13 +234,14 @@ download_DEM <- function(Train_ras = NULL,
     GMTED2010Target_ras <- mask(GMTED2010Target_ras, Shape)
   } # end of Shape check
 
+  ### SAVING DATA ----
+  writeRaster(x = GMTED2010Train_ras, filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE, format="CDF")
+  writeRaster(x = GMTED2010Target_ras, filename = file.path(Dir, "GMTED2010_Target.nc"), overwrite = TRUE, format="CDF")
+
   ### REMOVE FILES FROM HARD DRIVE -----
   if(Keep_Temporary == FALSE){ # cleanup check
     unlink(Dir.Data, recursive = TRUE)
   }  # end of cleanup check
 
-  ### SAVING DATA ----
-  writeRaster(x = GMTED2010Train_ras, filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE)
-  writeRaster(x = GMTED2010Target_ras, filename = file.path(Dir, "GMTED2010_Target.nc"), overwrite = TRUE)
   return(list(GMTED2010Train_ras, GMTED2010Target_ras))
 }
