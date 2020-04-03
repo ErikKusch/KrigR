@@ -27,7 +27,6 @@
 
 #'
 krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res){
-  library(raster) # i get an error on the establishing of Origin if this isn't set
   ## CLIMATE DATA (call to download_ERA function if no Data set is specified) ----
   if(is.null(Data)){ # data check: if no data has been specified
     Data <- download_ERA(Variable = Variable, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir)
@@ -55,7 +54,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   Terms <- unique(unlist(strsplit(labels(terms(KrigingEquation)), split = ":"))) # identify which layers of data are needed
 
   ## DATA REFORMATTING (Kriging requires spatially referenced data frames, reformatting from rasters happens here) ---
-  Origin <- as.data.frame(Covariates_coarse[[which(names(Covariates_coarse) == Terms[[1]])]], xy = TRUE) # extract first targeted covariate layer
+  Origin <- raster::as.data.frame(Covariates_coarse[[which(names(Covariates_coarse) == Terms[[1]])]], xy = TRUE) # extract first targeted covariate layer
   Origin[, 3] <- extract(x = Covariates_coarse[[which(names(Covariates_coarse) == Terms[[1]])]], y = Origin[,1:2], df=TRUE)[, 2] # extract pixel data of locations identified above
   if(length(Terms) > 1){ # coarse layer check: if covariates file has more than 1 layer
     for(Iter_Coarse in 2:length(Terms)){ # loop over layers in coarse covariates raster
@@ -76,6 +75,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   colnames(Target) <- c("x","y", Terms)  # assign column names from layer names
   Target <- na.omit(Target)
   suppressWarnings(gridded(Target) <- ~x+y) # establish a gridded data product ready for use in kriging
+  Target@grid@cellsize[1] <- Target@grid@cellsize[2] # ensure that grid cells are square
 
   ## SET-UP TEMPORARY DIRECTORY (this is where kriged products of each layer will be saved) ----
   Dir.Temp <- file.path(Dir, paste("Kriging", FileName, sep="_"))
@@ -87,6 +87,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   OriginK <- na.omit(OriginK) # get rid of NA cells
   colnames(OriginK) <- c('x','y', Terms, terms(KrigingEquation)[[2]]) # assign column names
   suppressWarnings(gridded(OriginK) <-  ~x+y) # generate gridded product
+  OriginK@grid@cellsize[1] <- OriginK@grid@cellsize[2] # ensure that grid cells are square
 
   Iter_Try = 0 # number of tries set to 0
   kriging_result <- NULL
@@ -99,9 +100,10 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   }
 
   Krig_ras <- raster(kriging_result$krige_output) # extract raster from kriging product
+  crs(Krig_ras) <- crs(Data) # setting the crs according to the data
 
   if(Cores == 1){Ras_Krig[[Iter_Krige]] <- Krig_ras} # stack kriged raster into raster list if non-parallel computing
-  suppressWarnings(writeRaster(x = Krig_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '.nc')), overwrite = TRUE, format='CDF')) # save kriged raster to temporary directory
+ writeRaster(x = Krig_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
 
   if(Cores == 1){ # core check: if processing non-parallel
     if(Count_Krige == 1){ # count check: if this was the first actual computation
@@ -163,7 +165,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## SAVING FINAL PRODUCT ----
   if(is.null(DataSkips)){ # Skip check: if no layers needed to be skipped
     Ras_Krig <- brick(Ras_Krig) # convert list of kriged layers in actual rasterbrick of kriged layers
-    suppressWarnings(writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF")) # save final product as raster
+    writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
   } # end of Skip check
 
   ### REMOVE FILES FROM HARD DRIVE ---

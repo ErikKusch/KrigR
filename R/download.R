@@ -37,7 +37,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   ### SETTING UP PARAMETERS FOR DOWNLOAD CALL ----
   # Extent Modifiers (needed for download product to produce square cells which are needed for Kriging to work)
   if(DataSet == "era5-land"){
-    Grid <- "0.100000000000000000000000001/0.100000000000000000000000001" # "0.100000000000000006/0.099999999999999992"
+    Grid <- ".1/.1" # era5-land-modifier
   }else{
     Grid <- ".5/.5" # era5-modifier
   }
@@ -93,10 +93,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
     stop('The Extent argument provided by you is neither formatted as an Extent nor a Raster or SpatialPolygonsDataFrame object. Please correct this.')
   } # # end of Extent check
   Extent <- extent(Extent) # extract extent
-  Extent <- try(paste(ceiling(Extent[4]),
-                      floor(Extent[1]),
-                      floor(Extent[3]),
-                      ceiling(Extent[2]), sep="/")) # break Extent object down into character
+  Extent <- try(paste(Extent[4], Extent[1], Extent[3], Extent[2], sep="/")) # break Extent object down into character
 
   # Time (set time for download depending on temporal resolution)
   if(TResolution == "hour" | TResolution == "day"){ # time check: if we need sub-daily data
@@ -134,10 +131,22 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
              verbose = TRUE)
 
   ### LOAD DATA BACK IN ----
-  Era5_ras <- stack(file.path(Dir, "/", FileName)) # loading the data
-  if(Grid != ".5/.5"){ # grid check: if we are looking at era5-land
-    res(Era5_ras) <- round(res(Era5_ras), 2) # slightly alter resolution of data to make it perfectly square
-  } # end of grid check
+  LayersSame <- suppressWarnings(all.equal(brick(file.path(Dir, "/", FileName), level = 1), brick(file.path(Dir, "/", FileName), level = 2))) # Check if the layers are the same in brick loading
+
+  ### ERROR CHECK (CDS sometimes produces a netcdf with two layers and break oint in the data being assigned to the first and then the second layer. this step fixes this) ----
+  if(LayersSame == FALSE){ # problem check: if we were able to load a second layer from the data
+    Era5_ras <- brick(file.path(Dir, "/", FileName), level = 1) # load initial data again for just the first band
+    Era5_ras2 <- brick(file.path(Dir, "/", FileName), level = 2) # load second layer
+    Sums_vec <- NA # recreate sum vector
+    for(Iter_Check in 1:nlayers(Era5_ras2)){ # layer loop: go over all layers in Era5_ras2
+      Sums_vec <- c(Sums_vec, sum(values(Era5_ras2[[Iter_Check]]), na.rm = TRUE)) # append sum of data values to sum vector, layers with issues will produce a 0
+    } # end of layer loop
+    Sums_vec <- na.omit(Sums_vec) # omit initial NA
+    StopFirst <- min(which(Sums_vec != 0)) # identify the last layer of the brick that is problematic on the second data layer loaded above
+    Era5_ras <- stack(Era5_ras[[1:(StopFirst-1)]], Era5_ras2[[StopFirst:nlayers(Era5_ras2)]]) # rebuild the Era5_ras stack as a combination of the data-containing layers in the two bricks
+  }else{ # if there is no double layer issue
+    Era5_ras <- stack(file.path(Dir, FileName)) # loading the data
+  } # end of problem check
 
   ### DAY/YEAR MEANS ----
   if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months)
