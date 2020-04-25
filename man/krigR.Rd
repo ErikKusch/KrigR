@@ -70,6 +70,3 @@ krigR(
 \description{
 Descriptions
 }
-\examples{
-
-}

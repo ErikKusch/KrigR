@@ -25,7 +25,7 @@
 
 #' @examples
 
-#'
+#' @export
 krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res){
   ## CLIMATE DATA (call to download_ERA function if no Data set is specified) ----
   if(is.null(Data)){ # data check: if no data has been specified

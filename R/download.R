@@ -21,6 +21,7 @@
 #' download_ERA(Variable = '2m_temperature', Type = 'reanalysis', DataSet = 'era5-land', DateStart = '2000-01-01', DateStop = '2000-12-31', TResolution = 'hour', TStep = 12, Extent = extent(6,15,47,55), API_User = NULL, API_Key = NULL)
 #' }
 #'
+#' @export
 download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-land",
                          DateStart = "1981-01-01", DateStop = Sys.Date()-100,
                          TResolution = "Month", TStep = 1, Extent = extent(-180,180,-90,90),
@@ -192,6 +193,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 #' download_HWSD(Train_ras = donwload_ERA(...), Target_res = 0.01)
 #' }
 #'
+#' @export
 download_DEM <- function(Train_ras = NULL,
                          Target_res = NULL,
                          Shape = NULL, Dir = getwd(), Keep_Temporary = FALSE) {

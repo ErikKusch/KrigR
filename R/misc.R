@@ -22,6 +22,7 @@
 #' @examples
 #' Variable_List(DataSet = "era5")
 #'
+#' @export
 Variable_List <- function(DataSet) {
   if(DataSet == "era5"){
     Variables <- data.frame(Clear = c("100m u-component of wind",
@@ -453,7 +454,7 @@ Variable_List <- function(DataSet) {
 #' check_Krig(????)
 #' }
 #'
-
+#' @export
 check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   ### RESOLUTIONS ----
   if(res(CovariatesFine)[1] < res(Data)[1]/10){

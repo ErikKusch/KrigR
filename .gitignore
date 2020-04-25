@@ -3,13 +3,5 @@
 .RData
 .Ruserdata
 
-*
-
-!*.R
-!*.Rd
-!DESCRIPTION
-!*/
-
-
 packrat/lib*/
 KrigRTesting
