@@ -32,7 +32,7 @@ This function downloads and rescales the median statistic of the Global Multi-re
 \examples{
 \dontrun{
 # Downloading GMTED2010-data at resolution and extent obtained by a call to download_ERA and a target resolution of .01.
-download_HWSD(Train_ras = donwload_ERA(...), Target_res = 0.01)
+download_HWSD(Train_ras = download_ERA(...), Target_res = 0.01)
 }
 
 }

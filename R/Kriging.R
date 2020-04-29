@@ -1,6 +1,11 @@
-#' Kriging
+#' (multi-core) Kriging
 #'
-#' Descriptions
+#' This function statistically downscales input data using covariate data and the kriging methodology. The function can be run in two ways:
+#' \enumerate{
+#' \item \strong{From Scratch} (\emph{not recommended}): Use the arguments Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, Dir, FileName, API_Key, API_User, and arget_res. By doing so, krigR will call the functions download_ERA() and download_DEM() for one coherent kriging workflow. Note that this process does not work when targetting UERRA data.
+#' \item \strong{By Itself} (\emph{recommended}): Use the arguments Data, Covariates_coarse, Covariates_fine when you already have raster files for your data which is to be downscaled as well as covariate raster data.
+#' }
+#' Use optional arguments such as Dir, FileName, Keep_Temporary, KrigingEquation and Cores for ease of use, substituion of non-GMTED2010 covariates, and parallel processing.
 #'
 #' @param Data Raster file which is to be downscaled.
 #' @param Covariates_coarse Raster file containing covariates at training resolution.
@@ -18,13 +23,16 @@
 #' @param TResolution Optional. Temporal resolution of final product. hour', 'day', 'month'. Passed on to download_ERA.
 #' @param TStep Optional. Which time steps (numeric) to consider for temporal resolution. Passed on to download_ERA.
 #' @param Extent Optional. Optional, download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. Passed on to download_ERA and downbload_DEM.
+#' @param Target_res Optional. The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.
 #' @param API_Key Optional. ECMWF cds API key. Passed on to download_ERA.
 #' @param API_User Optional. ECMWF cds user number. Passed on to download_ERA.
-#' @param Train_res Optional. The training resolution for the kriging step (i.e. wich resolution to downscale from). An object as specified/produced by raster::res(). Passed on to download_DEM.
-#' @param Target_res Optional. The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.
 
 #' @examples
-
+#' \dontrun{
+#' # Downloading and downscaling ERA5-Land air temperature reanalysis data in monthly intervals for the entire year of 2000 for Germany. API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
+#' krigR(Variable = '2m_temperature', Type = 'reanalysis', DataSet = 'era5-land', DateStart = '2000-01-01', DateStop = '2000-12-31', TResolution = 'month', TStep = 1, Extent = extent(6,15,47,55), API_User = NULL, API_Key = NULL, Target_res = .01, Cores = 4, FileName = "KrigingOutput.nc", Dir = file.path(getwd(), "KrigRTesting"))
+#' }
+#'
 #' @export
 krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res){
   ## CLIMATE DATA (call to download_ERA function if no Data set is specified) ----

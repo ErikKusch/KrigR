@@ -1,9 +1,9 @@
 #' Downloading ERA5(Land)-data from ECMWF servers
 #'
-#' This function generates a shell script to query downloading of ERA5(Land) data from the ECMWF servers as specified by user input. The actual time to download is dependant on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
+#' This function downloads ERA5(-Land) data from ECMWF servers according to user-specification. The actual time to download is dependant on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
 #'
-#' @param Variable ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.
-#' @param Type Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread' - only implemented for era5 data) data.
+#' @param Variable ERA5(Land)-contained climate variable. See 'donwload' output of Variable_List() for possible values.
+#' @param Type Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.
 #' @param DataSet Which ERA5 data set to download data from. 'era5' or 'era5-land'.
 #' @param DateStart Date ('YYYY-MM-DD') at which to start time series of downloaded data.
 #' @param DateStop Date ('YYYY-MM-DD') at which to stop time series of downloaded data.
@@ -14,7 +14,7 @@
 #' @param FileName A file name for the netcdf produced. Default is a combination parameters in the function call.
 #' @param API_Key ECMWF cds API key.
 #' @param API_User ECMWF cds user number.
-#' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory as well as a raster object containing the specified data.
+#' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
 #' # Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for the entire year of 2000 for Germany. API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
@@ -24,7 +24,7 @@
 #' @export
 download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-land",
                          DateStart = "1981-01-01", DateStop = Sys.Date()-100,
-                         TResolution = "Month", TStep = 1, Extent = extent(-180,180,-90,90),
+                         TResolution = "month", TStep = 1, Extent = extent(-180,180,-90,90),
                          Dir = getwd(), FileName = NULL,
                          API_User = NULL, API_Key = NULL) {
 
@@ -190,7 +190,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 #' @examples
 #' \dontrun{
 #' # Downloading GMTED2010-data at resolution and extent obtained by a call to download_ERA and a target resolution of .01.
-#' download_HWSD(Train_ras = donwload_ERA(...), Target_res = 0.01)
+#' download_HWSD(Train_ras = download_ERA(...), Target_res = 0.01)
 #' }
 #'
 #' @export

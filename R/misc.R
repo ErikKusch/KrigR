@@ -1,24 +1,8 @@
-.onLoad <- function(libname, pkgname) {
-  op <- options()
-  op.devtools <- list(
-    devtools.path = "~/R-dev",
-    devtools.install.args = "",
-    devtools.name = "Erik Kusch",
-    devtools.desc.author = "Kusch, Erik <erik@i-solution.de>",
-    devtools.desc.suggests = NULL,
-    devtools.desc = list()
-  )
-  toset <- !(names(op.devtools) %in% names(op))
-  if(any(toset)) options(op.devtools[toset])
-
-  invisible()
-}
-
 #' List of available variables
 #'
 #' This function presents the user with a selection of biologically relevant variables of the Era5-family which can be statistically downscaled. Notice that more variables are available and can be found here: \url{https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land?tab=form} for Era5-Land data and here: \url{https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels?tab=form} for Era5 data. Notice that variable names for download requests are written in all lower-case letters and substitute spaces for underscores.
 #'
-#' @param DataSet Which ERA5 data set to download data from. 'era5' or 'era5-land'.
+#' @param DataSet Which ERA5 data set to download data from. 'era5', 'era5-land', or 'uerra'.
 #' @examples
 #' Variable_List(DataSet = "era5")
 #'
@@ -432,7 +416,139 @@ Variable_List <- function(DataSet) {
     )
   }
 
-  if(DataSet != "era5" & DataSet != "era5-land"){
+  if(DataSet == "uerra"){
+    Variables <- data.frame(Clear = c("Pressure",
+                                      "Relative humidity",
+                                      "Temperature",
+                                      "Wind direction",
+                                      "Wind speed",
+                                      "Geopotential",
+                                      "Geopotential height",
+                                      "U-component of wind",
+                                      "V-component of wind",
+                                      "10m wind direction",
+                                      "10m wind speed",
+                                      "2m relative humidity",
+                                      "2m temperature",
+                                      "Albedo",
+                                      "High cloud cover",
+                                      "Land-sea mask",
+                                      "Low cloud cover",
+                                      "Mean sea level pressure",
+                                      "Medium cloud cover",
+                                      "Orography",
+                                      "Skin temperature",
+                                      "Snow density",
+                                      "Snow depth water equivalent",
+                                      "Surface pressure",
+                                      "Surface roughness",
+                                      "Total cloud cover",
+                                      "Total column integrated water vapour",
+                                      "Total precipitation",
+                                      "Soil temperature",
+                                      "Volumetric soil moisture",
+                                      "Volumetric transpiration stress-onset (soil moisture)",
+                                      "Volumetric wilting point"),
+                            Download = c("pressure",
+                                         "relative_humidity",
+                                         "temperature",
+                                         "wind_direction",
+                                         "wind_speed",
+                                         "geopotential",
+                                         "geopotential_height",
+                                         "u-component_of_wind",
+                                         "v-component_of_wind",
+                                         "10m_wind_direction",
+                                         "10m_wind_speed",
+                                         "2m_relative_humidity",
+                                         "2m_temperature",
+                                         "albedo",
+                                         "high_cloud_cover",
+                                         "land-sea mask",
+                                         "low_cloud_cover",
+                                         "mean_sea_level_pressure",
+                                         "medium_cloud_cover",
+                                         "orography",
+                                         "skin_temperature",
+                                         "snow_density",
+                                         "snow_depth_water_equivalent",
+                                         "surface_pressure",
+                                         "surface_roughness",
+                                         "total_cloud_cover",
+                                         "total_column_integrated_water_vapour",
+                                         "total_precipitation",
+                                         "soil_temperature",
+                                         "volumetric_soil_moisture",
+                                         "volumetric_transpiration_stress-onset",
+                                         "volumetric_wilting point"),
+                            Unit = c("Pa",
+                                     "%",
+                                     "K",
+                                     "Degrees",
+                                     "m/s",
+                                     "m^2/s^2",
+                                     "gpm",
+                                     "m/s",
+                                     "m/s",
+                                     "Degrees",
+                                     "m/s",
+                                     "%",
+                                     "K",
+                                     "%",
+                                     "%",
+                                     "Dimensionless",
+                                     "%",
+                                     "Pa",
+                                     "%",
+                                     "gpm",
+                                     "K",
+                                     "kg/m^3",
+                                     "kg/m^2",
+                                     "Pa",
+                                     "m",
+                                     "%",
+                                     "kg/m^2",
+                                     "kg/m^2",
+                                     "K",
+                                     "m^3/m^3",
+                                     "m^3/m^3",
+                                     "m^3/m^3"),
+                            DataSet = c("height-levels",
+                                        "height-levels/pressure-levels",
+                                        "height-levels/pressure-levels",
+                                        "height-levels",
+                                        "height-levels",
+                                        "pressure-levels",
+                                        "pressure-levels",
+                                        "pressure-levels",
+                                        "pressure-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "single-levels",
+                                        "soil-levels",
+                                        "soil-levels",
+                                        "soil-levels",
+                                        "soil-levels")
+                            )
+  }
+
+  if(DataSet != "era5" & DataSet != "era5-land" & DataSet != "uerra"){
     stop("Please select a DataSet from 'era5' or 'era5-land'.")
   }
 

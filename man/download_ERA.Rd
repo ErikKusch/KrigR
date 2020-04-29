@@ -10,7 +10,7 @@ download_ERA(
   DataSet = "era5-land",
   DateStart = "1981-01-01",
   DateStop = Sys.Date() - 100,
-  TResolution = "Month",
+  TResolution = "month",
   TStep = 1,
   Extent = extent(-180, 180, -90, 90),
   Dir = getwd(),
@@ -20,9 +20,9 @@ download_ERA(
 )
 }
 \arguments{
-\item{Variable}{ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.}
+\item{Variable}{ERA5(Land)-contained climate variable. See 'donwload' output of Variable_List() for possible values.}
 
-\item{Type}{Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread' - only implemented for era5 data) data.}
+\item{Type}{Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.}
 
 \item{DataSet}{Which ERA5 data set to download data from. 'era5' or 'era5-land'.}
 
@@ -45,10 +45,10 @@ download_ERA(
 \item{API_Key}{ECMWF cds API key.}
 }
 \value{
-A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory as well as a raster object containing the specified data.
+A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 }
 \description{
-This function generates a shell script to query downloading of ERA5(Land) data from the ECMWF servers as specified by user input. The actual time to download is dependant on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
+This function downloads ERA5(-Land) data from ECMWF servers according to user-specification. The actual time to download is dependant on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
 }
 \examples{
 \dontrun{
