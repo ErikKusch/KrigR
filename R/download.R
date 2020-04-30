@@ -129,7 +129,8 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
              request = Request_ls,
              transfer = TRUE,
              path = Dir,
-             verbose = TRUE)
+             verbose = TRUE,
+             time_out = 36000)
 
   ### LOAD DATA BACK IN ----
   LayersSame <- suppressWarnings(all.equal(brick(file.path(Dir, "/", FileName), level = 1), brick(file.path(Dir, "/", FileName), level = 2))) # Check if the layers are the same in brick loading
