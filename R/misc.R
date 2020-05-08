@@ -544,7 +544,31 @@ Variable_List <- function(DataSet) {
                                         "soil-levels",
                                         "soil-levels",
                                         "soil-levels",
-                                        "soil-levels")
+                                        "soil-levels"),
+                            Origin = c(rep(NA, 9), # no origin specified for height and pressure levels
+                                       "mescan_surfex/uerra_harmonie",
+                                       "mescan_surfex/uerra_harmonie",
+                                       "mescan_surfex/uerra_harmonie",
+                                       "mescan_surfex/uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "mescan_surfex/uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "mescan_surfex/uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "mescan_surfex",
+                                       "uerra_harmonie",
+                                       "uerra_harmonie",
+                                       "mescan_surfex",
+                                       "mescan_surfex")
                             )
   }
 
