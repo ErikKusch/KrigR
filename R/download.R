@@ -204,7 +204,7 @@ download_DEM <- function(Train_ras = NULL,
   Link <- "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/md30_grd.zip" # Link to GMTED2010
   # handling Target_res
   ## distinguishing if Target_res is a raster or a resolution, this will change whether GMTED2010 is aggregated or resampled
-  if(class(Target_res) == "Raster"){
+  if(class(Target_res[[1]]) == "RasterLayer"){
     Target_ras <- Target_res
     Target_res <- res(Target_ras)
   }
