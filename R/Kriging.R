@@ -72,7 +72,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   } # end of coarse layer check
   colnames(Origin) <- c("x","y", Terms) # assign column names from layer names
 
-  Target <- as.data.frame(Covariates_fine[[which(names(Covariates_fine) == Terms[[1]])]], xy = TRUE) # extract first covariate layer
+  Target <- raster::as.data.frame(Covariates_fine[[which(names(Covariates_fine) == Terms[[1]])]], xy = TRUE) # extract first covariate layer
   Target[, 3] <- extract(x = Covariates_fine[[which(names(Covariates_fine) == Terms[[1]])]], y = Target[,1:2], df=TRUE)[, 2] # extract pixel data of locations identified above
   if(length(Terms) > 1){ # fine layer check: if covariates file has more than 1 layer
     for(Iter_Fine in 2:length(Terms)){ # loop over layers in fine covariates raster
