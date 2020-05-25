@@ -659,7 +659,7 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   }
 
   ### NA DATA IN LAYERS ----
-  CovariatesFine <- CovariatesFine[[which(names(CovariatesFine) %in% Terms_Present)]] # only look at layers that the krigignequation targets
+  # CovariatesFine <- CovariatesFine[[which(names(CovariatesFine) %in% Terms_Present)]] # only look at layers that the krigignequation targets
   # if(nlayers(CovariatesFine) > 1){
   #   MaskedPix <- length(which(values(sum(CovariatesFine, na.rm = TRUE)) != 0)) # number of non-masked pixels in which data is present in at least one layer
   #   MissingPix <- length(which(!is.na(values(sum(CovariatesFine, na.rm = FALSE))))) # number of pixels in which all layers have data
