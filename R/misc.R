@@ -660,12 +660,12 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
 
   ### NA DATA IN LAYERS ----
   CovariatesFine <- CovariatesFine[[which(names(CovariatesFine) %in% Terms_Present)]] # only look at layers that the krigignequation targets
-  if(nlayers(CovariatesFine) > 1){
-    MaskedPix <- length(which(values(sum(CovariatesFine, na.rm = TRUE)) != 0)) # number of non-masked pixels in which data is present in at least one layer
-    MissingPix <- length(which(!is.na(values(sum(CovariatesFine, na.rm = FALSE))))) # number of pixels in which all layers have data
-    if(MissingPix < MaskedPix){ # when there are any pixels for which data is absent for at least one layer
-      stop("One more more of your target covariate layers is missing data in locations where data is present for other layers. Please either fill these pixels with data or omit terms targeting these layers from your Kriging equation.")
-    }
-  }
+  # if(nlayers(CovariatesFine) > 1){
+  #   MaskedPix <- length(which(values(sum(CovariatesFine, na.rm = TRUE)) != 0)) # number of non-masked pixels in which data is present in at least one layer
+  #   MissingPix <- length(which(!is.na(values(sum(CovariatesFine, na.rm = FALSE))))) # number of pixels in which all layers have data
+  #   if(MissingPix < MaskedPix){ # when there are any pixels for which data is absent for at least one layer
+  #     stop("One or more more of your target covariate layers is missing data in locations where data is present for other layers. Please either fill these pixels with data or omit terms targeting these layers from your Kriging equation.")
+  #   }
+  # }
   return(list(as.formula(KrigingEquation), DataSkips))
 }
