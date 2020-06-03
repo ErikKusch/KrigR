@@ -201,7 +201,7 @@ download_DEM <- function(Train_ras = NULL,
 
   ### PREPARATION -----
   Extent <- extent(Train_ras) # extract extent for later cropping
-  Link <- "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/md30_grd.zip" # Link to GMTED2010
+  Link <- "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/mn30_grd.zip" # Link to GMTED2010
   # handling Target_res
   ## distinguishing if Target_res is a raster or a resolution, this will change whether GMTED2010 is aggregated or resampled
   if(class(Target_res[[1]]) == "RasterLayer"){
@@ -221,7 +221,7 @@ download_DEM <- function(Train_ras = NULL,
   } # end of file check
 
   ### RASTERIZING & CROPPING -----
-  GMTED2010_ras <- raster(file.path(Dir.Data, "md30_grd/w001001.adf")) # rasterising elevetation data
+  GMTED2010_ras <- raster(file.path(Dir.Data, "mn30_grd/w001001.adf")) # rasterising elevetation data
   GMTED2010_ras <- crop(GMTED2010_ras, Extent) # crop data
 
   ### RESAMPLING TO SPECIFIED RESOLUTIONS -----
