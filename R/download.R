@@ -31,9 +31,9 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   ### SETTING UP API ----
   # Setting the API key for later retrieval by wf_request()
   API_Service = "cds"
-  wf_set_key(user=as.character(API_User),
-             key=as.character(API_Key),
-             service=as.character(API_Service))
+  wf_set_key(user = as.character(API_User),
+             key = as.character(API_Key),
+             service = API_Service)
 
   ### SETTING UP PARAMETERS FOR DOWNLOAD CALL ----
   # Extent Modifiers (needed for download product to produce square cells which are needed for Kriging to work)
@@ -112,7 +112,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 
   ### BUILDING REQUEST ----
   # Setting parameters of desired downloaded netcdf file according to user input
-  Request_ls <- list("dataset"        = DataSet,
+  Request_ls <- list("dataset_short_name" = DataSet,
                      "product_type"   = Type,
                      "variable"       = Variable,
                      "year"           = Years,
