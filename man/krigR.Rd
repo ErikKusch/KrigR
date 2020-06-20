@@ -74,7 +74,7 @@ This function statistically downscales input data using covariate data and the k
 \item \strong{By Itself}: Use the arguments Data, Covariates_coarse, Covariates_fine when you already have raster files for your data which is to be downscaled as well as covariate raster data.
 \item \strong{From Scratch}: Use the arguments Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, Dir, FileName, API_Key, API_User, and arget_res. By doing so, krigR will call the functions download_ERA() and download_DEM() for one coherent kriging workflow. Note that this process does not work when targetting UERRA data.
 }
-Use optional arguments such as Dir, FileName, Keep_Temporary, SIngularTry, KrigingEquation and Cores for ease of use, substituion of non-GMTED2010 covariates, and parallel processing.
+Use optional arguments such as Dir, FileName, Keep_Temporary, SingularTry, KrigingEquation and Cores for ease of use, substituion of non-GMTED2010 covariates, and parallel processing.
 }
 \examples{
 \dontrun{
