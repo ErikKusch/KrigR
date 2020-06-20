@@ -2,19 +2,20 @@
 #'
 #' This function statistically downscales input data using covariate data and the kriging methodology. The function can be run in two ways:
 #' \enumerate{
-#' \item \strong{From Scratch} (\emph{not recommended}): Use the arguments Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, Dir, FileName, API_Key, API_User, and arget_res. By doing so, krigR will call the functions download_ERA() and download_DEM() for one coherent kriging workflow. Note that this process does not work when targetting UERRA data.
-#' \item \strong{By Itself} (\emph{recommended}): Use the arguments Data, Covariates_coarse, Covariates_fine when you already have raster files for your data which is to be downscaled as well as covariate raster data.
+#' \item \strong{By Itself}: Use the arguments Data, Covariates_coarse, Covariates_fine when you already have raster files for your data which is to be downscaled as well as covariate raster data.
 #' }
-#' Use optional arguments such as Dir, FileName, Keep_Temporary, KrigingEquation and Cores for ease of use, substituion of non-GMTED2010 covariates, and parallel processing.
+#' \item \strong{From Scratch}: Use the arguments Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, Dir, FileName, API_Key, API_User, and arget_res. By doing so, krigR will call the functions download_ERA() and download_DEM() for one coherent kriging workflow. Note that this process does not work when targetting UERRA data.
+#' Use optional arguments such as Dir, FileName, Keep_Temporary, SIngularTry, KrigingEquation and Cores for ease of use, substituion of non-GMTED2010 covariates, and parallel processing.
 #'
 #' @param Data Raster file which is to be downscaled.
 #' @param Covariates_coarse Raster file containing covariates at training resolution.
 #' @param Covariates_fine Raster file containing covariates at target resolution.
-#' @param KrigingEquation Formula or character string specifying which covariates to use and how. Layer names in Covariates_coarse and Covariates_fine need to match Parameter in the formula. Needs to start with "X ~ ". X can read anything you like.
-#' @param Dir Directory specifying where to place final kriged product.
+#' @param KrigingEquation Formula or character string specifying which covariates to use and how. Layer names in Covariates_coarse and Covariates_fine need to match Parameters in this formula. Needs to start with "X ~ ". X can read anything you like.
+#' @param Dir Optional. Directory specifying where to place final kriged product. Default is current working directory.
 #' @param FileName Optional. A file name for the netcdf produced. Default is a combination parameters in the function call.
-#' @param Keep_Temporary Logical, whether to delete individual kriging products of layers in Data after processing.
-#' @param Cores Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Paralell processing is carried out when Cores is bigger than 1.
+#' @param Keep_Temporary Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE.
+#' @param Cores Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Paralell processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.
+#' @param SingularTry Numeric. How often to try kriging of each layer of the input. This usually gets around issues of singular covariance matrices in the kriging process, but takes some time. Default is 50
 #' @param Variable Optional, calls download_DEM(). ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.
 #' @param Type  Optional. Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Passed on to download_ERA.
 #' @param DataSet Optional. Which ERA5 data set to download data from. 'era5' or 'era5-land'. Passed on to download_ERA.
@@ -22,7 +23,7 @@
 #' @param DateStop Optional. Date ('YYYY-MM-DD') at which to stop time series of downloaded data. Passed on to download_ERA.
 #' @param TResolution Optional. Temporal resolution of final product. hour', 'day', 'month'. Passed on to download_ERA.
 #' @param TStep Optional. Which time steps (numeric) to consider for temporal resolution. Passed on to download_ERA.
-#' @param Extent Optional. Optional, download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. Passed on to download_ERA and downbload_DEM.
+#' @param Extent Optional. Download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. Passed on to download_ERA and downbload_DEM.
 #' @param Target_res Optional. The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.
 #' @param API_Key Optional. ECMWF cds API key. Passed on to download_ERA.
 #' @param API_User Optional. ECMWF cds user number. Passed on to download_ERA.
@@ -34,7 +35,7 @@
 #' }
 #'
 #' @export
-krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res){
+krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 50, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res){
   ## CLIMATE DATA (call to download_ERA function if no Data set is specified) ----
   if(is.null(Data)){ # data check: if no data has been specified
     Data <- download_ERA(Variable = Variable, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir)
@@ -99,7 +100,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
 
   Iter_Try = 0 # number of tries set to 0
   kriging_result <- NULL
-  while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < 51){ # try kriging 50 times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
+  while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < SingularTry){ # try kriging 50 times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
     try(invisible(capture.output(kriging_result <- autoKrige(KrigingEquation, OriginK, Target, verbose = FALSE))), silent = TRUE)
     Iter_Try <- Iter_Try +1
   }
