@@ -15,7 +15,7 @@
 #' @param FileName Optional. A file name for the netcdf produced. Default is a combination parameters in the function call.
 #' @param Keep_Temporary Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE.
 #' @param Cores Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Paralell processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.
-#' @param SingularTry Numeric. How often to try kriging of each layer of the input. This usually gets around issues of singular covariance matrices in the kriging process, but takes some time. Default is 50
+#' @param SingularTry Numeric. How often to try kriging of each layer of the input. This usually gets around issues of singular covariance matrices in the kriging process, but takes some time. Default is 10
 #' @param Variable Optional, calls download_DEM(). ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.
 #' @param Type  Optional. Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Passed on to download_ERA.
 #' @param DataSet Optional. Which ERA5 data set to download data from. 'era5' or 'era5-land'. Passed on to download_ERA.
@@ -35,7 +35,7 @@
 #' }
 #'
 #' @export
-krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 50, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res){
+krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res){
   ## CLIMATE DATA (call to download_ERA function if no Data set is specified) ----
   if(is.null(Data)){ # data check: if no data has been specified
     Data <- download_ERA(Variable = Variable, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir)

@@ -13,7 +13,7 @@ krigR(
   Dir = getwd(),
   FileName,
   Keep_Temporary = TRUE,
-  SingularTry = 50,
+  SingularTry = 10,
   Variable,
   Type,
   DataSet,
@@ -44,7 +44,7 @@ krigR(
 
 \item{Keep_Temporary}{Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE.}
 
-\item{SingularTry}{Numeric. How often to try kriging of each layer of the input. This usually gets around issues of singular covariance matrices in the kriging process, but takes some time. Default is 50}
+\item{SingularTry}{Numeric. How often to try kriging of each layer of the input. This usually gets around issues of singular covariance matrices in the kriging process, but takes some time. Default is 10}
 
 \item{Variable}{Optional, calls download_DEM(). ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.}
 
