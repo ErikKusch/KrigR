@@ -9,7 +9,7 @@ Authors@R: as.person(c(
 Description: The description of a package is usually long,
     spanning multiple lines. The second and subsequent lines
     should be indented, usually with four spaces.
-License: GPL-2
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.0

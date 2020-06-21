@@ -13,6 +13,7 @@ krigR(
   Dir = getwd(),
   FileName,
   Keep_Temporary = TRUE,
+  SingularTry = 10,
   Variable,
   Type,
   DataSet,
@@ -33,15 +34,17 @@ krigR(
 
 \item{Covariates_fine}{Raster file containing covariates at target resolution.}
 
-\item{KrigingEquation}{Formula or character string specifying which covariates to use and how. Layer names in Covariates_coarse and Covariates_fine need to match Parameter in the formula. Needs to start with "X ~ ". X can read anything you like.}
+\item{KrigingEquation}{Formula or character string specifying which covariates to use and how. Layer names in Covariates_coarse and Covariates_fine need to match Parameters in this formula. Needs to start with "X ~ ". X can read anything you like.}
 
-\item{Cores}{Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Paralell processing is carried out when Cores is bigger than 1.}
+\item{Cores}{Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Paralell processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.}
 
-\item{Dir}{Directory specifying where to place final kriged product.}
+\item{Dir}{Optional. Directory specifying where to place final kriged product. Default is current working directory.}
 
 \item{FileName}{Optional. A file name for the netcdf produced. Default is a combination parameters in the function call.}
 
-\item{Keep_Temporary}{Logical, whether to delete individual kriging products of layers in Data after processing.}
+\item{Keep_Temporary}{Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE.}
+
+\item{SingularTry}{Numeric. How often to try kriging of each layer of the input. This usually gets around issues of singular covariance matrices in the kriging process, but takes some time. Default is 10}
 
 \item{Variable}{Optional, calls download_DEM(). ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.}
 
@@ -57,7 +60,7 @@ krigR(
 
 \item{TStep}{Optional. Which time steps (numeric) to consider for temporal resolution. Passed on to download_ERA.}
 
-\item{Extent}{Optional. Optional, download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. Passed on to download_ERA and downbload_DEM.}
+\item{Extent}{Optional. Download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. Passed on to download_ERA and downbload_DEM.}
 
 \item{API_Key}{Optional. ECMWF cds API key. Passed on to download_ERA.}
 
@@ -68,10 +71,10 @@ krigR(
 \description{
 This function statistically downscales input data using covariate data and the kriging methodology. The function can be run in two ways:
 \enumerate{
-\item \strong{From Scratch} (\emph{not recommended}): Use the arguments Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, Dir, FileName, API_Key, API_User, and arget_res. By doing so, krigR will call the functions download_ERA() and download_DEM() for one coherent kriging workflow. Note that this process does not work when targetting UERRA data.
-\item \strong{By Itself} (\emph{recommended}): Use the arguments Data, Covariates_coarse, Covariates_fine when you already have raster files for your data which is to be downscaled as well as covariate raster data.
+\item \strong{By Itself}: Use the arguments Data, Covariates_coarse, Covariates_fine when you already have raster files for your data which is to be downscaled as well as covariate raster data.
+\item \strong{From Scratch}: Use the arguments Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, Dir, FileName, API_Key, API_User, and arget_res. By doing so, krigR will call the functions download_ERA() and download_DEM() for one coherent kriging workflow. Note that this process does not work when targetting UERRA data.
 }
-Use optional arguments such as Dir, FileName, Keep_Temporary, KrigingEquation and Cores for ease of use, substituion of non-GMTED2010 covariates, and parallel processing.
+Use optional arguments such as Dir, FileName, Keep_Temporary, SingularTry, KrigingEquation and Cores for ease of use, substituion of non-GMTED2010 covariates, and parallel processing.
 }
 \examples{
 \dontrun{
