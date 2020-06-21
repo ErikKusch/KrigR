@@ -100,7 +100,11 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
 
   Iter_Try = 0 # number of tries set to 0
   kriging_result <- NULL
+<<<<<<< HEAD
   while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < SingularTry){ # try kriging SingularTry times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
+=======
+  while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < SingularTry){ # try kriging 50 times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
+>>>>>>> b7e999d43520c20529b5346c3ae436c796df4dbd
     try(invisible(capture.output(kriging_result <- autoKrige(KrigingEquation, OriginK, Target, verbose = FALSE))), silent = TRUE)
     Iter_Try <- Iter_Try +1
   }
