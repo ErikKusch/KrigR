@@ -133,46 +133,72 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
              time_out = 36000)
 
   ### LOAD DATA BACK IN ----
-  LayersSame <- suppressWarnings(all.equal(brick(file.path(Dir, "/", FileName), level = 1), brick(file.path(Dir, "/", FileName), level = 2))) # Check if the layers are the same in brick loading
+  if(Type == "ensemble_members"){ # ensemble_member check: if user downloaded ensemble_member data
+    Layers <- 1:10 # ensemble members come in 10 distinct layers
+    LayersSame <- TRUE
+  }else{
+    Layers <- 1 # non-ensemble members have 1 layer for each time step instead of 10
+    LayersSame <- suppressWarnings(all.equal(brick(file.path(Dir, "/", FileName), level = 1), brick(file.path(Dir, "/", FileName), level = 2))) # Check if the layers are the same in brick loading
+  } # end of ensemble_member check
+  Era5_ls <- as.list(rep(NA, length(Layers))) # list for layer aggregation
 
-  ### ERROR CHECK (CDS sometimes produces a netcdf with two layers and break oint in the data being assigned to the first and then the second layer. this step fixes this) ----
-  if(LayersSame == FALSE){ # problem check: if we were able to load a second layer from the data
-    Era5_ras <- brick(file.path(Dir, "/", FileName), level = 1) # load initial data again for just the first band
-    Era5_ras2 <- brick(file.path(Dir, "/", FileName), level = 2) # load second layer
-    Sums_vec <- NA # recreate sum vector
-    for(Iter_Check in 1:nlayers(Era5_ras2)){ # layer loop: go over all layers in Era5_ras2
-      Sums_vec <- c(Sums_vec, sum(values(Era5_ras2[[Iter_Check]]), na.rm = TRUE)) # append sum of data values to sum vector, layers with issues will produce a 0
-    } # end of layer loop
-    Sums_vec <- na.omit(Sums_vec) # omit initial NA
-    StopFirst <- min(which(Sums_vec != 0)) # identify the last layer of the brick that is problematic on the second data layer loaded above
-    Era5_ras <- stack(Era5_ras[[1:(StopFirst-1)]], Era5_ras2[[StopFirst:nlayers(Era5_ras2)]]) # rebuild the Era5_ras stack as a combination of the data-containing layers in the two bricks
-  }else{ # if there is no double layer issue
-    Era5_ras <- stack(file.path(Dir, FileName)) # loading the data
-  } # end of problem check
+  for(LoadIter in Layers){
+    ### ERROR CHECK (CDS sometimes produces a netcdf with two layers and break point in the data being assigned to the first and then the second layer in non-ensemble members. this step fixes this) ----
+    if(LayersSame == FALSE){ # problem check: if we were able to load a second layer from the data
+      Era5_ras <- brick(file.path(Dir, "/", FileName), level = 1) # load initial data again for just the first band
+      Era5_ras2 <- brick(file.path(Dir, "/", FileName), level = 2) # load second layer
+      Sums_vec <- NA # recreate sum vector
+      for(Iter_Check in 1:nlayers(Era5_ras2)){ # layer loop: go over all layers in Era5_ras2
+        Sums_vec <- c(Sums_vec, sum(values(Era5_ras2[[Iter_Check]]), na.rm = TRUE)) # append sum of data values to sum vector, layers with issues will produce a 0
+      } # end of layer loop
+      Sums_vec <- na.omit(Sums_vec) # omit initial NA
+      StopFirst <- min(which(Sums_vec != 0)) # identify the last layer of the brick that is problematic on the second data layer loaded above
+      Era5_ras <- stack(Era5_ras[[1:(StopFirst-1)]], Era5_ras2[[StopFirst:nlayers(Era5_ras2)]]) # rebuild the Era5_ras stack as a combination of the data-containing layers in the two bricks
+    }else{ # if there is no double layer issue
+      Era5_ras <- raster::brick(x = file.path(Dir, FileName), level = Layers[[LoadIter]]) # loading the data
+    } # end of problem check
 
-  ### DAY/YEAR MEANS ----
-  if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months)
-    if(TResolution == "day"){ # daily means
-      factor <- 24 # number of hours per day
-    }else{ # annual means
-      factor <- 12 # number of months per year
-    }
-    Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
-    Era5_ras <- stackApply(Era5_ras, Index, fun='mean') # do the calculation
-  }# end of day/year check
+    ### DAY/YEAR MEANS ----
+    if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months)
+      if(TResolution == "day"){ # daily means
+        if(Type == "reanalysis" | is.na(Type)){
+          factor <- 24 # number of hours per day in reanalysis data
+        }else{
+          factor <- 8 # ensemble data only has 8 time steps in a day
+        }
+      }else{ # annual means
+        factor <- 12 # number of months per year
+      }
+      Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
+      Era5_ras <- stackApply(Era5_ras, Index, fun='mean') # do the calculation
+    }# end of day/year check
 
-  ### TIME STEP MEANS ----
-  if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
-    warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
-  }# end of sanity check for time step completeness
-  Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
-  Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun='mean') # do the calculation
-
-  ### MASKING ----
-  if(exists("Shape")){ # Shape check
-    Era5_ras <- mask(Era5_ras, Shape) # mask if shapefile was provided
-  }# end of Shape check
-
+    ### TIME STEP MEANS ----
+    if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
+      warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
+    }# end of sanity check for time step completeness
+    Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
+    Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun='mean') # do the calculation
+    ### MASKING ----
+    if(exists("Shape")){ # Shape check
+      Era5_ras <- mask(Era5_ras, Shape) # mask if shapefile was provided
+    }# end of Shape check
+    ### LIST SAVING
+    Era5_ls[[LoadIter]] <- Era5_ras
+  }
+  Era5_ras <- brick(Era5_ls)
+  if(Type == "ensemble_members"){ ## fixing indices of layers for ensemble means
+  Indices <- sub(pattern = ".*\\_", replacement = "", names(Era5_ras))
+  Indices2 <- strsplit(x = Indices, split = ".", fixed = TRUE)
+  Indices3 <- str_pad(unlist(Indices2), 3, "left","0")
+  PairNumbers <- rep(1:(length(Indices3)/2), each = 2)
+  Indices4 <- paste(Indices3[which(PairNumbers == 1)], collapse = "")
+  for(IndicesIter in 2:(length(Indices3)/2)){
+    Indices4 <- c(Indices4, paste(Indices3[which(PairNumbers == IndicesIter)], collapse = ""))
+  }
+  Indices4 <- as.numeric(Indices4)
+  Era5_ras <- Era5_ras[[order(Indices4)]]
+  }
   ### SAVING DATA ----
   writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)
   return(Era5_ras)
