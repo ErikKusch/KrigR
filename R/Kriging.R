@@ -154,7 +154,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     registerDoParallel(cl) # registering cores
     foreach(Iter_Krige = Compute_Layers, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
             .packages = c("raster", "stringr", "automap", "ncdf4", "rgdal"), # import packages necessary to each itteration
-            .export = ForeachObjects) %:% when(!paste0(str_pad(Iter_Krige,4,"left","0"), '.nc') %in% list.files(Dir.Temp)) %dopar% { # parallel kriging loop
+            .export = ForeachObjects) %:% when(!paste0(str_pad(Iter_Krige,4,"left","0"), '_data.nc') %in% list.files(Dir.Temp)) %dopar% { # parallel kriging loop
               Ras_Krig <- eval(parse(text=looptext)) # evaluate the kriging specification per cluster unit per layer
             } # end of parallel kriging loop
     stopCluster(cl) # close down cluster
@@ -168,7 +168,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     ### NON-PARALLEL KRIGING ---
     Count_Krige <- 1 # Establish count variable which is targeted in kriging specification text for producing an estimator
     for(Iter_Krige in Compute_Layers){ # non-parallel kriging loop over all layers in Data
-        if(paste0(str_pad(Iter_Krige,4,'left','0'), '.nc') %in% list.files(Dir.Temp)){ # file check: if this file has already been produced
+        if(paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc') %in% list.files(Dir.Temp)){ # file check: if this file has already been produced
           Ras_Krig[[Iter_Krige]] <- raster(file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc'))) # load already produced kriged file and save it to list of rasters
           Ras_Var[[Iter_Krige]] <- raster(file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_SE.nc')))
           setTxtProgressBar(ProgBar, Iter_Krige) # update progress bar
