@@ -149,7 +149,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## ACTUAL KRIGING (carry out kriging according to user specifications either in parallel or on a single core) ----
   if(Cores > 1){ # Cores check: if parallel processing has been specified
     ### PARALLEL KRIGING ---
-    ForeachObjects <- c("Dir.Temp", "Cores", "Data", "KrigingEquation", "Origin", "Target", "Covariates_coarse", "Covariates_fine", "Terms") # objects which are needed for each kriging run and are thus handed to each cluster unit
+    ForeachObjects <- c("Dir.Temp", "Cores", "Data", "KrigingEquation", "Origin", "Target", "Covariates_coarse", "Covariates_fine", "Terms", "SingularTry") # objects which are needed for each kriging run and are thus handed to each cluster unit
     cl <- makeCluster(Cores) # Assuming Cores node cluster
     registerDoParallel(cl) # registering cores
     foreach(Iter_Krige = Compute_Layers, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
