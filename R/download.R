@@ -133,6 +133,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
              time_out = 36000)
 
   ### LOAD DATA BACK IN ----
+  if(is.na(Type)){Type <- "era5land"}
   if(Type == "ensemble_members"){ # ensemble_member check: if user downloaded ensemble_member data
     Layers <- 1:10 # ensemble members come in 10 distinct layers
     LayersSame <- TRUE
