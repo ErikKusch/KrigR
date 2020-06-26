@@ -68,6 +68,9 @@ krigR(
 
 \item{Target_res}{Optional. The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.}
 }
+\value{
+A list object containing the downscaled data as well as the standard error for downscaling, and two NETCDF (.nc) file in the specified directory which are the contents of the aforementioned list.
+}
 \description{
 This function statistically downscales input data using covariate data and the kriging methodology. The function can be run in two ways:
 \enumerate{
