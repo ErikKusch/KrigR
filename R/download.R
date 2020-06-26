@@ -133,7 +133,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
              time_out = 36000)
 
   ### LOAD DATA BACK IN ----
-  if(is.na(Type)){Type <- "era5land"}
+  if(is.na(Type)){Type <- "reanalysis"} # na Type is used for Era5-land data which is essentially just reanalysis
   if(Type == "ensemble_members"){ # ensemble_member check: if user downloaded ensemble_member data
     Layers <- 1:10 # ensemble members come in 10 distinct layers
     LayersSame <- TRUE
@@ -162,7 +162,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
     ### DAY/YEAR MEANS ----
     if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months)
       if(TResolution == "day"){ # daily means
-        if(Type == "reanalysis" | is.na(Type)){
+        if(Type == "reanalysis"){
           factor <- 24 # number of hours per day in reanalysis data
         }else{
           factor <- 8 # ensemble data only has 8 time steps in a day
