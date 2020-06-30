@@ -113,9 +113,13 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   Var_ras <- stack(kriging_result$krige_output)[[3]] # extract raster from kriging product
   crs(Var_ras) <- crs(Data) # setting the crs according to the data
 
-  if(Cores == 1){Ras_Krig[[Iter_Krige]] <- Krig_ras} # stack kriged raster into raster list if non-parallel computing
+  if(Cores == 1){
+  Ras_Krig[[Iter_Krige]] <- Krig_ras
+  Ras_Var[[Iter_Krige]] <- Var_ras
+  } # stack kriged raster into raster list if non-parallel computing
  writeRaster(x = Krig_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
  writeRaster(x = Var_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_SE.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
+
 
   if(Cores == 1){ # core check: if processing non-parallel
     if(Count_Krige == 1){ # count check: if this was the first actual computation
