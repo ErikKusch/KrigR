@@ -22,4 +22,5 @@ Depends:
     rgdal,
     doParallel,
     foreach,
-    automap
+    automap,
+    lubridate
