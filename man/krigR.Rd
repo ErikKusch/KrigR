@@ -8,7 +8,7 @@ krigR(
   Data = NULL,
   Covariates_coarse = NULL,
   Covariates_fine = NULL,
-  KrigingEquation = "ERA ~ DEM",
+  KrigingEquation = "ERA ~ DEM + Aspect * Slope",
   Cores = detectCores(),
   Dir = getwd(),
   FileName,
