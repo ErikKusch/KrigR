@@ -1,6 +1,6 @@
 #' Downloading ERA5(Land)-data from ECMWF servers
 #'
-#' This function downloads ERA5(-Land) data from ECMWF servers according to user-specification. The actual time to download is dependant on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
+#' This function breaks down download calls into monthly intervals, downloads ERA5(-Land) data from ECMWF servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
 #'
 #' @param Variable ERA5(Land)-contained climate variable. See 'donwload' output of Variable_List() for possible values.
 #' @param Type Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.
@@ -265,14 +265,12 @@ download_DEM <- function(Train_ras = NULL,
   } # end of sanity check
   # resampling training data
   GMTED2010Train_ras <- resample(GMTED2010_ras, Train_ras)
-  names(GMTED2010Train_ras) <- "DEM" # setting layer name for later use in KrigingEquation
   # resampling target data
   if(exists("Target_ras")){
     GMTED2010Target_ras <- resample(GMTED2010_ras, Target_ras) # resample if output raster was given
   }else{
     GMTED2010Target_ras <- suppressWarnings(aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1])) # aggregate if output resolution was given
   }
-  names(GMTED2010Target_ras) <- "DEM" # setting layer name for later use in KrigingEquation
 
   ### MASKING ----
   if(!is.null(Shape)){ # Shape check
@@ -280,7 +278,13 @@ download_DEM <- function(Train_ras = NULL,
     GMTED2010Target_ras <- mask(GMTED2010Target_ras, Shape)
   } # end of Shape check
 
+  ### TERRAIN ----
+  GMTED2010Train_ras <- stack(GMTED2010Train_ras, terrain(x = GMTED2010Train_ras, opt = "aspect"), terrain(x = GMTED2010Train_ras, opt = "slope"))
+  GMTED2010Target_ras <- stack(GMTED2010Target_ras, terrain(x = GMTED2010Target_ras, opt = "aspect"), terrain(x = GMTED2010Target_ras, opt = "slope"))
+
   ### SAVING DATA ----
+  names(GMTED2010Train_ras) <- c("DEM", "Aspect", "Slope") # setting layer name for later use in KrigingEquation
+  names(GMTED2010Target_ras) <- c("DEM", "Aspect", "Slope") # setting layer name for later use in KrigingEquation
   writeRaster(x = GMTED2010Train_ras, filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE, format="CDF")
   writeRaster(x = GMTED2010Target_ras, filename = file.path(Dir, "GMTED2010_Target.nc"), overwrite = TRUE, format="CDF")
 
