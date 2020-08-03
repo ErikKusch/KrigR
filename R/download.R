@@ -278,9 +278,9 @@ download_DEM <- function(Train_ras = NULL,
     GMTED2010Target_ras <- mask(GMTED2010Target_ras, Shape)
   } # end of Shape check
 
-  ### TERRAIN ----
-  GMTED2010Train_ras <- stack(GMTED2010Train_ras, terrain(x = GMTED2010Train_ras, opt = "aspect"), terrain(x = GMTED2010Train_ras, opt = "slope"))
-  GMTED2010Target_ras <- stack(GMTED2010Target_ras, terrain(x = GMTED2010Target_ras, opt = "aspect"), terrain(x = GMTED2010Target_ras, opt = "slope"))
+  # ### TERRAIN ----
+  # GMTED2010Train_ras <- stack(GMTED2010Train_ras, terrain(x = GMTED2010Train_ras, opt = "aspect"), terrain(x = GMTED2010Train_ras, opt = "slope"))
+  # GMTED2010Target_ras <- stack(GMTED2010Target_ras, terrain(x = GMTED2010Target_ras, opt = "aspect"), terrain(x = GMTED2010Target_ras, opt = "slope"))
 
   ### SAVING DATA ----
   names(GMTED2010Train_ras) <- c("DEM", "Aspect", "Slope") # setting layer name for later use in KrigingEquation
