@@ -13,7 +13,6 @@ Description: An R Package for downloading, preprocessing, and statistical downsc
     - Downloading USGS GMTED 2010 elevation data
     - Kriging spatial input to desired output using user-specified covariates
     - Downloading and Kriging Era5(Land) data using USGS GMTED 2010 elevation as coviariate data in one function call
-    NOTE: All kriging functionality can be parallelised for faster computing using the Cores argument.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
