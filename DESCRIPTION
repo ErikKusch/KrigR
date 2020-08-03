@@ -6,13 +6,19 @@ Authors@R: as.person(c(
     "Erik Kusch <erik@i-solution.de> [aut, cre]", 
     "Richard Davy <Richard.Davy@nersc.no> [aut]"
   ))
-Description: The description of a package is usually long,
-    spanning multiple lines. The second and subsequent lines
-    should be indented, usually with four spaces.
+Description: An R Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the European Centre for Medium‐Range Weather Forecasts (ECMWF).
+    KrigR contains functions for:
+    - Downloading Era5(Land) data directly from within R
+    - Downloading UERRA data directly from within R
+    - Downloading USGS GMTED 2010 elevation data
+    - Kriging spatial input to desired output using user-specified covariates
+    - Downloading and Kriging Era5(Land) data using USGS GMTED 2010 elevation as coviariate data in one function call
+    
+    NOTE: All kriging functionality can be parallelised for faster computing using the Cores argument.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Depends: 
     ncdf4, 
     ecmwfr,
