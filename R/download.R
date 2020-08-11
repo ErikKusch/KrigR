@@ -1,6 +1,6 @@
 #' Downloading ERA5(Land)-data from ECMWF servers
 #'
-#' This function downloads ERA5(-Land) data from ECMWF servers according to user-specification. The actual time to download is dependant on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
+#' This function breaks down download calls into monthly intervals, downloads ERA5(-Land) data from ECMWF servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
 #'
 #' @param Variable ERA5(Land)-contained climate variable. See 'donwload' output of Variable_List() for possible values.
 #' @param Type Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.
@@ -65,23 +65,17 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   # Dates (this makes manipulation easier)
   DateStart <- as.Date(DateStart) # reformatting date
   DateStop <- as.Date(DateStop) # reformatting date
-
-  # Years (identify which years the user is targeting)
-  Years <- as.character(format(DateStart,'%Y'):format(DateStop,'%Y'))
-
-  # Months (identify which months the user is targeting)
-  if(format(DateStart,'%m') <= format(DateStop,'%m')){ # if beginning month is earlier than stopping month in annual sequence
-    Months <- str_pad(as.character(format(DateStart,'%m'):format(DateStop,'%m')), 2, "left","0") # set Months to sequence of months between dates
-  }else{ # beginning month is later than stopping month in annual sequence
-    Months <- str_pad(as.character(rev(format(DateStart,'%m'):format(DateStop,'%m'))), 2, "left","0") # invert month order
-  } # end of month check
-
-  # Days (identify which days the user is targeting)
-  if(format(DateStart,'%m') == format(DateStop,'%m') & format(DateStart,'%Y') == format(DateStop,'%Y')){ # equality check: if time series does not exceed one month
-    Days <- str_pad(as.character(format(DateStart,'%d'):format(DateStop,'%d')), 2, "left","0") # list all days between and including start and stop days
-  }else{ # if time spans more than one month or overlaps months
-    Days <- str_pad(1:31,2,"left","0") # full array of days for months
-  } # end of equality check
+  Dates_seq <- seq(ymd(DateStart),ymd(DateStop), by = '1 day') # identify all days for which we need data
+  Months_vec <- format(Dates_seq,'%Y-%m') # identify the YYYY-MM for each day
+  Days_vec <- format(Dates_seq,'%d') # identify the day numbers in each month in each year
+  n_calls <- length(unique(Months_vec)) # how many months we have in total
+  Calls_ls <- as.list(rep(NA, n_calls)) # an empty list to be filled with date specifications
+  for(Calls_Iter in 1:n_calls){ # calls loop: identify the dates to be called for each month in the sequence
+    Calls_ls[[Calls_Iter]] <- c(gsub("-.*.", "", unique(Months_vec)[Calls_Iter]), # year
+                                gsub(".*.-", "", unique(Months_vec)[Calls_Iter]), # month
+                                min(Days_vec[which(Months_vec == unique(Months_vec)[Calls_Iter])]) : max(Days_vec[which(Months_vec == unique(Months_vec)[Calls_Iter])]) # days of that month
+    )
+  } # end of calls loop
 
   # Extent (prepare rectangular bounding box for download from user input)
   if(class(Extent) == "Raster" | class(Extent) == "SpatialPolygonsDataFrame"){ # sanity check: ensure it is a raster of Spatialpolygonsdataframe object if not an extent object
@@ -109,72 +103,112 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   }
   FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
   FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
+  FileNames_vec <- paste0(1:n_calls, "_", FileName) # names for individual downloads
 
   ### BUILDING REQUEST ----
   # Setting parameters of desired downloaded netcdf file according to user input
-  Request_ls <- list("dataset_short_name" = DataSet,
-                     "product_type"   = Type,
-                     "variable"       = Variable,
-                     "year"           = Years,
-                     "month"          = Months,
-                     "day"            = Days,
-                     "time"           = Times,
-                     "area"           = Extent,
-                     "format"         = "netcdf",
-                     "target"         = paste0(FileName),
-                     "grid"           = Grid)
+  for(Downloads_Iter in 1:n_calls){
+    Request_ls <- list("dataset_short_name" = DataSet,
+                       "product_type"   = Type,
+                       "variable"       = Variable,
+                       "year"           = Calls_ls[[Downloads_Iter]][1],
+                       "month"          = Calls_ls[[Downloads_Iter]][2],
+                       "day"            = Calls_ls[[Downloads_Iter]][3:length(Calls_ls[[Downloads_Iter]])],
+                       "time"           = Times,
+                       "area"           = Extent,
+                       "format"         = "netcdf",
+                       "target"         = FileNames_vec[Downloads_Iter],
+                       "grid"           = Grid)
 
-  ### EXECUTING REQUEST ----
-  wf_request(user = as.character(API_User),
-             request = Request_ls,
-             transfer = TRUE,
-             path = Dir,
-             verbose = TRUE,
-             time_out = 36000)
+    ### EXECUTING REQUEST ----
+    wf_request(user = as.character(API_User),
+               request = Request_ls,
+               transfer = TRUE,
+               path = Dir,
+               verbose = TRUE,
+               time_out = 36000)
+  }
 
   ### LOAD DATA BACK IN ----
-  LayersSame <- suppressWarnings(all.equal(brick(file.path(Dir, "/", FileName), level = 1), brick(file.path(Dir, "/", FileName), level = 2))) # Check if the layers are the same in brick loading
-
-  ### ERROR CHECK (CDS sometimes produces a netcdf with two layers and break oint in the data being assigned to the first and then the second layer. this step fixes this) ----
-  if(LayersSame == FALSE){ # problem check: if we were able to load a second layer from the data
-    Era5_ras <- brick(file.path(Dir, "/", FileName), level = 1) # load initial data again for just the first band
-    Era5_ras2 <- brick(file.path(Dir, "/", FileName), level = 2) # load second layer
-    Sums_vec <- NA # recreate sum vector
-    for(Iter_Check in 1:nlayers(Era5_ras2)){ # layer loop: go over all layers in Era5_ras2
-      Sums_vec <- c(Sums_vec, sum(values(Era5_ras2[[Iter_Check]]), na.rm = TRUE)) # append sum of data values to sum vector, layers with issues will produce a 0
-    } # end of layer loop
-    Sums_vec <- na.omit(Sums_vec) # omit initial NA
-    StopFirst <- min(which(Sums_vec != 0)) # identify the last layer of the brick that is problematic on the second data layer loaded above
-    Era5_ras <- stack(Era5_ras[[1:(StopFirst-1)]], Era5_ras2[[StopFirst:nlayers(Era5_ras2)]]) # rebuild the Era5_ras stack as a combination of the data-containing layers in the two bricks
-  }else{ # if there is no double layer issue
-    Era5_ras <- stack(file.path(Dir, FileName)) # loading the data
-  } # end of problem check
-
-  ### DAY/YEAR MEANS ----
-  if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months)
-    if(TResolution == "day"){ # daily means
-      factor <- 24 # number of hours per day
-    }else{ # annual means
-      factor <- 12 # number of months per year
+  Files_vec <- file.path(Dir, list.files(Dir, pattern = FileName)) # all files belonging to this query with folder paths
+  if(is.na(Type)){Type <- "reanalysis"} # na Type is used for Era5-land data which is essentially just reanalysis
+  if(Type == "ensemble_members"){ # ensemble_member check: if user downloaded ensemble_member data
+    Layers <- 1:10 # ensemble members come in 10 distinct layers
+  }else{
+    Layers <- 1 # non-ensemble members have 1 layer for each time step instead of 10
+    ### ERROR CHECK (CDS sometimes produces a netcdf with two layers and break point in the data being assigned to the first and then the second layer in non-ensemble members. this step fixes this) ----
+    for(Layers_Check in 1:length(Files_vec)){
+      LayersSame <- suppressWarnings(all.equal(brick(Files_vec[Layers_Check], level = 1), brick(Files_vec[Layers_Check], level = 2))) # Check if the layers are the same in brick loading
+      if(LayersSame == FALSE){
+        Era5_ras <- brick(file.path(Dir, "/", Files_vec[Layers_Check]), level = 1) # load initial data again for just the first band
+        Era5_ras2 <- brick(file.path(Dir, "/", Files_vec[Layers_Check]), level = 2) # load second layer
+        Sums_vec <- NA # recreate sum vector
+        for(Iter_Check in 1:nlayers(Era5_ras2)){ # layer loop: go over all layers in Era5_ras2
+          Sums_vec <- c(Sums_vec, sum(values(Era5_ras2[[Iter_Check]]), na.rm = TRUE)) # append sum of data values to sum vector, layers with issues will produce a 0
+        } # end of layer loop
+        Sums_vec <- na.omit(Sums_vec) # omit initial NA
+        StopFirst <- min(which(Sums_vec != 0)) # identify the last layer of the brick that is problematic on the second data layer loaded above
+        Era5_ras <- stack(Era5_ras[[1:(StopFirst-1)]], Era5_ras2[[StopFirst:nlayers(Era5_ras2)]]) # rebuild the Era5_ras stack as a combination of the data-containing layers in the two bricks
+        writeRaster(Era5_ras, filename = Files_vec[Layers_Check])
+      }
     }
-    Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
-    Era5_ras <- stackApply(Era5_ras, Index, fun='mean') # do the calculation
-  }# end of day/year check
+  } # end of ensemble_member check
 
-  ### TIME STEP MEANS ----
-  if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
-    warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
-  }# end of sanity check for time step completeness
-  Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
-  Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun='mean') # do the calculation
+  ### loop over files and layers here
+  Era5_ls <- as.list(rep(NA, length(Layers))) # list for layer aggregation
+  for(LoadIter in Layers){
+    ERA5_ls <- as.list(rep(NA, n_calls)) # list for layer aggregation
+    for(LOADIter in 1:n_calls){
+      ERA5_ls[[LOADIter]] <- raster::brick(x = Files_vec[LOADIter], level = Layers[[LoadIter]]) # loading the data
+    }
+    Era5_ras <- stack(ERA5_ls)
+    # Files_vec <- c(Files_vec, file.path(Dir, paste0(FileName, "_Stacked_", LoadIter)))
+    # writeRaster(Era5_ras, filename = Files_vec[LoadIter+n_calls], format = "CDF")
 
-  ### MASKING ----
-  if(exists("Shape")){ # Shape check
-    Era5_ras <- mask(Era5_ras, Shape) # mask if shapefile was provided
-  }# end of Shape check
+    ### DAY/YEAR MEANS ----
+    if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months)
+      if(TResolution == "day"){ # daily means
+        if(Type == "reanalysis"){
+          factor <- 24 # number of hours per day in reanalysis data
+        }else{
+          factor <- 8 # ensemble data only has 8 time steps in a day
+        }
+      }else{ # annual means
+        factor <- 12 # number of months per year
+      }
+      Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
+      Era5_ras <- stackApply(Era5_ras, Index, fun='mean') # do the calculation
+    }# end of day/year check
 
+    ### TIME STEP MEANS ----
+    if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
+      warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
+    }# end of sanity check for time step completeness
+    Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
+    Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun='mean') # do the calculation
+    ### MASKING ----
+    if(exists("Shape")){ # Shape check
+      Era5_ras <- mask(Era5_ras, Shape) # mask if shapefile was provided
+    }# end of Shape check
+    ### LIST SAVING
+    Era5_ls[[LoadIter]] <- Era5_ras
+  }
+  Era5_ras <- brick(Era5_ls)
+  if(Type == "ensemble_members"){ ## fixing indices of layers for ensemble means
+    Indices <- sub(pattern = ".*\\_", replacement = "", names(Era5_ras))
+    Indices2 <- strsplit(x = Indices, split = ".", fixed = TRUE)
+    Indices3 <- str_pad(unlist(Indices2), 3, "left","0")
+    PairNumbers <- rep(1:(length(Indices3)/2), each = 2)
+    Indices4 <- paste(Indices3[which(PairNumbers == 1)], collapse = "")
+    for(IndicesIter in 2:(length(Indices3)/2)){
+      Indices4 <- c(Indices4, paste(Indices3[which(PairNumbers == IndicesIter)], collapse = ""))
+    }
+    Indices4 <- as.numeric(Indices4)
+    Era5_ras <- Era5_ras[[order(Indices4)]]
+  }
   ### SAVING DATA ----
   writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)
+  unlink(Files_vec, recursive = TRUE)
   return(Era5_ras)
 }
 
@@ -231,14 +265,12 @@ download_DEM <- function(Train_ras = NULL,
   } # end of sanity check
   # resampling training data
   GMTED2010Train_ras <- resample(GMTED2010_ras, Train_ras)
-  names(GMTED2010Train_ras) <- "DEM" # setting layer name for later use in KrigingEquation
   # resampling target data
   if(exists("Target_ras")){
     GMTED2010Target_ras <- resample(GMTED2010_ras, Target_ras) # resample if output raster was given
   }else{
     GMTED2010Target_ras <- suppressWarnings(aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1])) # aggregate if output resolution was given
   }
-  names(GMTED2010Target_ras) <- "DEM" # setting layer name for later use in KrigingEquation
 
   ### MASKING ----
   if(!is.null(Shape)){ # Shape check
@@ -247,6 +279,8 @@ download_DEM <- function(Train_ras = NULL,
   } # end of Shape check
 
   ### SAVING DATA ----
+  names(GMTED2010Train_ras) <- c("DEM") # setting layer name for later use in KrigingEquation
+  names(GMTED2010Target_ras) <- c("DEM") # setting layer name for later use in KrigingEquation
   writeRaster(x = GMTED2010Train_ras, filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE, format="CDF")
   writeRaster(x = GMTED2010Target_ras, filename = file.path(Dir, "GMTED2010_Target.nc"), overwrite = TRUE, format="CDF")
 

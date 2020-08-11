@@ -27,7 +27,7 @@
 #' @param Target_res Optional. The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.
 #' @param API_Key Optional. ECMWF cds API key. Passed on to download_ERA.
 #' @param API_User Optional. ECMWF cds user number. Passed on to download_ERA.
-
+#' @return A list object containing the downscaled data as well as the standard error for downscaling, and two NETCDF (.nc) file in the specified directory which are the contents of the aforementioned list.
 #' @examples
 #' \dontrun{
 #' # Downloading and downscaling ERA5-Land air temperature reanalysis data in monthly intervals for the entire year of 2000 for Germany. API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
@@ -100,11 +100,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
 
   Iter_Try = 0 # number of tries set to 0
   kriging_result <- NULL
-<<<<<<< HEAD
   while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < SingularTry){ # try kriging SingularTry times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
-=======
-  while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < SingularTry){ # try kriging 50 times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
->>>>>>> b7e999d43520c20529b5346c3ae436c796df4dbd
     try(invisible(capture.output(kriging_result <- autoKrige(KrigingEquation, OriginK, Target, verbose = FALSE))), silent = TRUE)
     Iter_Try <- Iter_Try +1
   }
@@ -114,9 +110,16 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
 
   Krig_ras <- raster(kriging_result$krige_output) # extract raster from kriging product
   crs(Krig_ras) <- crs(Data) # setting the crs according to the data
+  Var_ras <- stack(kriging_result$krige_output)[[3]] # extract raster from kriging product
+  crs(Var_ras) <- crs(Data) # setting the crs according to the data
 
-  if(Cores == 1){Ras_Krig[[Iter_Krige]] <- Krig_ras} # stack kriged raster into raster list if non-parallel computing
- writeRaster(x = Krig_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
+  if(Cores == 1){
+  Ras_Krig[[Iter_Krige]] <- Krig_ras
+  Ras_Var[[Iter_Krige]] <- Var_ras
+  } # stack kriged raster into raster list if non-parallel computing
+ writeRaster(x = Krig_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
+ writeRaster(x = Var_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_SE.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
+
 
   if(Cores == 1){ # core check: if processing non-parallel
     if(Count_Krige == 1){ # count check: if this was the first actual computation
@@ -131,6 +134,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
 
   ## KRIGING PREPARATION (establishing objects which the kriging refers to) ----
   Ras_Krig <- as.list(rep(NA, nlayers(Data))) # establish an empty list which will be filled with kriged layers
+  Ras_Var <- as.list(rep(NA, nlayers(Data))) # establish an empty list which will be filled with kriged layers
   if(Cores == 1){ProgBar <- txtProgressBar(min = 0, max = nlayers(Data), style = 3)} # create progress bar when non-parallel processing
 
   ## DATA SKIPS (if certain layers in the data are empty and need to be skipped, this is handled here) ---
@@ -149,24 +153,28 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## ACTUAL KRIGING (carry out kriging according to user specifications either in parallel or on a single core) ----
   if(Cores > 1){ # Cores check: if parallel processing has been specified
     ### PARALLEL KRIGING ---
-    ForeachObjects <- c("Dir.Temp", "Cores", "Data", "KrigingEquation", "Origin", "Target", "Covariates_coarse", "Covariates_fine", "Terms") # objects which are needed for each kriging run and are thus handed to each cluster unit
+    ForeachObjects <- c("Dir.Temp", "Cores", "Data", "KrigingEquation", "Origin", "Target", "Covariates_coarse", "Covariates_fine", "Terms", "SingularTry") # objects which are needed for each kriging run and are thus handed to each cluster unit
     cl <- makeCluster(Cores) # Assuming Cores node cluster
     registerDoParallel(cl) # registering cores
     foreach(Iter_Krige = Compute_Layers, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
             .packages = c("raster", "stringr", "automap", "ncdf4", "rgdal"), # import packages necessary to each itteration
-            .export = ForeachObjects) %:% when(!paste0(str_pad(Iter_Krige,4,"left","0"), '.nc') %in% list.files(Dir.Temp)) %dopar% { # parallel kriging loop
+            .export = ForeachObjects) %:% when(!paste0(str_pad(Iter_Krige,4,"left","0"), '_data.nc') %in% list.files(Dir.Temp)) %dopar% { # parallel kriging loop
               Ras_Krig <- eval(parse(text=looptext)) # evaluate the kriging specification per cluster unit per layer
             } # end of parallel kriging loop
     stopCluster(cl) # close down cluster
-    for(Iter_Load in 1:length(list.files(Dir.Temp))){ # load loop: load data from temporary files in Dir.Temp
-      Ras_Krig[[Iter_Load]] <- raster(file.path(Dir.Temp, list.files(Dir.Temp)[Iter_Load])) # load current temporary file and write contents to list of rasters
+    Files_krig <- list.files(Dir.Temp)[grep(pattern = "_data.nc", x = list.files(Dir.Temp))]
+    Files_var <- list.files(Dir.Temp)[grep(pattern = "_SE.nc", x = list.files(Dir.Temp))]
+    for(Iter_Load in 1:length(Files_krig)){ # load loop: load data from temporary files in Dir.Temp
+      Ras_Krig[[Iter_Load]] <- raster(file.path(Dir.Temp, Files_krig[Iter_Load])) # load current temporary file and write contents to list of rasters
+      Ras_Var[[Iter_Load]] <- raster(file.path(Dir.Temp, Files_var[Iter_Load])) # load current temporary file and write contents to list of rasters
     } # end of load loop
   }else{ # if non-parallel processing has been specified
     ### NON-PARALLEL KRIGING ---
     Count_Krige <- 1 # Establish count variable which is targeted in kriging specification text for producing an estimator
     for(Iter_Krige in Compute_Layers){ # non-parallel kriging loop over all layers in Data
-        if(paste0(str_pad(Iter_Krige,4,'left','0'), '.nc') %in% list.files(Dir.Temp)){ # file check: if this file has already been produced
-          Ras_Krig[[Iter_Krige]] <- raster(file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '.nc'))) # load already produced kriged file and save it to list of rasters
+        if(paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc') %in% list.files(Dir.Temp)){ # file check: if this file has already been produced
+          Ras_Krig[[Iter_Krige]] <- raster(file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc'))) # load already produced kriged file and save it to list of rasters
+          Ras_Var[[Iter_Krige]] <- raster(file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_SE.nc')))
           setTxtProgressBar(ProgBar, Iter_Krige) # update progress bar
           next() # jump to next layer
           } # end of file check
@@ -179,6 +187,8 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   if(is.null(DataSkips)){ # Skip check: if no layers needed to be skipped
     Ras_Krig <- brick(Ras_Krig) # convert list of kriged layers in actual rasterbrick of kriged layers
     writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
+    Ras_Var <- brick(Ras_Var) # convert list of kriged layers in actual rasterbrick of kriged layers
+    writeRaster(x = Ras_Var, filename = file.path(Dir, paste0("SE_",FileName)), overwrite = TRUE, format="CDF") # save final product as raster
   } # end of Skip check
 
   ### REMOVE FILES FROM HARD DRIVE ---
@@ -186,5 +196,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     unlink(Dir.Temp, recursive = TRUE)
   }  # end of cleanup check
 
-  return(Ras_Krig) # return raster or list of layers
+  Krig_ls <- list(Ras_Krig, Ras_Var)
+  names(Krig_ls) <- c("Kriging_Output", "Kriging_SE")
+  return(Krig_ls) # return raster or list of layers
 }
