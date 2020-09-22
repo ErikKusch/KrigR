@@ -24,7 +24,8 @@ krigR(
   Extent,
   API_Key,
   API_User,
-  Target_res
+  Target_res,
+  ...
 )
 }
 \arguments{
@@ -67,6 +68,8 @@ krigR(
 \item{API_User}{Optional. ECMWF cds user number. Passed on to download_ERA.}
 
 \item{Target_res}{Optional. The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.}
+
+\item{...}{further arguments that are passed to automap::autoKrige and gstat::krige}
 }
 \value{
 A list object containing the downscaled data as well as the standard error for downscaling, and two NETCDF (.nc) file in the specified directory which are the contents of the aforementioned list.
