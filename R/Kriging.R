@@ -27,6 +27,7 @@
 #' @param Target_res Optional. The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.
 #' @param API_Key Optional. ECMWF cds API key. Passed on to download_ERA.
 #' @param API_User Optional. ECMWF cds user number. Passed on to download_ERA.
+#' @param ... further arguments that are passed to automap::autoKrige and gstat::krige
 #' @return A list object containing the downscaled data as well as the standard error for downscaling, and two NETCDF (.nc) file in the specified directory which are the contents of the aforementioned list.
 #' @examples
 #' \dontrun{
@@ -35,7 +36,7 @@
 #' }
 #'
 #' @export
-krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res){
+krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res, ...){
   ## CLIMATE DATA (call to download_ERA function if no Data set is specified) ----
   if(is.null(Data)){ # data check: if no data has been specified
     Data <- download_ERA(Variable = Variable, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir)
@@ -101,7 +102,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   Iter_Try = 0 # number of tries set to 0
   kriging_result <- NULL
   while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < SingularTry){ # try kriging SingularTry times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
-    try(invisible(capture.output(kriging_result <- autoKrige(KrigingEquation, OriginK, Target, verbose = FALSE))), silent = TRUE)
+    try(invisible(capture.output(kriging_result <- autoKrige(KrigingEquation, OriginK, Target, ...))), silent = TRUE)
     Iter_Try <- Iter_Try +1
   }
   if(class(kriging_result)[1] != 'autoKrige'){ # give error if kriging fails
@@ -119,7 +120,6 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   } # stack kriged raster into raster list if non-parallel computing
  writeRaster(x = Krig_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
  writeRaster(x = Var_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_SE.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
-
 
   if(Cores == 1){ # core check: if processing non-parallel
     if(Count_Krige == 1){ # count check: if this was the first actual computation
