@@ -1,0 +1,557 @@
+---
+title: "KrigR - Climate Data For Your Spatial Analyses"
+subtitle: "An Introduction To The KrigR Package"
+author: "Erik Kusch & Richard Davy"
+date: "`r Sys.Date()`"
+documentclass: "report"
+fontsize: 10pt
+output: 
+  rmdformats::readthedown:
+    self_contained: true
+    highlight: tango
+  # html_document:
+    # toc: true
+    # toc_depth: 3
+---
+
+<style>
+#content{
+max-width: 3200px !important;
+}
+p.attention{
+color: #ffffff;
+background-color: #a30000;
+padding: 15px;
+border: 1px;
+border-radius: 5px;
+}
+p.hint{
+color: #ffffff;
+background-color: #073b26;
+padding: 15px;
+border: 1px;
+border-radius: 5px;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy='styler', tidy.opts=list(strict=TRUE), fig.width = 15, fig.height = 8)
+options(width = 200)
+if("KrigR" %in% rownames(installed.packages()) == FALSE){ # KrigR check
+  Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
+  devtools::install_github("https://github.com/ErikKusch/KrigR")
+}
+library(KrigR)
+source("PersonalSettings.R") # I do this here to specify number of cores and API credentials and am thus not sharing this file
+```
+
+# Setting Things Up
+## Installing `KrigR`
+First of all, we need to install `KrigR`. Since we are currently preparing the package for submission to CRAN, it is only available through the associated GitHub repository (https://github.com/ErikKusch/KrigR) for the time being.  
+
+Here, we use the `devtools` package within `R` to get access to the `install_github()` function. For this to run, we need to tell `R` to not stop the installation from GitHub as soon as a warning is produced. This would stop the installation process as early as one of the `KrigR` dependencies hits a warning as benign as "Package XYZ was built under R Version X.X.X" which can usually be ignored safely. 
+```{r InstallKrigR, eval = FALSE}
+Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
+devtools::install_github("https://github.com/ErikKusch/KrigR")
+library(KrigR)
+```
+
+For the sake of this tutorial, we need some extra packages for visualisations. We check if they are already installed,  subsequently install (if necessary) and load them with this user-defined function:
+```{r MiscPackages}
+install.load.package <- function(x){
+  if (!require(x, character.only = TRUE))
+    install.packages(x, repos='http://cran.us.r-project.org')
+  require(x, character.only = TRUE)
+}
+package_vec <- c("tidyr", # for turning rasters into ggplot-dataframes
+                 "ggplot2", # for plotting
+                 "viridis", # colour palettes
+                 "cowplot", # gridding multiple plots
+                 "ggmap" # obtaining google maps
+                 )
+sapply(package_vec, install.load.package)
+```
+
+Before we can proceed, you need to open up an account at the CDS and create an API key by following this link: https://cds.climate.copernicus.eu/api-how-to. This is required so that you may issue download requests through the `KrigR` package. Once you have done so, please register the user ID and API Key as characters as seen below:
+
+```{r APICredentials, eval = FALSE}
+API_User <- "XXXXXX"
+API_Key <- "XXXXXXX"
+```
+
+## Setting Up Directories
+The tutorial is designed to run completely from scratch. For this to work in a structured way, we create a folder/directory structure so that we got some nice compartments on our hard drives for where each separate Kriging process is run. We create the following directories:  
+- A **data** directory for all of our individual Kriging processes  
+- A **shapefile** directory (located within our data directory) for all of the shapefiles that we will use  
+```{r Directories}
+Dir.Base <- getwd() # identifying the current directory
+Dir.Data <- file.path(Dir.Base, "Data") # folder path for data
+Dir.Shapes <- file.path(Dir.Data, "Shapes") # folder path for shapefiles
+Dirs <- sapply(c(Dir.Data, Dir.Shapes), function(x) if(!dir.exists(x)) dir.create(x))
+```
+
+## Downloading Shapefiles
+Here, we download some of the most commonly used shapefiles (for our analyses using `KrigR` so far, at least). For repeat code-sourcing, we have implemented checks which only trigger the download of a given shapefile set if the data in question is not present in our *Shapes* directory yet.
+
+<p class="hint">
+This tutorial doesn't make use of all the shapefiles we download here. We simply thought it prudent to show you what we have found to be useful and how to get your hands on the data in a reproducible way.
+</p>
+
+### Land Cover   
+As we will see in this tutorial, masking out unnecessary areas from our analyses speeds up Kriging tremendously. Often, this will entail limiting data sets to terrestrial habitats. This land mask here does a terrific job at masking out non-land areas.
+```{r LandMask}
+#### LAND MASK (for masking covariates according to land vs. sea)
+if(!file.exists(file.path(Dir.Shapes, "LandMask.zip"))){ # if not downloaded yet
+  download.file(paste0("https://www.naturalearthdata.com/http//www.naturalearthdata.com",
+                       "/download/10m/physical/ne_10m_land.zip"), 
+                destfile = paste(Dir.Shapes, "LandMask.zip", sep="/")) # download cultural vector
+  unzip(paste(Dir.Shapes, "LandMask.zip", sep="/"), exdir = Dir.Shapes) # unzip data
+}
+LandMask <- readOGR(Dir.Shapes, "ne_10m_land", verbose = FALSE) # read
+ggplot() + 
+  geom_polygon(data = LandMask, aes(x = long, y = lat, group = group), colour = "darkred", fill = "black") +
+  theme_bw() + labs(x = "Longitude", y = "Latitude")
+```
+
+### States & Provinces  
+Political divisions are often what policy makers are after. Hence, we also download a shapefile for states and provinces across the Globe. 
+```{r StateMask}
+#### STATE MASK (for within-nation borders)
+if(!file.exists(file.path(Dir.Shapes, "StateMask.zip"))){ # if not downloaded yet
+  download.file(paste0("https://www.naturalearthdata.com/http//www.naturalearthdata.com/", 
+                       "download/10m/cultural/ne_10m_admin_1_states_provinces.zip"), 
+                destfile = paste(Dir.Shapes, "StateMask.zip", sep="/")) # download cultural vector
+  unzip(paste(Dir.Shapes, "StateMask.zip", sep="/"), exdir = Dir.Shapes) # unzip data
+}
+StateMask <- readOGR(Dir.Shapes, "ne_10m_admin_1_states_provinces", verbose = FALSE) # read
+ggplot() + 
+  geom_polygon(data = StateMask, aes(x = long, y = lat, group = group), colour = "darkred", fill = "black") +
+  theme_bw() + labs(x = "Longitude", y = "Latitude")
+```
+
+As you can see, this shapefile provides a set of rather small (geographically speaking) regions. We will use these for showing how Kriging works within this tutorial because Kriging runs in a timely manner for these regions.  
+
+Additionally, it is worth pointing out that www.naturalearthdata.com offers a large host of further shapefile data sets including (but not limited to):  
+- National borders  
+- Rivers and Lakes  
+- Urban areas  
+- Reefs and Bathymetry  
+
+We strongly recommend looking there early on in your projects for any shapefile needs you may have.
+
+### Ecoregions   
+When we're not bound by political boundaries, ecoregions can often help to limit the spatial scope of our macroecological studies to manageable sizes (as far as Kriging effort is concerned).
+```{r EcoregionMask}
+#### ECOREGIONS (for ecoregional borders)
+if(!file.exists(file.path(Dir.Shapes, "WWF_ecoregions"))){ # if not downloaded yet
+  download.file(paste0("http://assets.worldwildlife.org/publications/15/files/",
+                       "original/official_teow.zip"), 
+                destfile = file.path(Dir.Shapes, "wwf_ecoregions.zip")) # download regions
+  unzip(file.path(Dir.Shapes, "wwf_ecoregions.zip"), exdir = file.path(Dir.Shapes, "WWF_ecoregions")) # unzip data
+}
+EcoregionMask <- readOGR(file.path(Dir.Shapes, "WWF_ecoregions", "official", "wwf_terr_ecos.shp"), verbose = FALSE) # read
+ggplot() + 
+  geom_polygon(data = EcoregionMask, aes(x = long, y = lat, group = group), colour = "darkred", fill = "black") +
+  theme_bw() + labs(x = "Longitude", y = "Latitude")
+```
+
+This particular data set offers the shapes of biomes and biogeographical realms across the Earth. As far as Kriging with the `KrigR` package is concerned, we heavily **advise against** Kriging using **biogeographical realms** without further consideration since these large regions lead to extreme processing requirements.
+
+## Plotting Functions
+In order to easily visualise our Kriging procedure including (1) inputs, (2) covariates, and (3) outputs without repeating too much of the same code, we create a few plotting functions of our own here.
+
+<p class="hint">
+Don't worry about understanding how these work off the bat here. Kriging and the package `KrigR` are what we want to demonstrate here - not visualisation strategies.
+</p>
+
+### Raw Data
+This function plots the raw data that we will krig and exports a single plot of all layers of the input raster:
+```{r PlotFunRaw}
+Plot_Raw <- function(Raw, Shp = NULL, Dates){
+  Raw_df <- as.data.frame(Raw, xy = TRUE) # turn raster into dataframe
+  colnames(Raw_df)[c(-1,-2)] <- Dates # set colnames
+  Raw_df <- gather(data = Raw_df, key = Values, value = "value", colnames(Raw_df)[c(-1,-2)]) #  make ggplot-ready
+  Raw_plot <- ggplot() + # create a plot
+    geom_raster(data = Raw_df , aes(x = x, y = y, fill = value)) + # plot the raw data
+    facet_wrap(~Values) + # split raster layers up
+    theme_bw() + labs(x = "Longitude", y = "Latitude") + # make plot more readable
+    scale_fill_gradientn(name = "Air Temperature [K]", colours = inferno(100)) # add colour and legend
+  if(!is.null(Shp)){ # if a shape has been designated
+    Raw_plot <- Raw_plot + geom_polygon(data = Shp, aes(x = long, y = lat, group = group), colour = "black", fill = "NA") # add shape
+  }
+  return(Raw_plot)} # export the plot
+```
+
+### Covariates
+This function plots the covariate data we will be using by showing each variable on both resolution levels side-by-side:
+```{r PlotFunCovs}
+Plot_Covs <- function(Covs, Shp = NULL){
+  Plots_ls <- as.list(rep(NA, nlayers(Covs[[1]])*2)) # create as many plots as there are covariates variables * 2
+  Counter <- 1 # counter for list position
+  for(Variable in 1:nlayers(Covs[[1]])){ # loop over all covariate variables
+    Covs_Iter <- list(Covs[[1]][[Variable]], Covs[[2]][[Variable]]) # extract the data for this variable
+    for(Plot in 1:2){ # loop over both resolutions for the current variable
+      Cov_df <- as.data.frame(Covs_Iter[[Plot]], xy = TRUE) # turn raster into data frame
+      colnames(Cov_df)[3] <- "Values" # assign a column name to the data column
+      Plots_ls[[Counter]] <- ggplot() + # create plot
+        geom_raster(data = Cov_df , aes(x = x, y = y, fill = Values)) + # plot the covariate data
+        theme_bw() + labs(x = "Longitude", y = "Latitude") + # make plot more readable
+        scale_fill_gradientn(name = names(Covs[[Plot]]), colours = cividis(100)) + # add colour and legend
+        theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) # reduce margins (for fusing of plots)
+        if(!is.null(Shp)){ # if a shape has been designated
+          Plots_ls[[Counter]] <- Plots_ls[[Counter]] + geom_polygon(data = Shp, aes(x = long, y = lat, group = group), colour = "black", fill = "NA") # add shape
+        }
+      Counter <- Counter + 1 # raise list counter
+    } # end of resolution loop
+  } # end of variable loop
+  ggPlot <- plot_grid(plotlist = Plots_ls, ncol = 2, labels = "AUTO") # fuse the pplots into one big plot
+  return(ggPlot)} # export the plot
+```
+
+### Kriged Products
+This function plots the Kriging outputs by splitting them up according to whether they are Kriging predictions or the uncertainties associated with them:
+```{r PlotFunKrigs}
+Plot_Krigs <- function(Krigs, Shp = NULL, Dates){
+  Type_vec <- c("Prediction", "Standard Error") # these are the output typess of krigR
+  Colours_ls <- list(inferno(100), rev(viridis(100))) # we want separate colours for the types
+  Plots_ls <- as.list(NA, NA) # this list will be filled with the output plots
+  for(Plot in 1:2){ # loop over both output types
+    Krig_df <- as.data.frame(Krigs[[Plot]], xy = TRUE) # turn raster into dataframe
+    colnames(Krig_df)[c(-1,-2)] <- paste(Type_vec[Plot], Dates) # set colnames
+    Krig_df <- gather(data = Krig_df, key = Values, value = "value", colnames(Krig_df)[c(-1,-2)]) # make ggplot-ready
+    Plots_ls[[Plot]] <- ggplot() + # create plot
+      geom_raster(data = Krig_df , aes(x = x, y = y, fill = value)) + # plot the kriged data
+      facet_wrap(~Values) + # split raster layers up
+      theme_bw() + labs(x = "Longitude", y = "Latitude") + # make plot more readable
+      scale_fill_gradientn(name = "Air Temperature [K]", colours = Colours_ls[[Plot]]) + # add colour and legend
+      theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) # reduce margins (for fusing of plots)
+    if(!is.null(Shp)){ # if a shape has been designated
+          Plots_ls[[Plot]] <- Plots_ls[[Plot]] + geom_polygon(data = Shp, aes(x = long, y = lat, group = group), colour = "black", fill = "NA") # add shape
+        }
+  } # end of type-loop
+  ggPlot <- plot_grid(plotlist = Plots_ls, ncol = 1, labels = "AUTO") # fuse the pplots into one big plot
+  return(ggPlot)} # export the plot
+```
+
+# Kriging - The Three Steps
+Using `KrigR` in this way has us use the functions `download_ERA()`, `download_DEM()`, and `krigR()`. Running these functions by themselves as opposed to executing the `KrigR` **pipeline** (which we cover later in this tutorial) gives you the most control and oversight of the `KrigR` workflow.
+
+<p class="hint">
+We will start with a **simple Kriging process** and subsequently **make it more sophisticated** during this tutorial.
+</p>
+
+The most simple way in which you can run the functions of the `KrigR` package is by specifying a rectangular bounding box (i.e. an **extent**) to specify your study region(s). Let me show you how that changes the workflow and computational effort for the Saxony example. Here, we will run a small downscaling exercise of my birth-state of Saxony. It is a medium-sized state in the east of Germany and lends itself to some nice statistical downscaling  since it presents us with mountainous regions along the south-eastern border and flatland areas towards the north-western edges.  
+
+Here's the full area we will be obtaining and downscaling data for:
+```{r StateExt}
+Extent <- extent(c(11.8, 15.1, 50.1, 51.7)) # roughly the extent of Saxony
+GoogMap <- get_map(c(left = Extent[1], 
+                     right = Extent[2], 
+                     bottom = Extent[3], 
+                     top = Extent[4]))
+ggmap(GoogMap) + 
+  theme_bw() + labs(x = "Longitude", y = "Latitude")
+```
+Here, you can see a map of the region with the mountains of the Erzgebirge along the southern border to the Czech Republic as well as the flat terrains around Leipzig in the north of Saxony.  
+
+Now, let's create a separate directory within which we will store the raw ERA5-land data, GMTED2010 DEM covariate data, and Kriging outputs:
+```{r StateExtDir}
+Dir.StateExt <- file.path(Dir.Data, "State_Extent")
+dir.create(Dir.StateExt)
+```
+
+## Climate Data
+No we are ready to carry out our first download of climate reanalysis data through the `KrigR` package!  
+
+For this part of the tutorial, we download air temperature for a three-day interval around my birthday (03-01-1995) using the extent of my home-state of Saxony.
+
+<p class="attention">
+Notice that the downloading of ERA-family reanalysis data may take a short while to start as the download request gets queued with the CDS of the ECMWF before it is executed.
+</p>
+
+```{r ClimExt, results = 'hide', fig.keep = 'all'}
+State_Raw <- download_ERA(
+  Variable = '2m_temperature',
+  DataSet = 'era5-land',
+  DateStart = '1995-01-02',
+  DateStop = '1995-01-04',
+  TResolution = 'day',
+  TStep = 1,
+  Extent = Extent,
+  Dir = Dir.StateExt,
+  API_User = API_User,
+  API_Key = API_Key)
+Plot_Raw(State_Raw, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+
+Now, let's look at the raster that was produced:
+```{r ClimExtOutput}
+State_Raw
+```
+As you can see, we obtained a `r class(State_Raw)` object with `r nlayers(State_Raw)` layers of data (one for each day we are interested in). Additionally, as could be gleamed from the plots above, it is apparent that my home-state got a lot cooler on the day after my birth (04/01/1995) when compared to the two preceding days. What to make of this, I leave up to you because I don't think I like the interpretation myself if we were to assume causality here.  
+
+Keep in mind that every function within the `KrigR` package produces NetCDF (.nc) files in the specified directory (`Dir` argument in the function call) to allow for further manipulation outside of `R` if necessary (for example, using Panoply).
+
+## Covariates  
+Next, we use the `download_DEM()` function which comes with `KrigR` to obtain elevation data as our covariate of choice. This produces two rasters:  
+
+1. A raster of **training** resolution which matches the input data in all attributes except for the data in each cell  
+2. A raster of **target** resolution which matches the input data as closely as possible in all attributes except for the resolution (which is specified by the user) and the data in each cell  
+
+Both of these products are bundled into a `list` where the first element corresponds to the *training* resolution and the second element contains the *target* resolution covariate data. Here, we specify a target resolution of `.02`.
+```{r CovExt, results = 'hide', fig.keep = 'all'}
+Covs_ls <- download_DEM(Train_ras = State_Raw,
+                        Target_res = .02,
+                        Dir = Dir.StateExt,
+                        Keep_Temporary = TRUE)
+Plot_Covs(Covs_ls)
+```
+
+Alternatively, you can specify a different raster which should be matched in all attributes by the raster at target resolution. We get to this again at a later point in this tutorial.  
+
+For now, let's simply inspect our list of covariate rasters:
+```{r CovExtOutput}
+Covs_ls
+```
+This set of covariates has `r sum(!is.na(values(Covs_ls[[1]])))` and `r sum(!is.na(values(Covs_ls[[2]])))` cells containing values at training and target resolution, respectively.
+
+## Kriging  
+Now let's krig these data:
+```{r KrigExt, results = 'hide', fig.keep = 'all'}
+KrigStart <- Sys.time()
+State_Krig <- krigR(Data = State_Raw,
+      Covariates_coarse = Covs_ls[[1]],
+      Covariates_fine = Covs_ls[[2]],
+      Keep_Temporary = FALSE,
+      Cores = 1,
+      FileName = "State_Ext.nc",
+      Dir = Dir.StateExt)
+KrigStop <- Sys.time()
+Plot_Krigs(State_Krig, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+
+There we go. All the data has been downscaled and we do have uncertainties recorded for all of our outputs. As you can see, the elevation patterns show up clearly in our kriged air temperature output. Furthermore, you can see that our certainty of Kriging predictions drops on the 04/01/1995 in comparison to the two preceding days. However, do keep in mind that a maximum standard error of `r round(maxValue(State_Krig[[2]]), 3)` (for each layer of our output respectively) on a total range of data of `r round(maxValue(State_Krig[[1]])-minValue(State_Krig[[1]]), 3)` (again, for each layer in the output respectively) is evident of a downscaling result we can be confident in.  
+
+Now, what does the output actually look like?
+```{r KrigExtOutput}
+State_Krig
+```
+As output of the `krigR()` function, we obtain a list of downscaled data as the first element and downscaling standard errors as the second list element.
+
+Finally, let's see how long it took to carry out this shapefile-informed downscaling:
+```{r KrigExtTime}
+BaseTime <- KrigStop-KrigStart
+BaseTime
+```
+
+# Kriging - the pipeline
+Now that we've seen how you can execute the `KrigR` workflow using three separate functions, it is time that I show you the most simplified function call to obtain some downscaled products: the **pipeline**.
+
+First, let's create a directory which the `KrigR` pipeline will *leak* .nc files to. Don't worry, this leak in the pipeline is very much intentionally there and of no environmental concern (unless you are running low on disk space).
+```{r PipeDir}
+Dir.StatePipe <- file.path(Dir.Data, "State_Pipe")
+dir.create(Dir.StatePipe)
+```
+
+We have coded the `krigR()` function in such a way that it can either be addressed at already present spatial products within your `R` environment, or handle all the downloading and resampling of input data and covariates for you from scratch. To run the exact same Kriging approach as within our extent-example, we can specify the `krigR()` function as such:
+```{r PipeExec, results = 'hide', fig.keep = 'all', cache.lazy=TRUE}
+Pipe_Krig <- krigR(Variable = '2m_temperature',
+                    Type = 'reanalysis',
+                    DataSet = 'era5-land',
+                    DateStart = '1995-01-02',
+                    DateStop = '1995-01-04',
+                    TResolution = 'day',
+                    TStep = 1,
+                    Extent = Extent,
+                    API_User = API_User,
+                    API_Key = API_Key,
+                    Target_res = .02,
+                    Cores = 1,
+                    FileName = "State_Pipe.nc",
+                    Dir = Dir.StatePipe)
+Pipe_Krig
+Plot_Krigs(Pipe_Krig, Date = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+
+Now, let's check how this differs from the extent-informed output on three separate steps:
+```{r CompareStepsWPipe}
+all.equal(Pipe_Krig[[1]], State_Krig[[1]])
+```
+Surprise! There is no difference.
+
+# Getting more out of KrigR
+
+## Kriging By Shapefile
+
+<p class="hint">
+The computational cost of Kriging depends on many factors, one of which is number of observation (i.e. raster cells), which we can limit by using a **shapefile**.
+</p>
+
+Let's revisit our above Saxony-Kriging example, but this time, we will use a shapefile to mask for the exact boundaries of the state itself! We extract the shapefile from the states & provinces data set as follows:
+```{r StateShape, tidy = FALSE}
+Shapes <- readOGR(Dir.Shapes, # where to look for the file
+                  "ne_10m_admin_1_states_provinces", # the file name
+                  verbose = FALSE) # we don't want an overview of the loaded data
+Position <- which(Shapes$name_en == "Saxony") # find Saxony
+State_Shp <- Shapes[Position,]
+GoogMap <- get_map(c(left = extent(State_Shp)[1],
+                     right = extent(State_Shp)[2],
+                     bottom = extent(State_Shp)[3],
+                     top = extent(State_Shp)[4]))
+ggmap(GoogMap) +
+  geom_polygon(data = State_Shp, aes(x = long, y = lat, group = group),
+               colour = "black", fill = NA, size = 2) +
+  theme_bw() + labs(x = "Longitude", y = "Latitude")
+```
+Here, you can see a map of the region with an overlay of the state-borders of Saxony as defined by our shapefile.
+
+Again, we create a directory for all the .nc files that our functions create:
+```{r StateShapeDir}
+Dir.StateShp <- file.path(Dir.Data, "State_Shape")
+dir.create(Dir.StateShp)
+```
+
+### Climate Data
+Again, we download air temperature data from the ERA5-Land data set for the three days from the second to the fourth of January 1995. This time, however, we limit the data by shapefile.
+```{r ClimShape, results = 'hide', fig.keep = 'all'}
+State_Raw <- download_ERA(
+  Variable = '2m_temperature',
+  DataSet = 'era5-land',
+  DateStart = '1995-01-02',
+  DateStop = '1995-01-04',
+  TResolution = 'day',
+  TStep = 1,
+  Extent = State_Shp,
+  Dir = Dir.StateShp,
+  API_User = API_User,
+  API_Key = API_Key)
+Plot_Raw(State_Raw, Shp = State_Shp, Date = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+Note that using a shapefile will crop and mask the downloaded data to be as close a fit as possible to the shapefile. An exact fit is almost entirely impossible.
+
+### Covariates
+Again, we obtain elevation data as our covariate of choice:
+```{r CovShape, results = 'hide', fig.keep = 'all'}
+Covs_ls <- download_DEM(Train_ras = State_Raw,
+                        Target_res = .02,
+                        Shape = State_Shp,
+                        Dir = Dir.StateShp,
+                        Keep_Temporary = TRUE)
+Plot_Covs(Covs_ls, State_Shp)
+```
+Notice that despite the covariate rasters (and input rasters, for that matter) containing `r ncell(Covs_ls[[1]])` and `r ncell(Covs_ls[[2]])` for training and target resolution respectively, we only obtain data for `r sum(!is.na(values(Covs_ls[[1]])))` and `r sum(!is.na(values(Covs_ls[[2]])))` cells respectively due to our specification of a shapefile.
+
+### Kriging
+Again, we execute our Kriging functionality using the `krigR()` function:
+```{r KrigShape, results = 'hide', fig.keep = 'all'}
+KrigStart <- Sys.time() # record when we started
+State_Krig <- krigR(Data = State_Raw, # what to krig
+                    Covariates_coarse = Covs_ls[[1]], # covariates at training resolution
+                    Covariates_fine = Covs_ls[[2]], # covariates at target resolution
+                    Keep_Temporary = FALSE, # delete temporary krigs of layers
+                    Cores = 1, # only run this on 1 core
+                    FileName = "State_Shape.nc", # save the finished file as this
+                    Dir = Dir.StateShp # where to save the output
+)
+KrigStop <- Sys.time() # record when the function was done
+Plot_Krigs(State_Krig, Shp = State_Shp, Date = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+
+The results look just like the ones that we obtained without using the shapefile (this time, we only see what's contained in the shapefile, though). Let's see how long this took:
+
+```{r KrigShapeTime}
+ShapeTime <- KrigStop-KrigStart
+ShapeTime
+```
+
+Running this downscaling process for Saxony using the shapefile took `r as.numeric(ShapeTime)/as.numeric(BaseTime)` of the original downscaling time using an extent statement.
+
+<p class="attention">
+Using a `shapefile` rather than an `extent` statement **speeds up** the **Kriging process**!
+</p>
+
+## Multi-Core Kriging
+<p class="hint">
+The computational cost of Kriging can be divided up amongst multiple cores using our `krigR()` function and the `Cores` argument therein. This enables parallel computation of multi-layer rasters.
+</p>
+
+Let's stick with our shapefile-informed downscaling of air temperature records across Saxony. This time, however, we make use of the `Cores` argument in the `krigR()` function to run the downscaling of our three time steps worth of data in parallel:
+```{r KrigCores, results = 'hide', fig.keep = 'all'}
+KrigStart <- Sys.time() # record when we started
+State_Krig <- krigR(Data = State_Raw, # what to krig
+                    Covariates_coarse = Covs_ls[[1]], # covariates at training resolution
+                    Covariates_fine = Covs_ls[[2]], # covariates at target resolution
+                    Keep_Temporary = FALSE, # delete temporary krigs of layers
+                    Cores = 3, # run this on 3 core
+                    FileName = "State_Cores.nc", # save the finished file as this
+                    Dir = Dir.StateShp # where to save the output
+)
+KrigStop <- Sys.time() # record when the function was done
+Plot_Krigs(State_Krig, Shp = State_Shp, Date = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+
+The results look just like the ones that we obtained without using the shapefile and just one-core processing. Let's see how long this took:
+
+```{r KrigCoresTime}
+CoreTime <- KrigStop-KrigStart
+CoreTime
+```
+
+Running this downscaling process for Saxony using the shapefile took `r as.numeric(CoreTime)/as.numeric(ShapeTime)` of the original downscaling time using an extent statement (the effects multi-core Kriging really kick in when looking at rasters with many bands because the initial opening of clusters for parallel processing takes some time by itself.).
+
+<p class="attention">
+Using the `Cores` argument with a value of n (with n > 1) **speeds up** the **Kriging process** of multi-layer rasters by an order of n!
+</p>
+
+
+## Weighted Local Kriging
+<p class="hint">
+By default Kriging of the `krigR()` function uses all cells in a spatial product to downscale individual cells of rasters. The `nmax` argument can circumvent this.
+</p>
+
+Let's build further on our above example by adding the `nmax` argument (passed on to `gstat::krige()`) to our `krigR()` function call. This argument controls how many of the closest cells the Kriging algorithm should consider in the downscaling of individual coarse, training cells.
+```{r KrigNmax, results = 'hide', fig.keep = 'all'}
+KrigStart <- Sys.time() # record when we started
+State_Krig <- krigR(Data = State_Raw, # what to krig
+                    Covariates_coarse = Covs_ls[[1]], # covariates at training resolution
+                    Covariates_fine = Covs_ls[[2]], # covariates at target resolution
+                    Keep_Temporary = FALSE, # delete temporary krigs of layers
+                    Cores = 3, # only run this on 1 core
+                    FileName = "State_Local.nc", # save the finished file as this
+                    Dir = Dir.StateShp, # where to save the output
+                    nmax = 20 # how many nearest neighbours to consider in Kriging
+)
+KrigStop <- Sys.time() # record when the function was done
+Plot_Krigs(State_Krig, Shp = State_Shp, Date = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+
+The air temperature prediction/downscaling results look just like the ones that we obtained above. However, we seriously improved our localised understanding of Kriging uncertainties (i.e. we see much more localised patterns of Kriging standard error).
+
+<p class="attention">
+Using the `nmax` argument helps to identify highly localised patterns in the Kriging uncertainty as well as predictions!
+</p>
+
+## Aggregation of temporal Resolutions
+
+
+<!-- ## Kriging to match already available data sets   -->
+<!-- Train_res set to a raster with gimms package using Era5 data across Scotland -->
+
+<!-- ## Other variables and recommendations for downscaling -->
+
+# Using Third-Party Data
+
+Our `krigR()` function is designed to work with non-ERA climate data as well as non-GMTED2010 covariate data. To krig your own spatial products using different covariate data than the GMTED2010 DEM we use as a default, you need to step into the three-step workflow. 
+
+<p class="attention">
+**ATTENTION:** Kriging only works on **square-cell spatial products**!
+</p>
+
+`krigR()` also supports any combination of ERA-family reanalysis, GMTED2010, third-party climate data, and third-party covariate data.
+
+## Climate Data
+
+## Covariates
+
+## Kriging
+
