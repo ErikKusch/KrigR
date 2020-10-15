@@ -103,8 +103,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   }
   FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
   FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
-  FileNames_vec <- paste0(1:n_calls, "_", FileName) # names for individual downloads
-
+  FileNames_vec <- paste0(str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
   ### BUILDING REQUEST ----
   # Setting parameters of desired downloaded netcdf file according to user input
   for(Downloads_Iter in 1:n_calls){
