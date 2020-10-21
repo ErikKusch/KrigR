@@ -25,6 +25,7 @@ krigR(
   API_Key,
   API_User,
   Target_res,
+  nmax = Inf,
   ...
 )
 }
@@ -37,7 +38,7 @@ krigR(
 
 \item{KrigingEquation}{Formula or character string specifying which covariates to use and how. Layer names in Covariates_coarse and Covariates_fine need to match Parameters in this formula. Needs to start with "X ~ ". X can read anything you like.}
 
-\item{Cores}{Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Paralell processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.}
+\item{Cores}{Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Parallel processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.}
 
 \item{Dir}{Optional. Directory specifying where to place final kriged product. Default is current working directory.}
 
@@ -67,7 +68,9 @@ krigR(
 
 \item{API_User}{Optional. ECMWF cds user number. Passed on to download_ERA.}
 
-\item{Target_res}{Optional. The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.}
+\item{Target_res}{Optional. The target resolution for the kriging step (i.e. which resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.}
+
+\item{nmax}{Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric) or as "Opt" which prompts krigR to identify a suitable number of nmax given the resolution of your data.}
 
 \item{...}{further arguments that are passed to automap::autoKrige and gstat::krige}
 }
@@ -80,7 +83,7 @@ This function statistically downscales input data using covariate data and the k
 \item \strong{By Itself}: Use the arguments Data, Covariates_coarse, Covariates_fine when you already have raster files for your data which is to be downscaled as well as covariate raster data.
 \item \strong{From Scratch}: Use the arguments Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, Dir, FileName, API_Key, API_User, and arget_res. By doing so, krigR will call the functions download_ERA() and download_DEM() for one coherent kriging workflow. Note that this process does not work when targetting UERRA data.
 }
-Use optional arguments such as Dir, FileName, Keep_Temporary, SingularTry, KrigingEquation and Cores for ease of use, substituion of non-GMTED2010 covariates, and parallel processing.
+Use optional arguments such as Dir, FileName, Keep_Temporary, SingularTry, KrigingEquation and Cores for ease of use, substitution of non-GMTED2010 covariates, and parallel processing.
 }
 \examples{
 \dontrun{

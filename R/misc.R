@@ -579,8 +579,6 @@ Variable_List <- function(DataSet) {
   return(Variables)
 }
 
-
-
 #' List of available variables
 #'
 #' This function is called upon in the krigR function and performs sanity checks for some of the most common error sources in krigin thereby attempting to return more sensible error messages to the user than what is returned by default.
@@ -594,7 +592,7 @@ Variable_List <- function(DataSet) {
 #' check_Krig(????)
 #' }
 #'
-#' @export
+#'
 check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   ### RESOLUTIONS ----
   if(res(CovariatesFine)[1] < res(Data)[1]/10){
@@ -668,4 +666,23 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   #   }
   # }
   return(list(as.formula(KrigingEquation), DataSkips))
+}
+
+#' Summary of Raster file characteristics
+#'
+#' This function is called upon in the krigR function and summarizes Raster characteristics without carrying along the raster file itself. This is used to create lists tracking calls to the function krigR without bloating them too much.
+#'
+#' @param Object_ras A raster object..
+#' @examples
+#'
+#'
+SummarizeRaster <- function(Object_ras = NULL){
+  Summary_ls <- list(Class = class(Object_ras),
+                     Dimensions = list(nrow = nrow(Object_ras),
+                                       ncol = ncol(Object_ras),
+                                       ncell = ncell(Object_ras)),
+                     Extent = Object_ras@extent,
+                     CRS = crs(Object_ras),
+                     File = Object_ras@file@name)
+  return(Summary_ls)
 }
