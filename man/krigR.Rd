@@ -75,7 +75,7 @@ krigR(
 \item{...}{further arguments that are passed to automap::autoKrige and gstat::krige}
 }
 \value{
-A list object containing the downscaled data as well as the standard error for downscaling, and two NETCDF (.nc) file in the specified directory which are the contents of the aforementioned list.
+A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged succesfully.
 }
 \description{
 This function statistically downscales input data using covariate data and the kriging methodology. The function can be run in two ways:
