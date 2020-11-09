@@ -28,7 +28,7 @@
 #' @param API_Key Optional. ECMWF cds API key. Passed on to download_ERA.
 #' @param API_User Optional. ECMWF cds user number. Passed on to download_ERA.
 #' @param nmax Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric) or as "Opt" which prompts krigR to identify a suitable number of nmax given the resolution of your data.
-#' @param ... further arguments that are passed to automap::autoKrige and gstat::krige
+#' @param ... further arguments passed to automap::autoKrige and/or gstat::krige. Does not work with multi-core kriging for now.
 #' @return A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged succesfully.
 #' @examples
 #' \dontrun{
@@ -87,7 +87,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
                   Keep_Temporary = Keep_Temporary,
                   nmax = nmax,
                   Data_Retrieval = Data_Retrieval,
-                  misc = list(...))
+                  misc = ...)
 
   ## SANITY CHECKS (step into check_Krig function to catch most common error messages) ----
   Check_Product <- KrigR:::check_Krig(Data = Data, CovariatesCoarse = Covariates_coarse, CovariatesFine = Covariates_fine, KrigingEquation = KrigingEquation)
@@ -134,7 +134,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   Iter_Try = 0 # number of tries set to 0
   kriging_result <- NULL
   while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < SingularTry){ # try kriging SingularTry times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
-    try(invisible(capture.output(kriging_result <- autoKrige(formula = KrigingEquation, input_data = OriginK, new_data = Target, nmax = nmax, ...))), silent = TRUE)
+    try(invisible(capture.output(kriging_result <- autoKrige(formula = KrigingEquation, input_data = OriginK, new_data = Target, nmax = nmax))), silent = TRUE)
     Iter_Try <- Iter_Try +1
   }
   if(class(kriging_result)[1] != 'autoKrige'){ # give error if kriging fails
@@ -185,7 +185,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## ACTUAL KRIGING (carry out kriging according to user specifications either in parallel or on a single core) ----
   if(Cores > 1){ # Cores check: if parallel processing has been specified
     ### PARALLEL KRIGING ---
-    ForeachObjects <- c("Dir.Temp", "Cores", "Data", "KrigingEquation", "Origin", "Target", "Covariates_coarse", "Covariates_fine", "Terms", "SingularTry") # objects which are needed for each kriging run and are thus handed to each cluster unit
+    ForeachObjects <- c("Dir.Temp", "Cores", "Data", "KrigingEquation", "Origin", "Target", "Covariates_coarse", "Covariates_fine", "Terms", "SingularTry", "nmax") # objects which are needed for each kriging run and are thus handed to each cluster unit
     cl <- makeCluster(Cores) # Assuming Cores node cluster
     registerDoParallel(cl) # registering cores
     foreach(Iter_Krige = Compute_Layers, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
