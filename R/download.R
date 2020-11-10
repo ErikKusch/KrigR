@@ -87,8 +87,17 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   if(class(Extent) != "Extent"){ # Extent check: whether already specified as Extent object
     stop('The Extent argument provided by you is neither formatted as an Extent nor a Raster or SpatialPolygonsDataFrame object. Please correct this.')
   } # # end of Extent check
-  Extent <- extent(Extent) # extract extent
-  Extent <- try(paste(Extent[4], Extent[1], Extent[3], Extent[2], sep="/")) # break Extent object down into character
+  Modifier <- as.numeric(strsplit(Grid, "/")[[1]][1]) # for widening the extent to ensure full coverage of shapefile
+  Extent <- try(paste(Extent[4]+Modifier, Extent[1]-Modifier, Extent[3]-Modifier, Extent[2]+Modifier, sep="/")) # break Extent object down into character
+  # Extent global extent sanity check
+  Corner_vec <- as.numeric(unlist(strsplit(Extent, "/")))
+  Musts_vec <- c(90, -180, -90, 180)
+  for(Iter_Corners in 1:length(Corner_vec)){
+    if(abs(Corner_vec[Iter_Corners]) > abs(Musts_vec[Iter_Corners])){
+      Corner_vec[Iter_Corners] <- Musts_vec[Iter_Corners]
+    }
+  }
+  Extent <- try(paste(Corner_vec, collapse="/")) # break Extent object down into character
 
   # Time (set time for download depending on temporal resolution)
   if(TResolution == "hour" | TResolution == "day"){ # time check: if we need sub-daily data
