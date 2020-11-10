@@ -683,6 +683,7 @@ SummarizeRaster <- function(Object_ras = NULL){
                                        ncell = ncell(Object_ras)),
                      Extent = Object_ras@extent,
                      CRS = crs(Object_ras),
-                     File = Object_ras@file@name)
+                     layers = names(Object_ras),
+                     try(File = Object_ras@file@name))
   return(Summary_ls)
 }
