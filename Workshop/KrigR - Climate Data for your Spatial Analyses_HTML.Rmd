@@ -51,7 +51,7 @@ source("PersonalSettings.R") # I do this here to specify number of cores and API
 # Setting Things Up
 ## Installing `KrigR`
 
-First of all, we need to install `KrigR`. Since we are currently preparing the package for submission to CRAN, it is only available through the associated GitHub repository (https://github.com/ErikKusch/KrigR) for the time being.  
+First of all, we need to install `KrigR`. Since we are currently preparing the package for submission to CRAN, it is only available through the associated GitHub repository (https://github.com/ErikKusch/KrigR) for the time being. There, you may also find presentations as well as this guide/workshop.  
 
 Here, we use the `devtools` package within `R` to get access to the `install_github()` function. For this to run, we need to tell `R` to not stop the installation from GitHub as soon as a warning is produced. This would stop the installation process as early as one of the `KrigR` dependencies hits a warning as benign as "Package XYZ was built under R Version X.X.X" which can usually be ignored safely. 
 ```{r InstallKrigR, eval = FALSE}
@@ -60,7 +60,7 @@ devtools::install_github("https://github.com/ErikKusch/KrigR")
 library(KrigR)
 ```
 
-For the sake of this tutorial, we need some extra packages for visualisations. We check if they are already installed,  subsequently install (if necessary) and load them with this user-defined function:
+For the sake of this tutorial, we need some extra packages for visualisations. We check if they are already installed, subsequently install (if necessary) and load them with this user-defined function:
 ```{r MiscPackages}
 install.load.package <- function(x){
   if (!require(x, character.only = TRUE))
@@ -242,7 +242,7 @@ Using `KrigR` in this way has us use the functions `download_ERA()`, `download_D
 We will start with a **simple Kriging process** and subsequently **make it more sophisticated** during this tutorial.
 </p>
 
-The most simple way in which you can run the functions of the `KrigR` package is by specifying a rectangular bounding box (i.e. an **extent**) to specify your study region(s). Let me show you how that changes the workflow and computational effort for the Saxony example. Here, we will run a small downscaling exercise of my birth-state of Saxony. It is a medium-sized state in the east of Germany and lends itself to some nice statistical downscaling  since it presents us with mountainous regions along the south-eastern border and flatland areas towards the north-western edges.  
+The most simple way in which you can run the functions of the `KrigR` package is by specifying a rectangular bounding box (i.e. an **extent**) to specify your study region(s). Here, we will run a small downscaling exercise of my birth-state of Saxony. It is a medium-sized state in the east of Germany and lends itself to some nice statistical downscaling  since it presents us with mountainous regions along the south-eastern border and flatland areas towards the north-western edges.  
 
 Here's the full area we will be obtaining and downscaling data for:
 ```{r StateExt}
@@ -291,7 +291,13 @@ Now, let's look at the raster that was produced:
 ```{r ClimExtOutput}
 State_Raw
 ```
-As you can see, we obtained a `r class(State_Raw)` object with `r nlayers(State_Raw)` layers of data (one for each day we are interested in). Additionally, as could be gleamed from the plots above, it is apparent that my home-state got a lot cooler on the day after my birth (04/01/1995) when compared to the two preceding days. What to make of this, I leave up to you because I don't think I like the interpretation myself if we were to assume causality here.  
+As you can see, we obtained a `r class(State_Raw)` object with `r nlayers(State_Raw)` layers of data (one for each day we are interested in). Notice that extent of our downloaded data set does not fit the extent we set earlier manually. This is a precaution we have taken within `KrigR` to make sure that all data cells you are interested in are covered.
+
+<p class="atten">
+`KrigR` widens the spatial extent that is specified to ensure full coverage of the respective ERA5(-Land) raster cells. Global downloads are not affected by this and work just as you'd expect.
+</p>
+
+Additionally, as could be gleamed from the plots above, it is apparent that my home-state got a lot cooler on the day after my birth (04/01/1995) when compared to the two preceding days. What to make of this, I leave up to you because I don't think I like the interpretation myself if we were to assume causality here.  
 
 Keep in mind that every function within the `KrigR` package produces NetCDF (.nc) files in the specified directory (`Dir` argument in the function call) to allow for further manipulation outside of `R` if necessary (for example, using Panoply).
 
@@ -310,7 +316,7 @@ Covs_ls <- download_DEM(Train_ras = State_Raw,
 Plot_Covs(Covs_ls)
 ```
 
-Alternatively, you can specify a different raster which should be matched in all attributes by the raster at target resolution. We get to this again at a later point in this tutorial.  
+Alternatively to specifying a target resolution, you can specify a different raster which should be matched in all attributes by the raster at target resolution. We get to this again at a later point in this tutorial.  
 
 For now, let's simply inspect our list of covariate rasters:
 ```{r CovExtOutput}
@@ -322,13 +328,14 @@ This set of covariates has `r sum(!is.na(values(Covs_ls[[1]])))` and `r sum(!is.
 Now let's krig these data:
 ```{r KrigExt, results = 'hide', fig.keep = 'all'}
 KrigStart <- Sys.time()
-State_Krig <- krigR(Data = State_Raw,
-      Covariates_coarse = Covs_ls[[1]],
-      Covariates_fine = Covs_ls[[2]],
-      Keep_Temporary = FALSE,
-      Cores = 1,
-      FileName = "State_Ext.nc",
-      Dir = Dir.StateExt)
+State_Krig <- krigR(Data = State_Raw, # data we want to krig as a raster object
+      Covariates_coarse = Covs_ls[[1]], # training covariate as a raster object
+      Covariates_fine = Covs_ls[[2]], # target covariate as a raster object
+      Keep_Temporary = FALSE, # we don't want to retain the individually kriged layers on our hard-drive
+      Cores = 1, # we want to krig on just one core
+      FileName = "State_Ext.nc", # the file name for our full kriging output
+      Dir = Dir.StateExt # which directory to save our final input in
+      )
 KrigStop <- Sys.time()
 Plot_Krigs(State_Krig, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
@@ -337,7 +344,7 @@ There we go. All the data has been downscaled and we do have uncertainties recor
 
 Now, what does the output actually look like?
 ```{r KrigExtOutput}
-State_Krig[-3] # we will take later about why we leave out the third list element produced by krigR here
+State_Krig[-3] # we will talk later about why we leave out the third list element produced by krigR here
 ```
 As output of the `krigR()` function, we obtain a list of downscaled data as the first element and downscaling standard errors as the second list element.
 
@@ -347,10 +354,10 @@ BaseTime <- KrigStop-KrigStart
 BaseTime
 ```
 
-# Kriging - the pipeline
-Now that we've seen how you can execute the `KrigR` workflow using three separate functions, it is time that I show you the most simplified function call to obtain some downscaled products: the **pipeline**.
+# Kriging - the Pipeline
+Now that we've seen how you can execute the `KrigR` workflow using three separate functions, it is time that we show you the most simplified function call to obtain some downscaled products: the **pipeline**.
 
-First, let's create a directory which the `KrigR` pipeline will *leak* .nc files to. Don't worry, this leak in the pipeline is very much intentionally there and of no environmental concern (unless you are running low on disk space).
+First, let's create a directory which the `KrigR` pipeline will *leak* .nc files to. Don't worry, this leak in the pipeline is very much intentional and of no environmental concern (unless you are running low on disk space).
 ```{r PipeDir}
 Dir.StatePipe <- file.path(Dir.Data, "State_Pipe")
 dir.create(Dir.StatePipe)
@@ -372,7 +379,7 @@ Pipe_Krig <- krigR(Variable = '2m_temperature',
                     Cores = 1,
                     FileName = "State_Pipe.nc",
                     Dir = Dir.StatePipe)
-Pipe_Krig[-3] # we will take later about why we leave out the third list element produced by krigR here
+Pipe_Krig[-3] # we will talk later about why we leave out the third list element produced by krigR here
 Plot_Krigs(Pipe_Krig, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
 
@@ -382,7 +389,7 @@ all.equal(Pipe_Krig[[1]], State_Krig[[1]])
 ```
 Surprise! There is no difference.
 
-# Getting more out of KrigR
+# Getting More out of `KrigR`
 
 ## Kriging By Shapefile
 
@@ -427,7 +434,9 @@ State_Raw <- download_ERA(
   API_Key = API_Key)
 Plot_Raw(State_Raw, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
-Note that using a shapefile will crop and mask the downloaded data to be as close a fit as possible to the shapefile. An exact fit is almost entirely impossible.
+<p class="lookhere">
+Note that we have implemented masking by shapefile in such a way that every cell that is even partially covered by your shapefile is retained in the downloaded ERA5(-Land) data set. Regular masking via the `raster` package-contained `mask()` function only retains those cells whose centroids fall within the shapefile boundaries.
+</p>
 
 ### Covariates
 Again, we obtain elevation data as our covariate of choice:
@@ -457,8 +466,9 @@ KrigStop <- Sys.time() # record when the function was done
 Plot_Krigs(State_Krig, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
 
-The results look just like the ones that we obtained without using the shapefile (this time, we only see what's contained in the shapefile, though). Let's see how long this took:
+The results look just like the ones that we obtained without using the shapefile (this time, we only see what's contained in the shapefile, though). It is noteworthy to highlight the change in uncertainties here. Overall, our uncertainty decreased in going from extent-informed to shapefile-informed kriging in this example. However, we now see some serious chessboard pattern of the uncertainties in our outputs. This is due to the uncertainty decreasing as fine-resolution cells are more closely located towards the centre of a coarse-scaled cell which they have been downscaled from. This behaviour is normal. To obtain more useful kriging standard errors (i.e. uncertainties), we use local Kriging (we get to later in this tutorial).
 
+Let's see how long this took:
 ```{r KrigShapeTime}
 ShapeTime <- KrigStop-KrigStart
 ShapeTime
@@ -503,7 +513,6 @@ Running this downscaling process for Saxony using the shapefile took `r as.numer
 Using the `Cores` argument with a value of n (with n > 1) **speeds up** the **Kriging process** of multi-layer rasters by an order of n!
 </p>
 
-
 ## Weighted Local Kriging
 <p class="lookhere">
 By default Kriging of the `krigR()` function uses all cells in a spatial product to downscale individual cells of rasters. The `nmax` argument can circumvent this.
@@ -523,21 +532,23 @@ State_Krig <- krigR(Data = State_Raw, # what to krig
 Plot_Krigs(State_Krig, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
 
-The air temperature prediction/downscaling results look just like the ones that we obtained above. However, we seriously improved our localised understanding of Kriging uncertainties (i.e. we see much more localised patterns of Kriging standard error).
+The air temperature prediction/downscaling results look just like the ones that we obtained above. However, we seriously improved our localised understanding of Kriging uncertainties (i.e. we see much more localised patterns of Kriging standard error). In this case for Saxony, our uncertainties seem to be highest for areas where the landscape is dominated by large, abrupt changes in elevation (e.g. around the Fichtelberg along the southern border) and water-dominated areas such as streams and lakes (e.g. the lakes around Leipzig in the North of Saxony).
 
 <p class="atten">
-Using the `nmax` argument helps to identify highly localised patterns in the Kriging uncertainty as well as predictions! Our current analyses suggest that `nmax = 120` is a very sensible choice.
+Using the `nmax` argument helps to identify highly localised patterns in the Kriging uncertainty as well as predictions! 
 </p>
+
+Our current analyses suggest that `nmax = 120` is a very sensible choice, but we are working on an automatic feature for the identification of an approripate number of `nmax` straight from the data itself.
 
 ## Aggregation of Temporal Resolutions
 
 <p class="lookhere">
-The `KrigR` package is capable of some neat pre-processing of raw climate data.
+The `KrigR` package is capable of some neat pre-processing of raw climate data. - both spatially and temporally.
 </p>
 
 The functions used for downloading reanalysis data with the `KrigR` package (`download_ERA()` and `download_UERRA()`) accept the following arguments which you can use to control the temporal resolution of your climate data:  
 - `TResolution` controls the time-line that `TStep` indexes. You can specify anything from the following:  `'hour'`, `'day'`, `'month'`, or `'year'`. The default is `'month'`.   
-- `TStep` controls how many time-steps to aggregate into one layer of data each. Aggregation is done via taking the mean per cell in each raster comprising time steps that do into the final, aggregated time-step. The default is `1`.  
+- `TStep` controls how many time-steps to aggregate into one layer of data each. Aggregation is done via taking the mean per cell in each raster comprising time steps that go into the final, aggregated time-step. The default is `1`.  
 
 Let's run through a few examples to make clear how desired temporal resolution of data can be achieved using the `KrigR` package:  
 
@@ -568,13 +579,13 @@ Let's run through a few examples to make clear how desired temporal resolution o
 <p class="atten">
 Specifying `TResolution` of `'month'` will result in the download of full month aggregates for every month included in your time series.
 </p>
-For example, `DateStart = 20/01/2000`, `DateStop = 20/02/2000` with `TResolution = 'month'`, and `TStep = 1` **does not** result in the mean aggregate for the month between the 20/01/200 and the 20/02/2000, but **does result** in the monthly aggregates for January and February 2000. If you desire the former, you would need to specify `DateStart = 20/01/2000`, `DateStop = 20/02/2000` with `TResolution = 'day'`, and `TStep = 32` (the number of days between the two dates). 
+For example, `DateStart = "2000-01-20"`, `DateStop = "2000-02-20"` with `TResolution = 'month'`, and `TStep = 1` **does not** result in the mean aggregate for the month between the 20/01/200 and the 20/02/2000, but **does result** in the monthly aggregates for January and February 2000. If you desire the former, you would need to specify `DateStart = "2000-01-20"`, `DateStop = "2000-02-20"` with `TResolution = 'day'`, and `TStep = 32` (the number of days between the two dates). 
 
 <p class="lookhere">
 The reanalysis download functions of the `KrigR` package automatically break down download requests into monthly intervals thus circumventing the danger of running into making a download request that is too big for the CDS.
 </p>
 
-For example, `DateStart = 20/01/2000`, `DateStop = 20/02/2000` with `TResolution = 'day'`, and `TStep = 16` will lead to two download requests to the CDS: (1) hourly data in the range 20/01/2000 00:00 to 31/01/2000 23:00, and (2) hourly data in the range 01/02/2000 00:00 to 20/02/2000 23:00. These data sets are subsequently fused in `R`, aggregated to daily aggregates, and finally, aggregated to two big aggregates of all the first and last 16 daily layers, respectively.  
+For example, `DateStart = "2000-01-20"`, `DateStop = "2000-02-20"` with `TResolution = 'day'`, and `TStep = 8` will lead to two download requests to the CDS: (1) hourly data in the range 20/01/2000 00:00 to 31/01/2000 23:00, and (2) hourly data in the range 01/02/2000 00:00 to 20/02/2000 23:00. These data sets are subsequently fused in `R`, aggregated to daily aggregates, and finally, aggregated to four big aggregates.  
 
 This gives you a lot of flexibility, but always keep in mind that third-party data sets might not account for leap-years so make sure the dates of third-party data (should you chose to use some) lines up with the ones as specified by your calls to the functions of the `KrigR` package.
 
@@ -617,7 +628,7 @@ So what does this raster look like?
 ```{r}
 Reference_ras
 ```
-As stated above, we want to match this with out output.  
+As stated above, we want to match this with our output.  
 
 So, let's create our directory for this as we did before:
 ```{r NDVIDir}
@@ -646,6 +657,7 @@ NDVI_Krig <- krigR(Variable = '2m_temperature',
                    Target_res = Reference_ras,
                    Cores = 1,
                    FileName = "AirTemp_NDVI.nc",
+                   nmax = 20, # this is smaller than we recommend, but placed here to show some neat, localised uncertainty patterns
                    Dir = Dir.NDVI)
 ```
 
@@ -653,7 +665,7 @@ So? Did we match the pre-existing data?
 ```{r}
 NDVI_Krig[[1]]
 ```
-Almost. We nailed the spatial resolution, but our extent is a bit smaller than the input. This is an artefact of where the cells are placed in the ERA input data. To rectify this, just use a wider extent.
+We nailed this!
 
 Let's take one final look at our (A) raw ERA5 data, (B) NDVI data, (C) Kriged ERA5 data, and (D) standard error of our Kriging output:
 ```{r}
@@ -700,13 +712,13 @@ plot_grid(plotlist = list(Raw_plot, NDVI_plot, Plots_ls[[1]], Plots_ls[[2]]), nr
 
 ## The Call List
 
-So far, we have only ever looked at the first two elements in the list returned by `krigR()`. A quick look at the help file, the code, or this guide reveals that there is a third list element - the *call list*. When coding this feature into `krigR()` we intended for this to be a neat, clean, storage-friendly way of keeping track of how the spatial product was created. It does so without storing additional spatial products. Let's have a look at it:
+So far, we have only ever looked at the first two elements in the list returned by `krigR()`. A quick look at the help file, the code, or this guide reveals that there is a third list element - the *call list*. When coding this feature into `krigR()` we intended for this to be a neat, clean, storage-friendly way of keeping track of how the spatial product was created. It does so without storing additional spatial products. Let's have a look at it: 
 
 ```{r}
 NDVI_Krig[[3]]
 ```
 
-This lengthy list should contain all information you need to trace how you created a certain data set using `krigR()`. If you feel like anything is missing, please contact us.
+This lengthy list should contain all information you need to trace how you created a certain data set using `krigR()`. If you feel like anything is missing in this list, please contact us.
 
 ## Further Downscaling Recommendations
 
@@ -728,23 +740,27 @@ Position <- which(StateMask$name_en == "Saxony") # find Saxony
 State_Shp <- StateMask[Position,]
 ```
 
-Now, let's download some covariate data:
+Now, let's download some covariate data:  
+- `TKSat` - thermal conductivity of saturated soil  
+- `TKDry` - thermal conductivity of dry soil
 ```{r}
 Dir.TP <- file.path(Dir.Data, "Third-Party_Data")
 dir.create(Dir.TP)
-#### LAND MASK (for masking covariates according to land vs. sea)
+#### Thermal Conductivity of saturated soil
 if(!file.exists(file.path(Dir.TP, "TKSat.zip"))){ # if not downloaded yet
   download.file("http://globalchange.bnu.edu.cn/download/data/worldptf/tksat.zip", 
                 destfile = file.path(Dir.TP, "TKSat.zip")) # download cultural vector
   unzip(file.path(Dir.TP, "TKSat.zip"), exdir = Dir.TP) # unzip data
 }
 TKSat_ras <- raster(file.path(Dir.TP, "tksatu_l1.nc"))
-```
 
-Now, we limit that to Saxony:
-```{r}
-TKSat_ras <- crop(TKSat_ras, extent(State_Shp)) # crop to the right extent of the state
-TKSat_ras <- mask(TKSat_ras, State_Shp) # mask for the shape of the state
+#### Thermal Conductivity of dry soil
+if(!file.exists(file.path(Dir.TP, "TKDry.zip"))){ # if not downloaded yet
+  download.file("http://globalchange.bnu.edu.cn/download/data/worldptf/tkdry.zip", 
+                destfile = file.path(Dir.TP, "TKdry.zip")) # download cultural vector
+  unzip(file.path(Dir.TP, "TKdry.zip"), exdir = Dir.TP) # unzip data
+}
+TKDry_ras <- raster(file.path(Dir.TP, "tkdry_l1.nc"))
 ```
 
 ## Climate Data
@@ -761,29 +777,53 @@ State_Raw <- download_ERA(
   Dir = Dir.TP,
   API_User = API_User,
   API_Key = API_Key)
-Plot_Raw(State_Raw, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
+Plot_Raw(State_Raw, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"), Legend = "Soil Temperature (0-7cm) [K]")
 ```
 
 ## Covariates
-```{r results = 'hide', fig.keep = 'all', fig.height = 4}
-Covs_ls <- as.list(resample(x = TKSat_ras, y = State_Raw), # resample fine-resolution covariate data to match coarse input data
-                   TKSat_ras # High-resolution to which we downscale
-                   )
+As far as covariate data is concerned, we downloaded and loaded into `R` global data sets which now limit to Saxony:
+```{r}
+## TKSat
+TKSat_ras <- crop(TKSat_ras, extent(State_Raw)) # crop to the right extent of our data we want to krig
+Shape_ras <- rasterize(State_Shp, TKSat_ras, getCover=TRUE) # identify which cells are covered by the shape
+Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
+TKSat_ras <- mask(TKSat_ras, Shape_ras) # mask for the shape of the state
+## TKDry
+TKDry_ras <- crop(TKDry_ras, extent(State_Raw)) # crop to the right extent of our data we want to krig
+Shape_ras <- rasterize(State_Shp, TKDry_ras, getCover=TRUE) # identify which cells are covered by the shape
+Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
+TKDry_ras <- mask(TKDry_ras, Shape_ras) # mask for the shape of the state
+```
+
+Now we combine these into a list containing to stacks of rasters and plot our third-party covariates: 
+```{r results = 'hide', fig.keep = 'all'}
+# resample fine-resolution covariate data to match coarse input data
+Coarsecovs <- stack(resample(x = TKSat_ras, y = State_Raw), resample(x = TKDry_ras, y = State_Raw))
+names(Coarsecovs) <- c("TKWet", "TKDry") # setting some proer names
+# High-resolution to which we downscale
+Finecovs <- stack(TKSat_ras, TKDry_ras)
+names(Finecovs) <- c("TKWet", "TKDry") # setting some proer names
+# combine data into covariate list
+Covs_ls <- list(Coarsecovs, Finecovs)
 Plot_Covs(Covs_ls, State_Shp)
 ```
 
 ## Kriging
+Finally, we can krig our soil temperature data using the thermal conductivity of the soil. For this, we need to specify a new `KrigingEquation`. If we don't, `krigR()` will notify us that it our default formula cannot be executed and will attempt to build a formula from the data it can find (this auto-generated formula would be the same as the one we specify here).
 ```{r results = 'hide', fig.keep = 'all'}
 State_Krig <- krigR(Data = State_Raw, # what to krig
                     Covariates_coarse = Covs_ls[[1]], # covariates at training resolution
                     Covariates_fine = Covs_ls[[2]], # covariates at target resolution
                     Keep_Temporary = FALSE, # delete temporary krigs of layers
                     Cores = 3, # only run this on 1 core
-                    KrigingEquation = "ERA ~ Thermal.conductivity.of.saturated.soil", # this time, we need to specify a new formula. Try and see what happens if you forget to do this.
-                    FileName = "State_Local.nc", # save the finished file as this
-                    Dir = Dir.StateShp, # where to save the output
+                    KrigingEquation = "ERA ~ TKDry + TKWet", # this time, we need to specify a new formula. Try and see what happens if you forget to do this.
+                    FileName = "State_TP.nc", # save the finished file as this
+                    Dir = Dir.TP, # where to save the output
                     nmax = 20 # how many nearest neighbours to consider in Kriging
 )
 Plot_Krigs(State_Krig, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"), Legend = "Soil Temperature (0-7cm) [K]")
 ```
 
+<p class="atten">
+You can use the `KrigingEquation` argument in `krigR()` to specify the use of third-party covariates and/or data to be kriged. You can specify additive as well as interaction effects.
+</p>
