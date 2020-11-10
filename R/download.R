@@ -275,9 +275,11 @@ download_DEM <- function(Train_ras = NULL,
 
   ### MASKING ----
   if(!is.null(Shape)){ # Shape check
-    Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
+    Shape_ras <- rasterize(Shape, GMTED2010Train_ras, getCover=TRUE) # identify which cells are covered by the shape
     Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
     GMTED2010Train_ras <- mask(GMTED2010Train_ras, Shape_ras)
+    Shape_ras <- rasterize(Shape, GMTED2010Target_ras, getCover=TRUE) # identify which cells are covered by the shape
+    Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
     GMTED2010Target_ras <- mask(GMTED2010Target_ras, Shape_ras)
   } # end of Shape check
 
