@@ -187,7 +187,9 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
     Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun='mean') # do the calculation
     ### MASKING ----
     if(exists("Shape")){ # Shape check
-      Era5_ras <- mask(Era5_ras, Shape) # mask if shapefile was provided
+      Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
+      Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
+      Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
     }# end of Shape check
     ### LIST SAVING
     Era5_ls[[LoadIter]] <- Era5_ras
@@ -273,8 +275,10 @@ download_DEM <- function(Train_ras = NULL,
 
   ### MASKING ----
   if(!is.null(Shape)){ # Shape check
-    GMTED2010Train_ras <- mask(GMTED2010Train_ras, Shape)
-    GMTED2010Target_ras <- mask(GMTED2010Target_ras, Shape)
+    Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
+    Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
+    GMTED2010Train_ras <- mask(GMTED2010Train_ras, Shape_ras)
+    GMTED2010Target_ras <- mask(GMTED2010Target_ras, Shape_ras)
   } # end of Shape check
 
   ### SAVING DATA ----
