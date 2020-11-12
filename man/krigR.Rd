@@ -21,6 +21,7 @@ krigR(
   DateStop,
   TResolution,
   TStep,
+  FUN,
   Extent,
   API_Key,
   API_User,
@@ -60,7 +61,8 @@ krigR(
 
 \item{TResolution}{Optional. Temporal resolution of final product. hour', 'day', 'month'. Passed on to download_ERA.}
 
-\item{TStep}{Optional. Which time steps (numeric) to consider for temporal resolution. Passed on to download_ERA.}
+\item{TStep}{Optional. Which time steps (numeric) to consider for temporal resolution. Passed on to download_ERA.
+#' @param FUN Optional. A raster calculation argument as passed to `raster::stackApply()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.}
 
 \item{Extent}{Optional. Download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. Passed on to download_ERA and downbload_DEM.}
 

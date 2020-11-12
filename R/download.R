@@ -9,6 +9,7 @@
 #' @param DateStop Date ('YYYY-MM-DD') at which to stop time series of downloaded data.
 #' @param TResolution Temporal resolution of final product. 'hour', 'day', 'month', or 'year'.
 #' @param TStep Which time steps (numeric) to consider for temporal resolution. For example, specify bi-monthly data records by setting TResolution to 'month' and TStep to 2.
+#' @param FUN A raster calculation argument as passed to `raster::stackApply()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.
 #' @param Extent Optional, download data according to rectangular bounding box. specify as extent() object or as a raster or a SpatialPolygonsDataFrame object. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile.
 #' @param Dir Directory specifying where to download data to.
 #' @param FileName A file name for the netcdf produced. Default is a combination parameters in the function call.
@@ -24,7 +25,7 @@
 #' @export
 download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-land",
                          DateStart = "1981-01-01", DateStop = Sys.Date()-100,
-                         TResolution = "month", TStep = 1, Extent = extent(-180,180,-90,90),
+                         TResolution = "month", TStep = 1, FUN = 'mean', Extent = extent(-180,180,-90,90),
                          Dir = getwd(), FileName = NULL,
                          API_User = NULL, API_Key = NULL) {
 
@@ -185,7 +186,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
         factor <- 12 # number of months per year
       }
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
-      Era5_ras <- stackApply(Era5_ras, Index, fun='mean') # do the calculation
+      Era5_ras <- stackApply(Era5_ras, Index, fun=FUN) # do the calculation
     }# end of day/year check
 
     ### TIME STEP MEANS ----
@@ -193,7 +194,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
       warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
     }# end of sanity check for time step completeness
     Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
-    Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun='mean') # do the calculation
+    Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN) # do the calculation
     ### MASKING ----
     if(exists("Shape")){ # Shape check
       Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
