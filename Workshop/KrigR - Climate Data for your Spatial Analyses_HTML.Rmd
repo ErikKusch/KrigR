@@ -383,10 +383,6 @@ Pipe_Krig[-3] # we will talk later about why we leave out the third list element
 Plot_Krigs(Pipe_Krig, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
 
-Now, let's check how this differs from the extent-informed output on three separate steps:
-```{r CompareStepsWPipe}
-all.equal(Pipe_Krig[[1]], State_Krig[[1]])
-```
 Surprise! There is no difference.
 
 # Getting More out of `KrigR`
