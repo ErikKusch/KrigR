@@ -549,6 +549,17 @@ The `KrigR` package is capable of some neat pre-processing of raw climate data. 
 The functions used for downloading reanalysis data with the `KrigR` package (`download_ERA()` and `download_UERRA()`) accept the following arguments which you can use to control the temporal resolution of your climate data:  
 - `TResolution` controls the time-line that `TStep` indexes. You can specify anything from the following:  `'hour'`, `'day'`, `'month'`, or `'year'`. The default is `'month'`.   
 - `TStep` controls how many time-steps to aggregate into one layer of data each. Aggregation is done via taking the mean per cell in each raster comprising time steps that go into the final, aggregated time-step. The default is `1`.  
+- `FUN` controls which values to calculate for the temporal aggregates, e.g.: `'min'`, `'max'`, or `'mean'` (default).
+
+<p class="atten">
+Specifying `FUN` only does something when a `Tstep` > 1 is specified - otherwise, there is no temporal aggregation to be done.
+</p>
+
+`KrigR` automatically identifies which data set to download from given your temporal aggregation specification. As soon as `TResolution` is set to `'month'` or `'year'`, the package automatically downloads monthly mean data from the CDS. We do this to make the temporal aggregtation calculation more light-weight on your computing units and to make downloads less heavy.
+
+<p class="lookhere">
+If you want to obtain the most extreme minima/maxima for a given time-period, you need to specify a `TResolution` of `'hour'` or `'day'` so that temporal aggregation is carried out on hourly data.
+</p>
 
 Let's run through a few examples to make clear how desired temporal resolution of data can be achieved using the `KrigR` package:  
 
