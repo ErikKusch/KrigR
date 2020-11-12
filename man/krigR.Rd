@@ -21,7 +21,7 @@ krigR(
   DateStop,
   TResolution,
   TStep,
-  FUN,
+  FUN = "mean",
   Extent,
   API_Key,
   API_User,

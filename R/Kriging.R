@@ -38,7 +38,7 @@
 #' }
 #'
 #' @export
-krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, FUN, Extent, API_Key, API_User, Target_res, nmax = Inf, ...){
+krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, FUN = 'mean', Extent, API_Key, API_User, Target_res, nmax = Inf, ...){
   ## CALL LIST (for storing how the function as called in the output) ----
   if(is.null(Data)){
     Data_Retrieval <- list(Variable = Variable,
