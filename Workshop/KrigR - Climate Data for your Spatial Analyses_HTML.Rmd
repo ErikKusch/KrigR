@@ -527,7 +527,7 @@ State_Krig <- krigR(Data = State_Raw, # what to krig
                     Cores = 3, # only run this on 1 core
                     FileName = "State_Local.nc", # save the finished file as this
                     Dir = Dir.StateShp, # where to save the output
-                    nmax = 20 # how many nearest neighbours to consider in Kriging
+                    nmax = 15 # how many nearest neighbours to consider in Kriging
 )
 Plot_Krigs(State_Krig, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
@@ -538,7 +538,7 @@ The air temperature prediction/downscaling results look just like the ones that 
 Using the `nmax` argument helps to identify highly localised patterns in the Kriging uncertainty as well as predictions! 
 </p>
 
-Our current analyses suggest that `nmax = 120` is a very sensible choice, but we are working on an automatic feature for the identification of an approripate number of `nmax` straight from the data itself.
+We are working on an automatic feature for the identification of an appropriate number of `nmax` straight from the data itself.
 
 ## Aggregation of Temporal Resolutions
 
@@ -657,7 +657,7 @@ NDVI_Krig <- krigR(Variable = '2m_temperature',
                    Target_res = Reference_ras,
                    Cores = 1,
                    FileName = "AirTemp_NDVI.nc",
-                   nmax = 20, # this is smaller than we recommend, but placed here to show some neat, localised uncertainty patterns
+                   nmax = 80, # we are still working on an automatic optimisation of this. Here, let's try a bigger number
                    Dir = Dir.NDVI)
 ```
 
@@ -720,9 +720,9 @@ NDVI_Krig[[3]]
 
 This lengthy list should contain all information you need to trace how you created a certain data set using `krigR()`. If you feel like anything is missing in this list, please contact us.
 
-## Further Downscaling Recommendations
+<!-- ## Further Downscaling Recommendations -->
 
-**covariate-variable pairing table here**
+<!-- **covariate-variable pairing table here** -->
 
 # Using Third-Party Data
 
@@ -819,7 +819,7 @@ State_Krig <- krigR(Data = State_Raw, # what to krig
                     KrigingEquation = "ERA ~ TKDry + TKWet", # this time, we need to specify a new formula. Try and see what happens if you forget to do this.
                     FileName = "State_TP.nc", # save the finished file as this
                     Dir = Dir.TP, # where to save the output
-                    nmax = 20 # how many nearest neighbours to consider in Kriging
+                    nmax = 15 # how many nearest neighbours to consider in Kriging
 )
 Plot_Krigs(State_Krig, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"), Legend = "Soil Temperature (0-7cm) [K]")
 ```
