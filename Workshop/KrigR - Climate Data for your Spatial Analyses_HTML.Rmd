@@ -354,7 +354,7 @@ BaseTime <- KrigStop-KrigStart
 BaseTime
 ```
 
-# Kriging - the Pipeline
+# Kriging - The Pipeline
 Now that we've seen how you can execute the `KrigR` workflow using three separate functions, it is time that we show you the most simplified function call to obtain some downscaled products: the **pipeline**.
 
 First, let's create a directory which the `KrigR` pipeline will *leak* .nc files to. Don't worry, this leak in the pipeline is very much intentional and of no environmental concern (unless you are running low on disk space).
@@ -381,6 +381,11 @@ Pipe_Krig <- krigR(Variable = '2m_temperature',
                     Dir = Dir.StatePipe)
 Pipe_Krig[-3] # we will talk later about why we leave out the third list element produced by krigR here
 Plot_Krigs(Pipe_Krig, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+
+Let's just check how this compares to non-pipeline product:
+```{r}
+all.equal(State_Krig[[1]], Pipe_Krig[[1]])
 ```
 
 Surprise! There is no difference.
