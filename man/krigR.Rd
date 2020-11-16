@@ -23,6 +23,8 @@ krigR(
   TStep,
   FUN = "mean",
   Extent,
+  Buffer = 0.5,
+  ID = "ID",
   API_Key,
   API_User,
   Target_res,
@@ -61,10 +63,15 @@ krigR(
 
 \item{TResolution}{Optional. Temporal resolution of final product. hour', 'day', 'month'. Passed on to download_ERA.}
 
-\item{TStep}{Optional. Which time steps (numeric) to consider for temporal resolution. Passed on to download_ERA.
-#' @param FUN Optional. A raster calculation argument as passed to `raster::stackApply()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.}
+\item{TStep}{Optional. Which time steps (numeric) to consider for temporal resolution. Passed on to download_ERA.}
 
-\item{Extent}{Optional. Download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. Passed on to download_ERA and downbload_DEM.}
+\item{FUN}{Optional. A raster calculation argument as passed to `raster::stackApply()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.}
+
+\item{Extent}{Optional, download data according to rectangular bounding box. specify as extent() object or as a raster, a SpatialPolygonsDataFrame object, or a data.frame object. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns as well as a non-repeating ID-column. Passed on to download_ERA and download_DEM.}
+
+\item{Buffer}{Optional. Identifies how big a rectangular buffer to draw around points if Extent is a data frame of points. Buffer is expressed as centessimal degrees. Passed on to download_ERA and download_DEM.}
+
+\item{ID}{Optional. Identifies which column in Extent to use for creation of individual buffers if Extent is a data.frame. Passed on to download_ERA and download_DEM.}
 
 \item{API_Key}{Optional. ECMWF cds API key. Passed on to download_ERA.}
 
@@ -77,7 +84,7 @@ krigR(
 \item{...}{further arguments passed to automap::autoKrige and/or gstat::krige. Does not work with multi-core kriging for now.}
 }
 \value{
-A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged succesfully.
+A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.
 }
 \description{
 This function statistically downscales input data using covariate data and the kriging methodology. The function can be run in two ways:

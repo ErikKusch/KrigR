@@ -23,14 +23,16 @@
 #' @param DateStop Optional. Date ('YYYY-MM-DD') at which to stop time series of downloaded data. Passed on to download_ERA.
 #' @param TResolution Optional. Temporal resolution of final product. hour', 'day', 'month'. Passed on to download_ERA.
 #' @param TStep Optional. Which time steps (numeric) to consider for temporal resolution. Passed on to download_ERA.
-#' #' @param FUN Optional. A raster calculation argument as passed to `raster::stackApply()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.
-#' @param Extent Optional. Download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. Passed on to download_ERA and downbload_DEM.
+#' @param FUN Optional. A raster calculation argument as passed to `raster::stackApply()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.
+#' @param Extent Optional, download data according to rectangular bounding box. specify as extent() object or as a raster, a SpatialPolygonsDataFrame object, or a data.frame object. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns as well as a non-repeating ID-column. Passed on to download_ERA and download_DEM.
+#' @param Buffer Optional. Identifies how big a rectangular buffer to draw around points if Extent is a data frame of points. Buffer is expressed as centessimal degrees. Passed on to download_ERA and download_DEM.
+#' @param ID Optional. Identifies which column in Extent to use for creation of individual buffers if Extent is a data.frame. Passed on to download_ERA and download_DEM.
 #' @param Target_res Optional. The target resolution for the kriging step (i.e. which resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.
 #' @param API_Key Optional. ECMWF cds API key. Passed on to download_ERA.
 #' @param API_User Optional. ECMWF cds user number. Passed on to download_ERA.
 #' @param nmax Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric) or as "Opt" which prompts krigR to identify a suitable number of nmax given the resolution of your data.
 #' @param ... further arguments passed to automap::autoKrige and/or gstat::krige. Does not work with multi-core kriging for now.
-#' @return A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged succesfully.
+#' @return A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.
 #' @examples
 #' \dontrun{
 #' # Downloading and downscaling ERA5-Land air temperature reanalysis data in monthly intervals for the entire year of 2000 for Germany. API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
@@ -38,7 +40,7 @@
 #' }
 #'
 #' @export
-krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, FUN = 'mean', Extent, API_Key, API_User, Target_res, nmax = Inf, ...){
+krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, FUN = 'mean', Extent, Buffer = 0.5, ID = "ID", API_Key, API_User, Target_res, nmax = Inf, ...){
   ## CALL LIST (for storing how the function as called in the output) ----
   if(is.null(Data)){
     Data_Retrieval <- list(Variable = Variable,

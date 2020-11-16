@@ -8,6 +8,8 @@ download_DEM(
   Train_ras = NULL,
   Target_res = NULL,
   Shape = NULL,
+  Buffer = 0.5,
+  ID = "ID",
   Dir = getwd(),
   Keep_Temporary = FALSE
 )
@@ -17,7 +19,11 @@ download_DEM(
 
 \item{Target_res}{The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res() or a single number (GMTED2010 data will be aggregated) or a raster which the data should be comparable to after kriging (GMTED2010 data will be resampled).}
 
-\item{Shape}{Optional, a SpatialPolygonsDataFrame object. This will be treated as a shapefile and the output will be masked to this shapefile.}
+\item{Shape}{Optional, a SpatialPolygonsDataFrame or data.frame object. If Shape is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Shape is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns as well as a non-repeating ID-column.}
+
+\item{Buffer}{Optional. Identifies how big a rectangular buffer to draw around points if Shape is a data frame of points. Buffer is expressed as centessimal degrees.}
+
+\item{ID}{Optional. Identifies which column in Shape to use for creation of individual buffers if Shape is a data.frame.}
 
 \item{Dir}{Directory specifying where to download data to.}
 
