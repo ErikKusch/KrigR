@@ -269,7 +269,7 @@ download_DEM <- function(Train_ras = NULL,
 
   # Extent vs. Shapefile vs. Points
   if(class(Shape) == "data.frame"){ # if we have been given point data
-    Extent <- KrigR:::buffer_Points(Points = Extent, Buffer = Buffer, ID = ID)
+    Extent <- KrigR:::buffer_Points(Points = Shape, Buffer = Buffer, ID = ID)
   }
 
   ### DOWNLOADING & UNPACKING -----
