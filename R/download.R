@@ -303,7 +303,7 @@ download_DEM <- function(Train_ras = NULL,
 
   ### MASKING ----
   if(!is.null(Shape)){ # Shape check
-    if(class(Shape == "data.frame")){
+    if(class(Shape) == "data.frame"){
       Shape <- Extent
     }
     range <- KrigR:::mask_Shape(base.map = GMTED2010Train_ras, Shape = Shape)
