@@ -736,7 +736,6 @@ buffer_Points <- function(Points = NULL, Buffer = .5, ID = "ID"){
 #'
 #'
 mask_Shape <- function(base.map = NULL, Shape = NULL){
-  base.map <- Era5_ras[[1]]
   base.map[] <- NA
   stars.base.map <- stars::st_as_stars(base.map)
   # Subset shape file
