@@ -61,12 +61,12 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
 
   ## COVARIATE DATA (call to download_DEM function when no covariates are specified) ----
   if(is.null(Covariates_coarse) & is.null(Covariates_fine)){ # covariate check: if no covariates have been specified
-    if(class(Extent) == "SpatialPolygonsDataFrame"){ # Extent check: if Extent input is a shapefile
+    if(class(Extent) == "SpatialPolygonsDataFrame" | class(Extent) == "data.frame"){ # Extent check: if Extent input is a shapefile
       Shape <- Extent # save shapefile for use as Shape in masking covariate data
     }else{ # if Extent is not a shape, then extent specification is already baked into Data
       Shape <- NULL # set Shape to NULL so it is ignored in download_DEM function when masking is applied
     } # end of Extent check
-    Covs_ls <- download_DEM(Train_ras = Data, Target_res = Target_res, Shape = Shape, Keep_Temporary = Keep_Temporary, Dir = Dir)
+    Covs_ls <- download_DEM(Train_ras = Data, Target_res = Target_res, Shape = Shape, Buffer = Buffer, ID = ID, Keep_Temporary = Keep_Temporary, Dir = Dir)
     Covariates_coarse <- Covs_ls[[1]] # extract coarse covariates from download_DEM output
     Covariates_fine <- Covs_ls[[2]] # extract fine covariates from download_DEM output
   } # end of covariate check
