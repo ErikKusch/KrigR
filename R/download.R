@@ -305,6 +305,7 @@ download_DEM <- function(Train_ras = NULL,
   if(!is.null(Shape)){ # Shape check
     range <- KrigR:::mask_Shape(base.map = GMTED2010Train_ras, Shape = Shape)
     GMTED2010Train_ras <- mask(GMTED2010Train_ras, range)
+    GMTED2010Target_ras <- setValues(raster(GMTED2010Target_ras), GMTED2010Target_ras[]) # remove attributes
     range <- KrigR:::mask_Shape(base.map = GMTED2010Target_ras, Shape = Shape)
     GMTED2010Target_ras <- mask(GMTED2010Target_ras, range)
   } # end of Shape check
