@@ -27,4 +27,8 @@ Depends:
     doParallel,
     foreach,
     automap,
-    lubridate
+    lubridate,
+    sp,
+    sf,
+    fasterize,
+    stars
