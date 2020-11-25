@@ -23,4 +23,5 @@ This function is called upon in the krigR function and performs sanity checks fo
 check_Krig(????)
 }
 
+
 }

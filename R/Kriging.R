@@ -5,7 +5,7 @@
 #' \item \strong{By Itself}: Use the arguments Data, Covariates_coarse, Covariates_fine when you already have raster files for your data which is to be downscaled as well as covariate raster data.
 #' \item \strong{From Scratch}: Use the arguments Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, Dir, FileName, API_Key, API_User, and arget_res. By doing so, krigR will call the functions download_ERA() and download_DEM() for one coherent kriging workflow. Note that this process does not work when targetting UERRA data.
 #' }
-#' Use optional arguments such as Dir, FileName, Keep_Temporary, SingularTry, KrigingEquation and Cores for ease of use, substituion of non-GMTED2010 covariates, and parallel processing.
+#' Use optional arguments such as Dir, FileName, Keep_Temporary, SingularTry, KrigingEquation and Cores for ease of use, substitution of non-GMTED2010 covariates, and parallel processing.
 #'
 #' @param Data Raster file which is to be downscaled.
 #' @param Covariates_coarse Raster file containing covariates at training resolution.
@@ -14,7 +14,7 @@
 #' @param Dir Optional. Directory specifying where to place final kriged product. Default is current working directory.
 #' @param FileName Optional. A file name for the netcdf produced. Default is a combination parameters in the function call.
 #' @param Keep_Temporary Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE.
-#' @param Cores Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Paralell processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.
+#' @param Cores Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Parallel processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.
 #' @param SingularTry Numeric. How often to try kriging of each layer of the input. This usually gets around issues of singular covariance matrices in the kriging process, but takes some time. Default is 10
 #' @param Variable Optional, calls download_DEM(). ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.
 #' @param Type  Optional. Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Passed on to download_ERA.
@@ -23,12 +23,16 @@
 #' @param DateStop Optional. Date ('YYYY-MM-DD') at which to stop time series of downloaded data. Passed on to download_ERA.
 #' @param TResolution Optional. Temporal resolution of final product. hour', 'day', 'month'. Passed on to download_ERA.
 #' @param TStep Optional. Which time steps (numeric) to consider for temporal resolution. Passed on to download_ERA.
-#' @param Extent Optional. Download data according to rectangular bounding box. Specify as extent object (obtained via raster::extent()). Alternatively, a raster or a SpatialPolygonsDataFrameobject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. Passed on to download_ERA and downbload_DEM.
-#' @param Target_res Optional. The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.
+#' @param FUN Optional. A raster calculation argument as passed to `raster::stackApply()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.
+#' @param Extent Optional, download data according to rectangular bounding box. specify as extent() object or as a raster, a SpatialPolygonsDataFrame object, or a data.frame object. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns as well as a non-repeating ID-column. Passed on to download_ERA and download_DEM.
+#' @param Buffer Optional. Identifies how big a rectangular buffer to draw around points if Extent is a data frame of points. Buffer is expressed as centessimal degrees. Passed on to download_ERA and download_DEM.
+#' @param ID Optional. Identifies which column in Extent to use for creation of individual buffers if Extent is a data.frame. Passed on to download_ERA and download_DEM.
+#' @param Target_res Optional. The target resolution for the kriging step (i.e. which resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.
 #' @param API_Key Optional. ECMWF cds API key. Passed on to download_ERA.
 #' @param API_User Optional. ECMWF cds user number. Passed on to download_ERA.
-#' @param ... further arguments that are passed to automap::autoKrige and gstat::krige
-#' @return A list object containing the downscaled data as well as the standard error for downscaling, and two NETCDF (.nc) file in the specified directory which are the contents of the aforementioned list.
+#' @param nmax Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric) or as "Opt" which prompts krigR to identify a suitable number of nmax given the resolution of your data.
+#' @param ... further arguments passed to automap::autoKrige and/or gstat::krige. Does not work with multi-core kriging for now.
+#' @return A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.
 #' @examples
 #' \dontrun{
 #' # Downloading and downscaling ERA5-Land air temperature reanalysis data in monthly intervals for the entire year of 2000 for Germany. API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
@@ -36,20 +40,33 @@
 #' }
 #'
 #' @export
-krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, Extent, API_Key, API_User, Target_res, ...){
+krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, Type, DataSet, DateStart, DateStop, TResolution, TStep, FUN = 'mean', Extent, Buffer = 0.5, ID = "ID", API_Key, API_User, Target_res, nmax = Inf, ...){
+  ## CALL LIST (for storing how the function as called in the output) ----
+  if(is.null(Data)){
+    Data_Retrieval <- list(Variable = Variable,
+                           Type = Type,
+                           DataSet = DataSet,
+                           DateStart = DateStart,
+                           DateStop = DateStop,
+                           TResolution = TResolution,
+                           TStep = TStep,
+                           Extent = Extent)
+  }else{
+    Data_Retrieval <- "None needed. Data was not queried via krigR function, but supplied by user."
+  }
   ## CLIMATE DATA (call to download_ERA function if no Data set is specified) ----
   if(is.null(Data)){ # data check: if no data has been specified
-    Data <- download_ERA(Variable = Variable, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir)
+    Data <- download_ERA(Variable = Variable, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, FUN = FUN, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir)
   } # end of data check
 
   ## COVARIATE DATA (call to download_DEM function when no covariates are specified) ----
   if(is.null(Covariates_coarse) & is.null(Covariates_fine)){ # covariate check: if no covariates have been specified
-    if(class(Extent) == "SpatialPolygonsDataFrame"){ # Extent check: if Extent input is a shapefile
+    if(class(Extent) == "SpatialPolygonsDataFrame" | class(Extent) == "data.frame"){ # Extent check: if Extent input is a shapefile
       Shape <- Extent # save shapefile for use as Shape in masking covariate data
     }else{ # if Extent is not a shape, then extent specification is already baked into Data
       Shape <- NULL # set Shape to NULL so it is ignored in download_DEM function when masking is applied
     } # end of Extent check
-    Covs_ls <- download_DEM(Train_ras = Data, Target_res = Target_res, Shape = Shape, Keep_Temporary = Keep_Temporary, Dir = Dir)
+    Covs_ls <- download_DEM(Train_ras = Data, Target_res = Target_res, Shape = Shape, Buffer = Buffer, ID = ID, Keep_Temporary = Keep_Temporary, Dir = Dir)
     Covariates_coarse <- Covs_ls[[1]] # extract coarse covariates from download_DEM output
     Covariates_fine <- Covs_ls[[2]] # extract fine covariates from download_DEM output
   } # end of covariate check
@@ -57,8 +74,26 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## KRIGING FORMULA (assure that KrigingEquation is a formula object) ----
   KrigingEquation <- as.formula(KrigingEquation)
 
+  ## nmax INDENTIFICATION
+  if(nmax == "Opt"){
+    # identify the best nmax here
+    nmax <- 50
+  }
+
+  ## CALL LIST (for storing how the function as called in the output) ----
+  Call_ls <- list(Data = KrigR:::SummarizeRaster(Data),
+                  Covariates_coarse = KrigR:::SummarizeRaster(Covariates_coarse),
+                  Covariates_fine = KrigR:::SummarizeRaster(Covariates_fine),
+                  KrigingEquation = KrigingEquation,
+                  Cores = Cores,
+                  FileName = FileName,
+                  Keep_Temporary = Keep_Temporary,
+                  nmax = nmax,
+                  Data_Retrieval = Data_Retrieval,
+                  misc = ...)
+
   ## SANITY CHECKS (step into check_Krig function to catch most common error messages) ----
-  Check_Product <- check_Krig(Data = Data, CovariatesCoarse = Covariates_coarse, CovariatesFine = Covariates_fine, KrigingEquation = KrigingEquation)
+  Check_Product <- KrigR:::check_Krig(Data = Data, CovariatesCoarse = Covariates_coarse, CovariatesFine = Covariates_fine, KrigingEquation = KrigingEquation)
   KrigingEquation <- Check_Product[[1]] # extract KrigingEquation (this may have changed in check_Krig)
   DataSkips <- Check_Product[[2]] # extract which layers to skip due to missing data (this is unlikely to ever come into action)
   Terms <- unique(unlist(strsplit(labels(terms(KrigingEquation)), split = ":"))) # identify which layers of data are needed
@@ -102,7 +137,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   Iter_Try = 0 # number of tries set to 0
   kriging_result <- NULL
   while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < SingularTry){ # try kriging SingularTry times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
-    try(invisible(capture.output(kriging_result <- autoKrige(KrigingEquation, OriginK, Target, ...))), silent = TRUE)
+    try(invisible(capture.output(kriging_result <- autoKrige(formula = KrigingEquation, input_data = OriginK, new_data = Target, nmax = nmax))), silent = TRUE)
     Iter_Try <- Iter_Try +1
   }
   if(class(kriging_result)[1] != 'autoKrige'){ # give error if kriging fails
@@ -153,7 +188,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## ACTUAL KRIGING (carry out kriging according to user specifications either in parallel or on a single core) ----
   if(Cores > 1){ # Cores check: if parallel processing has been specified
     ### PARALLEL KRIGING ---
-    ForeachObjects <- c("Dir.Temp", "Cores", "Data", "KrigingEquation", "Origin", "Target", "Covariates_coarse", "Covariates_fine", "Terms", "SingularTry") # objects which are needed for each kriging run and are thus handed to each cluster unit
+    ForeachObjects <- c("Dir.Temp", "Cores", "Data", "KrigingEquation", "Origin", "Target", "Covariates_coarse", "Covariates_fine", "Terms", "SingularTry", "nmax") # objects which are needed for each kriging run and are thus handed to each cluster unit
     cl <- makeCluster(Cores) # Assuming Cores node cluster
     registerDoParallel(cl) # registering cores
     foreach(Iter_Krige = Compute_Layers, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
@@ -189,6 +224,9 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
     Ras_Var <- brick(Ras_Var) # convert list of kriged layers in actual rasterbrick of kriged layers
     writeRaster(x = Ras_Var, filename = file.path(Dir, paste0("SE_",FileName)), overwrite = TRUE, format="CDF") # save final product as raster
+  }else{ # if some layers needed to be skipped
+    warning(paste0("Some of the layers in your raster could not be kriged. You will find all the individual layers (kriged and not kriged) in ", Dir, "."))
+    Keep_Temporary <- TRUE # keep temporary files so kriged products are not deleted
   } # end of Skip check
 
   ### REMOVE FILES FROM HARD DRIVE ---
@@ -196,7 +234,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     unlink(Dir.Temp, recursive = TRUE)
   }  # end of cleanup check
 
-  Krig_ls <- list(Ras_Krig, Ras_Var)
-  names(Krig_ls) <- c("Kriging_Output", "Kriging_SE")
+  Krig_ls <- list(Ras_Krig, Ras_Var, Call_ls)
+  names(Krig_ls) <- c("Kriging_Output", "Kriging_SE", "Call")
   return(Krig_ls) # return raster or list of layers
 }

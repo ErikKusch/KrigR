@@ -9,7 +9,10 @@
 #' @param DateStop Date ('YYYY-MM-DD') at which to stop time series of downloaded data.
 #' @param TResolution Temporal resolution of final product. 'hour', 'day', 'month', or 'year'.
 #' @param TStep Which time steps (numeric) to consider for temporal resolution. For example, specify bi-monthly data records by setting TResolution to 'month' and TStep to 2.
-#' @param Extent Optional, download data according to rectangular bounding box. specify as extent() object or as a raster or a SpatialPolygonsDataFrame object. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile.
+#' @param FUN A raster calculation argument as passed to `raster::stackApply()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.
+#' @param Extent Optional, download data according to rectangular bounding box. specify as extent() object or as a raster, a SpatialPolygonsDataFrame object, or a data.frame opbject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns as well as a non-repeating ID-column.
+#' @param Buffer Optional. Identifies how big a rectangular buffer to draw around points if Extent is a data frame of points. Buffer is expressed as centessimal degrees.
+#' @param ID Optional. Identifies which column in Extent to use for creation of individual buffers if Extent is a data.frame.
 #' @param Dir Directory specifying where to download data to.
 #' @param FileName A file name for the netcdf produced. Default is a combination parameters in the function call.
 #' @param API_Key ECMWF cds API key.
@@ -24,7 +27,8 @@
 #' @export
 download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-land",
                          DateStart = "1981-01-01", DateStop = Sys.Date()-100,
-                         TResolution = "month", TStep = 1, Extent = extent(-180,180,-90,90),
+                         TResolution = "month", TStep = 1, FUN = 'mean',
+                         Extent = extent(-180,180,-90,90), Buffer = 0.5, ID = "ID",
                          Dir = getwd(), FileName = NULL,
                          API_User = NULL, API_Key = NULL) {
 
@@ -77,9 +81,14 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
     )
   } # end of calls loop
 
+  # Extent vs. Shapefile vs. Points
+  if(class(Extent) == "data.frame"){ # if we have been given point data
+    Extent <- KrigR:::buffer_Points(Points = Extent, Buffer = Buffer, ID = ID)
+  }
+
   # Extent (prepare rectangular bounding box for download from user input)
-  if(class(Extent) == "Raster" | class(Extent) == "SpatialPolygonsDataFrame"){ # sanity check: ensure it is a raster of Spatialpolygonsdataframe object if not an extent object
-    if(class(Extent) == "SpatialPolygonsDataFrame"){ # shape check
+  if(class(Extent) == "Raster" | class(Extent) == "SpatialPolygonsDataFrame" | class(Extent) == "SpatialPolygons"){ # sanity check: ensure it is a raster of Spatialpolygonsdataframe object if not an extent object
+    if(class(Extent) == "SpatialPolygonsDataFrame" | class(Extent) == "SpatialPolygons"){ # shape check
       Shape <- Extent # save the shapefile for later masking
     } # end of shape check
     Extent <- extent(Extent) # extract extent
@@ -87,8 +96,17 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   if(class(Extent) != "Extent"){ # Extent check: whether already specified as Extent object
     stop('The Extent argument provided by you is neither formatted as an Extent nor a Raster or SpatialPolygonsDataFrame object. Please correct this.')
   } # # end of Extent check
-  Extent <- extent(Extent) # extract extent
-  Extent <- try(paste(Extent[4], Extent[1], Extent[3], Extent[2], sep="/")) # break Extent object down into character
+  Modifier <- as.numeric(strsplit(Grid, "/")[[1]][1]) # for widening the extent to ensure full coverage of shapefile
+  Extent <- try(paste(Extent[4]+Modifier, Extent[1]-Modifier, Extent[3]-Modifier, Extent[2]+Modifier, sep="/")) # break Extent object down into character
+  # Extent global extent sanity check
+  Corner_vec <- as.numeric(unlist(strsplit(Extent, "/")))
+  Musts_vec <- c(90, -180, -90, 180)
+  for(Iter_Corners in 1:length(Corner_vec)){
+    if(abs(Corner_vec[Iter_Corners]) > abs(Musts_vec[Iter_Corners])){
+      Corner_vec[Iter_Corners] <- Musts_vec[Iter_Corners]
+    }
+  }
+  Extent <- try(paste(Corner_vec, collapse="/")) # break Extent object down into character
 
   # Time (set time for download depending on temporal resolution)
   if(TResolution == "hour" | TResolution == "day"){ # time check: if we need sub-daily data
@@ -176,7 +194,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
         factor <- 12 # number of months per year
       }
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
-      Era5_ras <- stackApply(Era5_ras, Index, fun='mean') # do the calculation
+      Era5_ras <- stackApply(Era5_ras, Index, fun=FUN) # do the calculation
     }# end of day/year check
 
     ### TIME STEP MEANS ----
@@ -184,10 +202,14 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
       warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
     }# end of sanity check for time step completeness
     Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
-    Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun='mean') # do the calculation
+    Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN) # do the calculation
     ### MASKING ----
     if(exists("Shape")){ # Shape check
-      Era5_ras <- mask(Era5_ras, Shape) # mask if shapefile was provided
+      range <- KrigR:::mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
+      Era5_ras <- mask(Era5_ras, range)
+      # Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
+      # Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
+      # Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
     }# end of Shape check
     ### LIST SAVING
     Era5_ls[[LoadIter]] <- Era5_ras
@@ -217,7 +239,9 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 #'
 #' @param Train_ras A raster file containing the data which is to be downscaled. GMTED2010 data is then resampled to match this.
 #' @param Target_res The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res() or a single number (GMTED2010 data will be aggregated) or a raster which the data should be comparable to after kriging (GMTED2010 data will be resampled).
-#' @param Shape Optional, a SpatialPolygonsDataFrame object. This will be treated as a shapefile and the output will be masked to this shapefile.
+#' @param Shape Optional, a SpatialPolygonsDataFrame or data.frame object. If Shape is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Shape is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns as well as a non-repeating ID-column.
+#' @param Buffer Optional. Identifies how big a rectangular buffer to draw around points if Shape is a data frame of points. Buffer is expressed as centessimal degrees.
+#' @param ID Optional. Identifies which column in Shape to use for creation of individual buffers if Shape is a data.frame.
 #' @param Dir Directory specifying where to download data to.
 #' @param Keep_Temporary Logical, whether to delete individual, global, 30 arc-sec files or keep them to be reused in later analyses.
 #' @return A list containing two raster object ready to be used as covariates for kriging, and two NETCDF (.nc) files in the specified directory.
@@ -230,7 +254,8 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 #' @export
 download_DEM <- function(Train_ras = NULL,
                          Target_res = NULL,
-                         Shape = NULL, Dir = getwd(), Keep_Temporary = FALSE) {
+                         Shape = NULL, Buffer = 0.5, ID = "ID",
+                         Dir = getwd(), Keep_Temporary = FALSE) {
 
   ### PREPARATION -----
   Extent <- extent(Train_ras) # extract extent for later cropping
@@ -240,6 +265,11 @@ download_DEM <- function(Train_ras = NULL,
   if(class(Target_res[[1]]) == "RasterLayer"){
     Target_ras <- Target_res
     Target_res <- res(Target_ras)
+  }
+
+  # Extent vs. Shapefile vs. Points
+  if(class(Shape) == "data.frame"){ # if we have been given point data
+    Shape <- KrigR:::buffer_Points(Points = Shape, Buffer = Buffer, ID = ID)
   }
 
   ### DOWNLOADING & UNPACKING -----
@@ -273,8 +303,11 @@ download_DEM <- function(Train_ras = NULL,
 
   ### MASKING ----
   if(!is.null(Shape)){ # Shape check
-    GMTED2010Train_ras <- mask(GMTED2010Train_ras, Shape)
-    GMTED2010Target_ras <- mask(GMTED2010Target_ras, Shape)
+    range <- KrigR:::mask_Shape(base.map = GMTED2010Train_ras, Shape = Shape)
+    GMTED2010Train_ras <- mask(GMTED2010Train_ras, range)
+    GMTED2010Target_ras <- setValues(raster(GMTED2010Target_ras), GMTED2010Target_ras[]) # remove attributes
+    range <- KrigR:::mask_Shape(base.map = GMTED2010Target_ras, Shape = Shape)
+    GMTED2010Target_ras <- mask(GMTED2010Target_ras, range)
   } # end of Shape check
 
   ### SAVING DATA ----
