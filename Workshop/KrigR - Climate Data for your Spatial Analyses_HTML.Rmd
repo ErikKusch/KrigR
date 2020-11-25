@@ -378,8 +378,12 @@ Pipe_Krig <- krigR(Variable = '2m_temperature',
                     Target_res = .02,
                     Cores = 1,
                     FileName = "State_Pipe.nc",
+<<<<<<< HEAD
                     Dir = Dir.StatePipe,
                     Keep_Temporary = FALSE)
+=======
+                    Dir = Dir.StatePipe)
+>>>>>>> 04e618e26984793b74309cc9d02d9253e096c40e
 Pipe_Krig[-3] # we will talk later about why we leave out the third list element produced by krigR here
 Plot_Krigs(Pipe_Krig, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
@@ -836,11 +840,19 @@ So far, we have only ever looked at the first two elements in the list returned 
 ```{r}
 NDVI_Krig[[3]]
 ```
+<<<<<<< HEAD
 
 This lengthy list should contain all information you need to trace how you created a certain data set using `krigR()`. If you feel like anything is missing in this list, please contact us.
 
 <!-- ## Further Downscaling Recommendations -->
 
+=======
+
+This lengthy list should contain all information you need to trace how you created a certain data set using `krigR()`. If you feel like anything is missing in this list, please contact us.
+
+<!-- ## Further Downscaling Recommendations -->
+
+>>>>>>> 04e618e26984793b74309cc9d02d9253e096c40e
 <!-- **covariate-variable pairing table here** -->
 
 # Using Third-Party Data
