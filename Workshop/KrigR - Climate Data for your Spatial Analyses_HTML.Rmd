@@ -378,7 +378,8 @@ Pipe_Krig <- krigR(Variable = '2m_temperature',
                     Target_res = .02,
                     Cores = 1,
                     FileName = "State_Pipe.nc",
-                    Dir = Dir.StatePipe)
+                    Dir = Dir.StatePipe,
+                    Keep_Temporary = FALSE)
 Pipe_Krig[-3] # we will talk later about why we leave out the third list element produced by krigR here
 Plot_Krigs(Pipe_Krig, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
@@ -479,6 +480,112 @@ Running this downscaling process for Saxony using the shapefile took `r as.numer
 
 <p class="atten">
 Using a `shapefile` rather than an `extent` statement **speeds up** the **Kriging process**!
+</p>
+
+## Kriging For Point-Data
+<p class="lookhere">
+
+</p>
+
+```{r PointsMap1, tidy = FALSE}
+Bigfoot.URL <- "https://opendata.arcgis.com/datasets/9947fc49e6c44120b4a1b3133c073dbc_0.csv"
+Bigfoot.data <- read.csv(Bigfoot.URL)
+Bigfoot_ext <- extent(min(Bigfoot.data$Lon), max(Bigfoot.data$Lon),
+                      min(Bigfoot.data$Lat), max(Bigfoot.data$Lat))
+
+BigfootLand <- crop(LandMask , Bigfoot_ext)
+
+
+GoogMap <- get_map(c(left = Bigfoot_ext[1],
+                     right = Bigfoot_ext[2],
+                     bottom = Bigfoot_ext[3],
+                     top = Bigfoot_ext[4])
+                   )
+ggmap(GoogMap) +
+  geom_point(data = Bigfoot.data, aes(x = Lon, y = Lat)) +
+  theme_bw() + labs(x = "Longitude", y = "Latitude")
+```
+
+```{r PointsMap2, tidy = FALSE}
+ggplot() + 
+  geom_polygon(data = BigfootLand, aes(x = long, y = lat, group = group), colour = "red", fill = "lightgrey") +
+  geom_point(data = Bigfoot.data, aes(x = Lon, y = Lat)) +
+  theme_bw() + labs(x = "Longitude", y = "Latitude")
+```
+
+```{r PointsSubset, tidy = FALSE}
+set.seed(42)
+Bigfoot_sample <- sample(x = 1:dim(Bigfoot.data)[1], size = 60)
+Bigfoot_df <- Bigfoot.data[Bigfoot_sample, ]
+```
+
+```{r PointsMap3, tidy = FALSE}
+ggplot() + 
+  geom_polygon(data = BigfootLand, aes(x = long, y = lat, group = group), colour = "red", fill = "lightgrey") +
+  geom_point(data = Bigfoot_df, aes(x = Lon, y = Lat)) +
+  theme_bw() + labs(x = "Longitude", y = "Latitude")
+```
+
+```{r DirPoints}
+Dir.Points <- file.path(Dir.Data, "Point_Data")
+dir.create(Dir.Points)
+```
+
+### Climate Data
+
+```{r ClimPoints, results = 'hide', fig.keep = 'all', fig.height = 4}
+Points_Raw <- download_ERA(
+  Variable = '2m_temperature',
+  DataSet = 'era5-land',
+  DateStart = '1995-01-02',
+  DateStop = '1995-01-04',
+  TResolution = 'day',
+  TStep = 1,
+  Extent = State_Shp,
+  Dir = Dir.StateShp,
+  API_User = API_User,
+  API_Key = API_Key)
+Plot_Raw(Points_Raw, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+<p class="lookhere">
+
+</p>
+
+### Covariates
+
+```{r CovPoints, results = 'hide', fig.keep = 'all', fig.height = 4}
+Covs_ls <- download_DEM(Train_ras = State_Raw,
+                        Target_res = .02,
+                        Shape = State_Shp,
+                        Dir = Dir.StateShp,
+                        Keep_Temporary = TRUE)
+Plot_Covs(Covs_ls)
+```
+
+### Kriging
+
+```{r KrigPoints, results = 'hide', fig.keep = 'all'}
+KrigStart <- Sys.time() # record when we started
+Points_Krig <- krigR(Data = Points_Raw, # what to krig
+                    Covariates_coarse = Covs_ls[[1]], # covariates at training resolution
+                    Covariates_fine = Covs_ls[[2]], # covariates at target resolution
+                    Keep_Temporary = FALSE, # delete temporary krigs of layers
+                    Cores = 1, # only run this on 1 core
+                    FileName = "State_Shape.nc", # save the finished file as this
+                    Dir = Dir.StateShp # where to save the output
+)
+KrigStop <- Sys.time() # record when the function was done
+Plot_Krigs(State_Krig, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
+```
+
+Let's see how long this took:
+```{r KrigPointsTime}
+ShapeTime <- KrigStop-KrigStart
+ShapeTime
+```
+
+<p class="atten">
+
 </p>
 
 ## Multi-Core Kriging
