@@ -198,7 +198,7 @@ Plot_Covs <- function(Covs, Shp = NULL){
       Plots_ls[[Counter]] <- ggplot() + # create plot
         geom_raster(data = Cov_df , aes(x = x, y = y, fill = Values)) + # plot the covariate data
         theme_bw() + labs(x = "Longitude", y = "Latitude") + # make plot more readable
-        scale_fill_gradientn(name = names(Covs[[Plot]]), colours = cividis(100)) + # add colour and legend
+        scale_fill_gradientn(name = names(Covs_Iter[[Plot]]), colours = cividis(100)) + # add colour and legend
         theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) # reduce margins (for fusing of plots)
         if(!is.null(Shp)){ # if a shape has been designated
           Plots_ls[[Counter]] <- Plots_ls[[Counter]] + geom_polygon(data = Shp, aes(x = long, y = lat, group = group), colour = "black", fill = "NA") # add shape
@@ -378,12 +378,7 @@ Pipe_Krig <- krigR(Variable = '2m_temperature',
                     Target_res = .02,
                     Cores = 1,
                     FileName = "State_Pipe.nc",
-<<<<<<< HEAD
-                    Dir = Dir.StatePipe,
-                    Keep_Temporary = FALSE)
-=======
                     Dir = Dir.StatePipe)
->>>>>>> 04e618e26984793b74309cc9d02d9253e096c40e
 Pipe_Krig[-3] # we will talk later about why we leave out the third list element produced by krigR here
 Plot_Krigs(Pipe_Krig, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
 ```
@@ -488,57 +483,197 @@ Using a `shapefile` rather than an `extent` statement **speeds up** the **Krigin
 
 ## Kriging For Point-Data
 <p class="lookhere">
-
+`KrigR` also support point-data which is usually used for plot/observation measurements.
 </p>
 
+Often times, we only require data for a certain number of geo-referenced locations which may be separated by large areas of no interest to a given analysis. For these analyses, drawing a shapefile around all locations is already a big step up from just using the extent of the area within which the locations fall. That being said, such a shapefile could still cover big areas of which are of no consideration to our analysis. We have this implemented support for point-data input in `KrigR`. 
+
+Let's first look at the data for this example. Here, we will use hypothetical sightings of Bigfoot:
 ```{r PointsMap1, tidy = FALSE}
-Bigfoot.URL <- "https://opendata.arcgis.com/datasets/9947fc49e6c44120b4a1b3133c073dbc_0.csv"
-Bigfoot.data <- read.csv(Bigfoot.URL)
+Bigfoot.URL <- "https://opendata.arcgis.com/datasets/9947fc49e6c44120b4a1b3133c073dbc_0.csv" # link to the data
+Bigfoot.data <- read.csv(Bigfoot.URL) # red the data
 Bigfoot_ext <- extent(min(Bigfoot.data$Lon), max(Bigfoot.data$Lon),
                       min(Bigfoot.data$Lat), max(Bigfoot.data$Lat))
-
 BigfootLand <- crop(LandMask , Bigfoot_ext)
-
-
 GoogMap <- get_map(c(left = Bigfoot_ext[1],
                      right = Bigfoot_ext[2],
                      bottom = Bigfoot_ext[3],
                      top = Bigfoot_ext[4])
                    )
 ggmap(GoogMap) +
-  geom_point(data = Bigfoot.data, aes(x = Lon, y = Lat)) +
+  geom_point(data = Bigfoot.data, aes(x = Lon, y = Lat), pch = 3) +
   theme_bw() + labs(x = "Longitude", y = "Latitude")
 ```
 
+As we can see, Bigfoot is mostly reported to be found in the west and east of the contiguous US with some occurrences ranging across Canada and Alaska. Quite obviously, there are large areas here, within which we do not require fine-resolution climate data to understand Bigfoot occurrence.
+
+What does this look like with our land mask?
 ```{r PointsMap2, tidy = FALSE}
 ggplot() + 
   geom_polygon(data = BigfootLand, aes(x = long, y = lat, group = group), colour = "red", fill = "lightgrey") +
-  geom_point(data = Bigfoot.data, aes(x = Lon, y = Lat)) +
+  geom_point(data = Bigfoot.data, aes(x = Lon, y = Lat), pch = 3) +
   theme_bw() + labs(x = "Longitude", y = "Latitude")
 ```
 
+We could use the cropped land mask above to download some data. This would already be better than going by extent of the point-data since we bypass sea-areas. However, `KrigR` can do better. To visualise how this works, we create a smaller subset of the Bigfoot location data here:
 ```{r PointsSubset, tidy = FALSE}
 set.seed(42)
 Bigfoot_sample <- sample(x = 1:dim(Bigfoot.data)[1], size = 60)
 Bigfoot_df <- Bigfoot.data[Bigfoot_sample, ]
 ```
 
+So what does this look like on a map?
 ```{r PointsMap3, tidy = FALSE}
+Bigfoot_ext <- extent(min(Bigfoot_df$Lon), max(Bigfoot_df$Lon),
+                      min(Bigfoot_df$Lat), max(Bigfoot_df$Lat))
+BigfootLand <- crop(LandMask , Bigfoot_ext)
 ggplot() + 
   geom_polygon(data = BigfootLand, aes(x = long, y = lat, group = group), colour = "red", fill = "lightgrey") +
-  geom_point(data = Bigfoot_df, aes(x = Lon, y = Lat)) +
+  geom_point(data = Bigfoot_df, aes(x = Lon, y = Lat), pch = 3, cex = 4) +
   theme_bw() + labs(x = "Longitude", y = "Latitude")
 ```
 
+We've obtained a nice sample showing distinct patches of Bigfoot occurrences in the west and east parts of the contiguous US. Again, the shapefile we would make from this with the landmask would cover vast areas which we would not be interested in and thus rack up processing time without a payoff. But what if we drew a tiny extent around each of our locations? `KrigR` can do that for you!
+
+Before we get stuck in with this, we create a directory for our following analysis before we proceed:
 ```{r DirPoints}
 Dir.Points <- file.path(Dir.Data, "Point_Data")
 dir.create(Dir.Points)
 ```
 
 ### Climate Data
+Now, it is time to obtain climate data for our Bigfoot sightings. To do so within `KrigR` we make use of three arguments:   
 
-```{r ClimPoints, results = 'hide', fig.keep = 'all', fig.height = 4}
-Points_Raw <- download_ERA(
+1. `Extent` - Here, we provide `KrigR` with a data frame containing *Lat* and *Lon* coordinates with columns that are named as such.  
+2. `Buffer` - How big a rectangular (square, to be precise) buffer to draw around each location. This is measured in centesimal degrees.  
+3. `ID` - Column name in our `Extent`-object containing unique location/observation/plot identifiers.  
+
+You might already ask yourself? *"What if two or more buffers overlap?"* Well, these buffers are **fused** automatically to build a single polygon.
+
+Here, we are after a climatology or air temperature spanning the years 1982 - 2012 in a 0.1 degree square buffer around around each of our sampled Bigfoot occurrences. Since downloading this data set takes quite a while, I have implemented a check here to make skip downloading and formatting of the data if it has already been done:
+```{r ClimPoints, results = 'hide', fig.keep = 'all'}
+if(!file.exists(file.path(Dir.Points, "AT_Climatology.nc"))){
+  Points_Raw <- download_ERA(
+    Variable = '2m_temperature',
+    DataSet = 'era5-land',
+    DateStart = '1982-01-01',
+    DateStop = '2012-12-31',
+    TResolution = 'year',
+    TStep = 30,
+    Extent = Bigfoot_df, # the point data with Lon and Lat columns
+    Buffer = 0.1, # a 0.1 degree buffer should be drawn around each point
+    ID = "FID_", # this is the column which holds point IDs
+    API_User = API_User,
+    API_Key = API_Key,
+    Dir = Dir.Points,
+    FileName = "AT_Climatology.nc")
+}else{
+  Points_Raw <- raster(file.path(Dir.Points, "AT_Climatology.nc"))
+}
+Plot_Raw(Points_Raw, Shp = BigfootLand, Dates = c("Climatology"))
+```
+<p class="lookhere">
+Setting the `Extent` argument to be a `data.frame` object containing **Lat** and **Lon** data, you can obtain climate reanalysis data around locations/points. This can be controlled using the `Buffer` and `ID` arguments.
+</p>
+
+### Covariates
+Next, we need covariates. We obtain these using the same arguments as we used in our call to `download_ERA`:
+```{r CovPoints, results = 'hide', fig.keep = 'all', fig.height = 4}
+Covs_ls <- download_DEM(Train_ras = Points_Raw,
+                        Target_res = .02,
+                        Keep_Temporary = TRUE,
+                        Shape = Bigfoot_df, # the point data with Lon and Lat columns
+                        Buffer = 0.1, # a 0.1 degree buffer should be drawn around each point
+                        ID = "FID_", # this is the column which holds point IDs
+                        Dir = Dir.Points)
+Plot_Covs(Covs_ls, Shp = BigfootLand)
+```
+
+### Kriging
+Finally, we are ready to krig our data. This is done the exact same way as in any other approach. However, to be sensible, I add the use of the `maxdist` argument (passed on to `gstat::krige`) here. I set it to the same value as the `Buffer` argument previously so that we perform local Kriging (more on that later) by looking only at data that is no further than what we set our `maxdist` to:
+```{r KrigPoints, results = 'hide', fig.keep = 'all', fig.height = 12}
+KrigStart <- Sys.time() # record when we started
+Points_Krig <- krigR(Data = Points_Raw,
+                    Covariates_coarse = Covs_ls[[1]],
+                    Covariates_fine = Covs_ls[[2]],
+                    Keep_Temporary = FALSE,
+                    Cores = 1,
+                    Dir = Dir.Points,
+                    FileName = "Points.nc", 
+                    maxdist = 0.1 # only krig in areas of 0.1 around each location
+                    )
+KrigStop <- Sys.time() # record when the function was done
+Plot_Krigs(Points_Krig, Shp = BigfootLand, Dates = c("Climatology"))
+```
+That went by quick! We can't really see the results clearly here and will look at the in more detail in just a second. Firstly, let's see how long this took:
+```{r KrigPointsTime}
+PointsTime <- KrigStop-KrigStart
+PointsTime
+```
+From experience, Kriging for a region this large instead of just for small regions around locations would easily take upwards of 10 hours! This is a big improvement.
+
+What did we gain by doing this? Why not just obtain the raw reanalysis data and be done with it? For this, we plot our data:
+```{r PointsZoom}
+## DATA EXTRACTION
+AirTemp_Krig <- raster::extract(x = stack(Points_Krig[-3]), 
+                y = Bigfoot_df[, c("Lon", "Lat")])
+AirTemp_Coarse <- raster::extract(x = stack(Points_Raw), 
+                y = Bigfoot_df[, c("Lon", "Lat")])
+## DATA PREPARATION
+ggplot_df <- data.frame(Data = c(AirTemp_Coarse, AirTemp_Krig[, 1]),
+                        Source = rep(c("Native", "Kriged"), each = nrow(Bigfoot_df)),
+                        Difference = c(AirTemp_Coarse - AirTemp_Krig[, 1]),
+                        Uncertainty = AirTemp_Krig[, 2], 
+                        Index = 1:nrow(Bigfoot_df))
+## DENSITIES
+Densities_gg <- ggplot(data = ggplot_df, aes(x = Data, fill = Source)) + 
+  geom_density(alpha = 0.42) + 
+  theme_bw() + labs(x = "Density", y = "Air Temperature")
+## DIFFERENCES
+Difference_gg <- ggplot(data = ggplot_df, aes(x = Index, y = Difference)) + 
+  geom_point(cex = 5, pch = 18) + 
+  geom_errorbar(aes(ymin = Difference - Uncertainty, ymax = Difference + Uncertainty)) + 
+  geom_abline(intercept = 0, slope = 0, col = "red", lwd = 1.5) +
+  theme_bw() + labs(x = "Location", y = "Native vs. Kriged Temprature-Difference")
+### FINAL PLOT
+plot_grid(plotlist = list(Densities_gg, Difference_gg), nrow = 1, labels = "AUTO")
+```
+
+Looking at the *density distributions* we can see a higher peak of intermediate temperature values when compared to the native Era5-Land data. However, that is not a big difference. This is even more evident when looking at the *differences between native and kriged data*. Many of the data points therein fall close to a difference of 0K. Taking into account the kriging uncertainty, not many fall significantly outside of the 0K range. Thjat being said, there are outliers which might be very important in understanding the physiology of Bigfoot.
+
+<p class="atten">
+By obtaining climate reanalysis data around locations/points and subsequently downscaling these, we can obtain **more precise local data**.
+</p>
+
+Of course, you can do what we did above in just one call to the `KrigR` pipeline with the following specification:
+```{r PointsPipe, eval = FALSE}
+krigR(Variable = '2m_temperature',
+    DataSet = 'era5-land',
+    Type = "reanalysis", 
+    DateStart = '1982-01-01',
+    DateStop = '2012-12-31',
+    TResolution = 'year',
+    TStep = 30,
+    Extent = Bigfoot_df, # the point data with Lon and Lat columns
+    Buffer = 0.1, # a 0.1 degree buffer should be drawn around each point
+    ID = "FID_", # this is the column which holds point IDs
+    API_User = API_User,
+    API_Key = API_Key,
+    Target_res = .02,
+    Cores = 1,
+    maxdist = 0.1,
+    FileName = "Points.nc",
+    Keep_Temporary = FALSE)
+```
+
+## Multi-Core Kriging
+<p class="lookhere">
+The computational cost of Kriging can be divided up amongst multiple cores using our `krigR()` function and the `Cores` argument therein. This enables parallel computation of multi-layer rasters.
+</p>
+
+Let's stick with our shapefile-informed downscaling of air temperature records across Saxony. First, we again obtain our data:
+```{r ClimCores, results = 'hide', fig.keep = 'all', fig.height = 4}
+State_Raw <- download_ERA(
   Variable = '2m_temperature',
   DataSet = 'era5-land',
   DateStart = '1995-01-02',
@@ -549,55 +684,14 @@ Points_Raw <- download_ERA(
   Dir = Dir.StateShp,
   API_User = API_User,
   API_Key = API_Key)
-Plot_Raw(Points_Raw, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
-```
-<p class="lookhere">
-
-</p>
-
-### Covariates
-
-```{r CovPoints, results = 'hide', fig.keep = 'all', fig.height = 4}
 Covs_ls <- download_DEM(Train_ras = State_Raw,
                         Target_res = .02,
                         Shape = State_Shp,
                         Dir = Dir.StateShp,
                         Keep_Temporary = TRUE)
-Plot_Covs(Covs_ls)
 ```
 
-### Kriging
-
-```{r KrigPoints, results = 'hide', fig.keep = 'all'}
-KrigStart <- Sys.time() # record when we started
-Points_Krig <- krigR(Data = Points_Raw, # what to krig
-                    Covariates_coarse = Covs_ls[[1]], # covariates at training resolution
-                    Covariates_fine = Covs_ls[[2]], # covariates at target resolution
-                    Keep_Temporary = FALSE, # delete temporary krigs of layers
-                    Cores = 1, # only run this on 1 core
-                    FileName = "State_Shape.nc", # save the finished file as this
-                    Dir = Dir.StateShp # where to save the output
-)
-KrigStop <- Sys.time() # record when the function was done
-Plot_Krigs(State_Krig, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"))
-```
-
-Let's see how long this took:
-```{r KrigPointsTime}
-ShapeTime <- KrigStop-KrigStart
-ShapeTime
-```
-
-<p class="atten">
-
-</p>
-
-## Multi-Core Kriging
-<p class="lookhere">
-The computational cost of Kriging can be divided up amongst multiple cores using our `krigR()` function and the `Cores` argument therein. This enables parallel computation of multi-layer rasters.
-</p>
-
-Let's stick with our shapefile-informed downscaling of air temperature records across Saxony. This time, however, we make use of the `Cores` argument in the `krigR()` function to run the downscaling of our three time steps worth of data in parallel:
+This time, however, we make use of the `Cores` argument in the `krigR()` function to run the downscaling of our three time steps worth of data in paralle:.
 ```{r KrigCores, results = 'hide', fig.keep = 'all'}
 KrigStart <- Sys.time() # record when we started
 State_Krig <- krigR(Data = State_Raw, # what to krig
@@ -840,19 +934,11 @@ So far, we have only ever looked at the first two elements in the list returned 
 ```{r}
 NDVI_Krig[[3]]
 ```
-<<<<<<< HEAD
 
 This lengthy list should contain all information you need to trace how you created a certain data set using `krigR()`. If you feel like anything is missing in this list, please contact us.
 
 <!-- ## Further Downscaling Recommendations -->
 
-=======
-
-This lengthy list should contain all information you need to trace how you created a certain data set using `krigR()`. If you feel like anything is missing in this list, please contact us.
-
-<!-- ## Further Downscaling Recommendations -->
-
->>>>>>> 04e618e26984793b74309cc9d02d9253e096c40e
 <!-- **covariate-variable pairing table here** -->
 
 # Using Third-Party Data
@@ -926,34 +1012,45 @@ Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to N
 TKDry_ras <- mask(TKDry_ras, Shape_ras) # mask for the shape of the state
 ```
 
+Personally, I am not content with just looking at thermal conductivity of dry and wet soil in predicting soil temperatures. Other covariates that come to mind are elevation and air temperature (which we can easily provide at target resolution through Kriging it reliably with elevation). Here, we just use some elevation data. Also, let's push the boundaries and downscale all the way to a 0.01. resolution:
+```{r}
+Covs_ls <- download_DEM(Train_ras = State_Raw,
+                        Target_res = .01,
+                        Shape = State_Shp,
+                        Dir = Dir.StateShp,
+                        Keep_Temporary = TRUE)
+```
+
 Now we combine these into a list containing to stacks of rasters and plot our third-party covariates: 
-```{r results = 'hide', fig.keep = 'all'}
+```{r results = 'hide', fig.keep = 'all', fig.height = 12}
 # resample fine-resolution covariate data to match coarse input data
-Coarsecovs <- stack(resample(x = TKSat_ras, y = State_Raw), resample(x = TKDry_ras, y = State_Raw))
-names(Coarsecovs) <- c("TKWet", "TKDry") # setting some proer names
+Coarsecovs <- stack(resample(x = TKSat_ras, y = State_Raw), resample(x = TKDry_ras, y = State_Raw), Covs_ls[[1]])
+names(Coarsecovs) <- c("TKWet", "TKDry", "DEM") # setting some proper names
 # High-resolution to which we downscale
-Finecovs <- stack(TKSat_ras, TKDry_ras)
-names(Finecovs) <- c("TKWet", "TKDry") # setting some proer names
+Finecovs <- stack(TKSat_ras, TKDry_ras, Covs_ls[[2]])
+names(Finecovs) <- c("TKWet", "TKDry", "DEM") # setting some proper names
 # combine data into covariate list
 Covs_ls <- list(Coarsecovs, Finecovs)
 Plot_Covs(Covs_ls, State_Shp)
 ```
 
 ## Kriging
-Finally, we can krig our soil temperature data using the thermal conductivity of the soil. For this, we need to specify a new `KrigingEquation`. If we don't, `krigR()` will notify us that it our default formula cannot be executed and will attempt to build a formula from the data it can find (this auto-generated formula would be the same as the one we specify here).
-```{r results = 'hide', fig.keep = 'all'}
+Finally, we can krig our soil temperature data using the thermal conductivity of the soil. For this, we need to specify a new `KrigingEquation`. If we don't, `krigR()` will notify us that it our default formula cannot be executed and will attempt to build a formula from the data it can find (this auto-generated formula would be the same as the one we specify here - an additive combination of all covariates found both at coarse and fine resolutions). Of course, this formula can also be specified to reflect interactive effects.
+
+```{r results = 'hide', fig.keep = 'all', warning=TRUE}
 State_Krig <- krigR(Data = State_Raw, # what to krig
                     Covariates_coarse = Covs_ls[[1]], # covariates at training resolution
                     Covariates_fine = Covs_ls[[2]], # covariates at target resolution
                     Keep_Temporary = FALSE, # delete temporary krigs of layers
                     Cores = 3, # only run this on 1 core
-                    KrigingEquation = "ERA ~ TKDry + TKWet", # this time, we need to specify a new formula. Try and see what happens if you forget to do this.
+                    KrigingEquation = "ERA ~ DEM + TKDry + TKWet", # this time, we need to specify a new formula. Try and see what happens if you forget to do this.
                     FileName = "State_TP.nc", # save the finished file as this
                     Dir = Dir.TP, # where to save the output
                     nmax = 15 # how many nearest neighbours to consider in Kriging
 )
 Plot_Krigs(State_Krig, Shp = State_Shp, Dates = c("02-01-1995", "03-01-1995", "04-01-1995"), Legend = "Soil Temperature (0-7cm) [K]")
 ```
+Setting aside the output of the Kriging itself, you find a warning message produced by `krigR()` - since we specified a resolution of 0.01 as our target and our raw data (both third-party and GMTED2010) comes at a native resolution of 0.0083, we cannot aggregate to 0.01 and are stuck with 0.0083. `krigR()` warns us that this means we krig below the threshold of 0.09 which could be argued to be sensible bny rule of thumb as our lowest resolution we might go to, but proceeds with the Kriging.
 
 <p class="atten">
 You can use the `KrigingEquation` argument in `krigR()` to specify the use of third-party covariates and/or data to be kriged. You can specify additive as well as interaction effects.
