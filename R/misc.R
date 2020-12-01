@@ -701,10 +701,10 @@ buffer_Points <- function(Points = NULL, Buffer = .5, ID = "ID"){
   # set the radius for the plots
   radius <- Buffer # radius in meters
   # define the plot edges based upon the plot radius.
-  yPlus <- Bigfoot.dta$Lat+radius
-  xPlus <- Bigfoot.dta$Lon+radius
-  yMinus <- Bigfoot.dta$Lat-radius
-  xMinus <- Bigfoot.dta$Lon-radius
+  yPlus <- Points$Lat+radius
+  xPlus <- Points$Lon+radius
+  yMinus <- Points$Lat-radius
+  xMinus <- Points$Lon-radius
   # calculate polygon coordinates for each plot centroid.
   square=cbind(xMinus,yPlus,  # NW corner
                xPlus, yPlus,  # NE corner
