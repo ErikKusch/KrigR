@@ -25,7 +25,7 @@ download_ERA(
 \arguments{
 \item{Variable}{ERA5(Land)-contained climate variable. See 'donwload' output of Variable_List() for possible values.}
 
-\item{Type}{Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.}
+\item{Type}{Whether to download reanalysis ('reanalysis', 'monthly_averaged_reanalysis_by_hour_of_day') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.}
 
 \item{DataSet}{Which ERA5 data set to download data from. 'era5' or 'era5-land'.}
 
