@@ -79,7 +79,7 @@ krigR(
 
 \item{Target_res}{Optional. The target resolution for the kriging step (i.e. which resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.}
 
-\item{nmax}{Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric) or as "Opt" which prompts krigR to identify a suitable number of nmax given the resolution of your data.}
+\item{nmax}{Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric).}
 
 \item{...}{further arguments passed to automap::autoKrige and/or gstat::krige. Does not work with multi-core kriging for now.}
 }
