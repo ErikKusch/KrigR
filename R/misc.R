@@ -598,7 +598,7 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   if(res(CovariatesFine)[1] < res(Data)[1]/10){
     warning("It is not recommended to use kriging for statistical downscaling of more than one order of magnitude. You are currently attempting this. Kriging will proceed.")
   }
-  if(!all.equal(res(CovariatesCoarse)[1], res(Data)[1])){
+  if(all.equal(res(CovariatesCoarse)[1], res(cropped_train)[1]) != TRUE){
     stop(paste0("The resolution of your data (", res(Data)[1], ") does not match the resolution of your covariate data (", res(CovariatesCoarse)[1], ") used for training the kriging model. Kriging can't be performed!" ))
   }
   ### EXTENTS ----
