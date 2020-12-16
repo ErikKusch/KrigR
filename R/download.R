@@ -3,7 +3,7 @@
 #' This function breaks down download calls into monthly intervals, downloads ERA5(-Land) data from ECMWF servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
 #'
 #' @param Variable ERA5(Land)-contained climate variable. See 'donwload' output of Variable_List() for possible values.
-#' @param Type Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.
+#' @param Type Whether to download reanalysis ('reanalysis', 'monthly_averaged_reanalysis_by_hour_of_day') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.
 #' @param DataSet Which ERA5 data set to download data from. 'era5' or 'era5-land'.
 #' @param DateStart Date ('YYYY-MM-DD') at which to start time series of downloaded data.
 #' @param DateStop Date ('YYYY-MM-DD') at which to stop time series of downloaded data.
@@ -48,6 +48,7 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
   }
 
   # Type (era5-land only provides reanalysis data and doesn't require a type argument, setting it to NA let's us ignore it further down the pipeline)
+  TypeOrigin <- Type # save original type input
   if(DataSet == "era5-land"){ # product check
     Type <- NA # set Type to NA for later omission from request list when downloading era5-land data
   } # end of product check
@@ -65,6 +66,9 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
       Type <- "monthly_averaged_reanalysis" # monthly averaged values are a product type that needs to be indexed for era5 and era5-land
     } # end of ensemble check
   } # end of subdaily check
+  if(TypeOrigin == "monthly_averaged_reanalysis_by_hour_of_day"){
+    Type <- TypeOrigin
+  }
 
   # Dates (this makes manipulation easier)
   DateStart <- as.Date(DateStart) # reformatting date
@@ -113,6 +117,9 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
     Times <- str_pad(str_c(0:23,"00",sep=":"), 5,"left","0")
   }else{ # if data intervals are monthly or bigger
     Times <- "00:00" # monthly averages are addressed with time stamp 00:00
+    if(TypeOrigin == "monthly_averaged_reanalysis_by_hour_of_day"){
+      Times <- str_pad(str_c(0:23,"00",sep=":"), 5,"left","0")
+    }
   } # end of time check
 
   # FileName (generate automatic filename if none is specified by user)
