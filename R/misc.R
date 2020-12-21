@@ -730,7 +730,7 @@ buffer_Points <- function(Points = NULL, Buffer = .5, ID = "ID"){
 #'
 #' XXXX
 #'
-#' @param base.map A raster wwithin which coverage should be identified
+#' @param base.map A raster within which coverage should be identified
 #' @param Shape A polygon(-collection) whose coverage of the raster object is to be found.
 #' @examples
 #'
@@ -747,10 +747,12 @@ mask_Shape <- function(base.map = NULL, Shape = NULL){
   range <- fasterize(select.ranges, base.map, fun = "first", background = 0)
   # Get edges (slower than fasterize but faster than rasterize)
   range.edges <- stars::st_rasterize(select.ranges.lines, stars.base.map, options = "ALL_TOUCHED=TRUE")
-  range.edges <- as.vector(range.edges[[1]])
-  range.edges <- ifelse(is.na(range.edges), 0, 1)
-  # Merge
-  range[] <- ifelse(range[] + range.edges, 1, 0)
+  if(class(as.vector(range.edges[[1]])) == "stars"){
+    range.edges <- as.vector(range.edges[[1]])
+    range.edges <- ifelse(is.na(range.edges), 0, 1)
+    # Merge
+    range[] <- ifelse(range[] + range.edges, 1, 0)
+  }
   range[range==0] <- NA # set all cells which the shape doesn't touch to NA
   return(range)
 }

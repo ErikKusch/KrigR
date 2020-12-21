@@ -7,7 +7,7 @@
 mask_Shape(base.map = NULL, Shape = NULL)
 }
 \arguments{
-\item{base.map}{A raster wwithin which coverage should be identified}
+\item{base.map}{A raster within which coverage should be identified}
 
 \item{Shape}{A polygon(-collection) whose coverage of the raster object is to be found.}
 }
