@@ -6,6 +6,7 @@
 \usage{
 download_ERA(
   Variable = NULL,
+  PrecipFix = FALSE,
   Type = "reanalysis",
   DataSet = "era5-land",
   DateStart = "1981-01-01",
@@ -23,7 +24,9 @@ download_ERA(
 )
 }
 \arguments{
-\item{Variable}{ERA5(Land)-contained climate variable. See 'donwload' output of Variable_List() for possible values.}
+\item{Variable}{ERA5(Land)-contained climate variable. See 'download' output of Variable_List() for possible values.}
+
+\item{PrecipFix}{Logical. Era5(-land) total precipitation is recorded in cumulative steps per hour from the 00:00 time mark per day. Setting PrecipFix to TRUE converts these into records which represent the total precipitation per hour. Monthly records in Era5(-land) express the average daily total precipitation. Setting this argument to TRUE multiplies monthly records by the number of days per the respective month(s) to get to total precipitation records instead of average.  Default is FALSE.}
 
 \item{Type}{Whether to download reanalysis ('reanalysis', 'monthly_averaged_reanalysis_by_hour_of_day') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.}
 

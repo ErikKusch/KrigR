@@ -2,7 +2,8 @@
 #'
 #' This function breaks down download calls into monthly intervals, downloads ERA5(-Land) data from ECMWF servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
 #'
-#' @param Variable ERA5(Land)-contained climate variable. See 'donwload' output of Variable_List() for possible values.
+#' @param Variable ERA5(Land)-contained climate variable. See 'download' output of Variable_List() for possible values.
+#' @param PrecipFix Logical. Era5(-land) total precipitation is recorded in cumulative steps per hour from the 00:00 time mark per day. Setting PrecipFix to TRUE converts these into records which represent the total precipitation per hour. Monthly records in Era5(-land) express the average daily total precipitation. Setting this argument to TRUE multiplies monthly records by the number of days per the respective month(s) to get to total precipitation records instead of average.  Default is FALSE.
 #' @param Type Whether to download reanalysis ('reanalysis', 'monthly_averaged_reanalysis_by_hour_of_day') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.
 #' @param DataSet Which ERA5 data set to download data from. 'era5' or 'era5-land'.
 #' @param DateStart Date ('YYYY-MM-DD') at which to start time series of downloaded data.
@@ -25,12 +26,17 @@
 #' }
 #'
 #' @export
-download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-land",
+download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis", DataSet = "era5-land",
                          DateStart = "1981-01-01", DateStop = Sys.Date()-100,
                          TResolution = "month", TStep = 1, FUN = 'mean',
                          Extent = extent(-180,180,-90,90), Buffer = 0.5, ID = "ID",
                          Dir = getwd(), FileName = NULL,
                          API_User = NULL, API_Key = NULL) {
+
+  ### PrecipFix Mispecification Check ----
+  if(PrecipFix == TRUE & Variable != "total_precipitation"){
+    stop("You cannot specify PrecipFix = TRUE without calling on Variable = total_precipitation")
+  }
 
   ### SETTING UP API ----
   # Setting the API key for later retrieval by wf_request()
@@ -72,7 +78,12 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
 
   # Dates (this makes manipulation easier)
   DateStart <- as.Date(DateStart) # reformatting date
-  DateStop <- as.Date(DateStop) # reformatting date
+  if(PrecipFix == TRUE & TResolution == "day" | PrecipFix == TRUE & TResolution == "hour"){
+    DateStop <- as.Date(DateStop)+1 # reformatting date
+  }else{
+    DateStop <- as.Date(DateStop) # reformatting date
+  }
+
   Dates_seq <- seq(ymd(DateStart),ymd(DateStop), by = '1 day') # identify all days for which we need data
   Months_vec <- format(Dates_seq,'%Y-%m') # identify the YYYY-MM for each day
   Days_vec <- format(Dates_seq,'%d') # identify the day numbers in each month in each year
@@ -186,42 +197,73 @@ download_ERA <- function(Variable = NULL, Type = "reanalysis", DataSet = "era5-l
       ERA5_ls[[LOADIter]] <- raster::brick(x = Files_vec[LOADIter], level = Layers[[LoadIter]]) # loading the data
     }
     Era5_ras <- stack(ERA5_ls)
-    # Files_vec <- c(Files_vec, file.path(Dir, paste0(FileName, "_Stacked_", LoadIter)))
-    # writeRaster(Era5_ras, filename = Files_vec[LoadIter+n_calls], format = "CDF")
-
-    ### DAY/YEAR MEANS ----
-    if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months)
-      if(TResolution == "day"){ # daily means
-        if(Type == "reanalysis"){
-          factor <- 24 # number of hours per day in reanalysis data
-        }else{
-          factor <- 8 # ensemble data only has 8 time steps in a day
-        }
-      }else{ # annual means
-        factor <- 12 # number of months per year
-      }
-      Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
-      Era5_ras <- stackApply(Era5_ras, Index, fun=FUN) # do the calculation
-    }# end of day/year check
-
-    ### TIME STEP MEANS ----
-    if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
-      warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
-    }# end of sanity check for time step completeness
-    Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
-    Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN) # do the calculation
-    ### MASKING ----
-    if(exists("Shape")){ # Shape check
-      range <- KrigR:::mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
-      Era5_ras <- mask(Era5_ras, range)
-      # Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
-      # Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
-      # Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
-    }# end of Shape check
     ### LIST SAVING
     Era5_ls[[LoadIter]] <- Era5_ras
   }
-  Era5_ras <- brick(Era5_ls)
+  Era5_ras <- stack(Era5_ls)
+
+  ### PRECIP FIX ----
+  if(PrecipFix == TRUE & TResolution == "day" | PrecipFix == TRUE & TResolution == "hour"){
+    Era5_ras <- Era5_ras[[c(-1, -(nlayers(Era5_ras)-22):-nlayers(Era5_ras))]]
+    counter <- 1
+    Era5_ls <- as.list(rep(NA, nlayers(Era5_ras)))
+    names(Era5_ls) <- names(Era5_ras)
+
+    for(i in 1:nlayers(Era5_ras)){
+
+      if(counter > 24){counter <- 1}
+
+      if(counter == 1){
+        Era5_ls[[i]] <- Era5_ras[[i]]
+        StartI <- i
+      }
+
+      if(counter == 24){
+        Era5_ls[[i]] <- Era5_ras[[i]]-sum(brick(Era5_ls[StartI:(StartI+counter-2)]))
+      }
+      if(counter != 24 & counter != 1){
+        Era5_ls[[i]] <- Era5_ras[[i+1]] - Era5_ras[[i]]
+      }
+      counter <- counter + 1
+    }
+    Era5_ras <- stack(Era5_ls)
+    warning("You toggled on the PrecipFix option in the function call. Hourly records have been converted from cumulative aggregates to individual hourly records of precipitation. This is currently an experimental feature.")
+  }
+  if(PrecipFix == TRUE & TResolution == "month" | PrecipFix == TRUE & TResolution == "year"){
+    Era5_ras <- Era5_ras * days_in_month(seq(ymd(DateStart),ymd(DateStop), by = '1 month'))
+    warning("You toggled on the PrecipFix option in the function call. Monthly records have been multiplied by the amount of days per respective month. This is currently an experimental feature.")
+  }
+
+  ### DAY/YEAR MEANS ----
+  if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months), we pulled hourly data
+    if(TResolution == "day"){ # daily means
+      if(Type == "reanalysis"){
+        factor <- 24 # number of hours per day in reanalysis data
+      }else{
+        factor <- 8 # ensemble data only has 8 time steps in a day
+      }
+    }else{ # annual means
+      factor <- 12 # number of months per year
+    }
+    Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
+    Era5_ras <- stackApply(Era5_ras, Index, fun=FUN) # do the calculation
+  }# end of day/year check
+
+  ### TIME STEP MEANS ----
+  if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
+    warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
+  }# end of sanity check for time step completeness
+  Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
+  Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN) # do the calculation
+  ### MASKING ----
+  if(exists("Shape")){ # Shape check
+    range <- KrigR:::mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
+    Era5_ras <- mask(Era5_ras, range)
+    # Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
+    # Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
+    # Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
+  }# end of Shape check
+
   if(Type == "ensemble_members"){ ## fixing indices of layers for ensemble means
     Indices <- sub(pattern = ".*\\_", replacement = "", names(Era5_ras))
     Indices2 <- strsplit(x = Indices, split = ".", fixed = TRUE)
