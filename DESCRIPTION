@@ -31,4 +31,5 @@ Depends:
     sp,
     sf,
     fasterize,
-    stars
+    stars,
+    httr
