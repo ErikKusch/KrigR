@@ -11,7 +11,8 @@ download_DEM(
   Buffer = 0.5,
   ID = "ID",
   Dir = getwd(),
-  Keep_Temporary = FALSE
+  Keep_Temporary = FALSE,
+  Source = "USGS"
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ download_DEM(
 \item{Dir}{Directory specifying where to download data to.}
 
 \item{Keep_Temporary}{Logical, whether to delete individual, global, 30 arc-sec files or keep them to be reused in later analyses.}
+
+\item{Source}{Character. Whether to attempt download from the official USGS data viewer (Source = "USGS") or a static copy of the data set on a private drive (Source = "Drive"). Default is "USGS". Use this if the USGS viewer is unavailable.}
 }
 \value{
 A list containing two raster object ready to be used as covariates for kriging, and two NETCDF (.nc) files in the specified directory.

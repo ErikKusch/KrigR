@@ -293,6 +293,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 #' @param ID Optional. Identifies which column in Shape to use for creation of individual buffers if Shape is a data.frame.
 #' @param Dir Directory specifying where to download data to.
 #' @param Keep_Temporary Logical, whether to delete individual, global, 30 arc-sec files or keep them to be reused in later analyses.
+#' @param Source Character. Whether to attempt download from the official USGS data viewer (Source = "USGS") or a static copy of the data set on a private drive (Source = "Drive"). Default is "USGS". Use this if the USGS viewer is unavailable.
 #' @return A list containing two raster object ready to be used as covariates for kriging, and two NETCDF (.nc) files in the specified directory.
 #' @examples
 #' \dontrun{
@@ -304,11 +305,17 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 download_DEM <- function(Train_ras = NULL,
                          Target_res = NULL,
                          Shape = NULL, Buffer = 0.5, ID = "ID",
-                         Dir = getwd(), Keep_Temporary = FALSE) {
+                         Dir = getwd(), Keep_Temporary = FALSE, Source = "USGS"){
 
   ### PREPARATION -----
   Extent <- extent(Train_ras) # extract extent for later cropping
-  Link <- "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/mn30_grd.zip" # Link to GMTED2010
+  if(Source == "USGS"){
+    Link <- "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/mn30_grd.zip" # Link to GMTED2010
+  }
+  if(Source == "Drive"){
+    Link <- "https://www.dropbox.com/s/whkje7jc401xuwx/GMTED2010.zip?raw=1"# link to DropBox with GMTED2010
+  }
+
   # handling Target_res
   ## distinguishing if Target_res is a raster or a resolution, this will change whether GMTED2010 is aggregated or resampled
   if(class(Target_res[[1]]) == "RasterLayer"){
@@ -326,14 +333,15 @@ download_DEM <- function(Train_ras = NULL,
   if(!file.exists(file.path(Dir.Data, "GMTED2010.zip"))){ # file check: check if file is not already downloaded
     dir.create(Dir.Data) # create folder for GMTED2010 data
     print("Downloading GMTED2010 covariate data.") # inform user of download in console
-    download.file(Link, # product for donload
-                  destfile = file.path(Dir.Data, "GMTED2010.zip")) # destination file
+    httr::GET(Link,
+        write_disk(file.path(Dir.Data, "GMTED2010.zip")),
+        progress(), overwrite = TRUE)
     unzip(file.path(Dir.Data, "GMTED2010.zip"), # which file to unzip
           exdir = Dir.Data) # where to unzip to
   } # end of file check
 
   ### RASTERIZING & CROPPING -----
-  GMTED2010_ras <- raster(file.path(Dir.Data, "mn30_grd/w001001.adf")) # rasterising elevetation data
+  GMTED2010_ras <- raster(file.path(Dir.Data, "mn30_grd/w001001.adf")) # rasterising elevation data
   GMTED2010_ras <- crop(GMTED2010_ras, Extent) # crop data
 
   ### RESAMPLING TO SPECIFIED RESOLUTIONS -----

@@ -29,6 +29,7 @@ krigR(
   API_Key,
   API_User,
   Target_res,
+  Source = "USGS",
   nmax = Inf,
   ...
 )
@@ -81,6 +82,8 @@ krigR(
 \item{API_User}{Optional. ECMWF cds user number. Passed on to download_ERA.}
 
 \item{Target_res}{Optional. The target resolution for the kriging step (i.e. which resolution to downscale to). An object as specified/produced by raster::res(). Passed on to download_DEM.}
+
+\item{Source}{Optional, character. Whether to attempt download from the official USGS data viewer (Source = "USGS") or a static copy of the data set on a  private drive (Source = "Drive"). Default is "USGS". Use this if the USGS viewer is unavailable. Passed on to download_DEM.}
 
 \item{nmax}{Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric).}
 
