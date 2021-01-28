@@ -96,25 +96,11 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   Terms <- unique(unlist(strsplit(labels(terms(KrigingEquation)), split = ":"))) # identify which layers of data are needed
 
   ## DATA REFORMATTING (Kriging requires spatially referenced data frames, reformatting from rasters happens here) ---
-  Origin <- raster::as.data.frame(Covariates_coarse[[which(names(Covariates_coarse) == Terms[[1]])]], xy = TRUE) # extract first targeted covariate layer
-  Origin[, 3] <- raster::extract(x = Covariates_coarse[[which(names(Covariates_coarse) == Terms[[1]])]], y = Origin[,1:2], df=TRUE)[, 2] # extract pixel data of locations identified above
-  if(length(Terms) > 1){ # coarse layer check: if covariates file has more than 1 layer
-    for(Iter_Coarse in 2:length(Terms)){ # loop over layers in coarse covariates raster
-      Covariate <- raster::extract(x = Covariates_coarse[[which(names(Covariates_coarse) == Terms[[Iter_Coarse]])]], y = Origin[,1:2], df=TRUE)[, 2] # extract data of current layer
-      Origin <- cbind(Origin, Covariate) # only append data portion of covariate layer
-    } # end of layer loop
-  } # end of coarse layer check
-  colnames(Origin) <- c("x","y", Terms) # assign column names from layer names
+  Origin <- raster::as.data.frame(Covariates_coarse, xy = TRUE) # extract covariate layers
+  Origin <- Origin[, c(1:2, which(colnames(Origin) %in% Terms))] # retain only columns containing terms
 
-  Target <- raster::as.data.frame(Covariates_fine[[which(names(Covariates_fine) == Terms[[1]])]], xy = TRUE) # extract first covariate layer
-  Target[, 3] <- raster::extract(x = Covariates_fine[[which(names(Covariates_fine) == Terms[[1]])]], y = Target[,1:2], df=TRUE)[, 2] # extract pixel data of locations identified above
-  if(length(Terms) > 1){ # fine layer check: if covariates file has more than 1 layer
-    for(Iter_Fine in 2:length(Terms)){ # loop over layers in fine covariates raster
-      Covariate <- raster::extract(x = Covariates_fine[[which(names(Covariates_fine) == Terms[[Iter_Fine]])]], y = Target[,1:2], df=TRUE)[, 2] # extract data of current layer
-      Target <- cbind(Target, Covariate) # append data
-    } # end of layer loop
-  } # end of fine layer check
-  colnames(Target) <- c("x","y", Terms)  # assign column names from layer names
+  Target <- raster::as.data.frame(Covariates_fine, xy = TRUE) # extract covariate layers
+  Target <- Target[, c(1:2, which(colnames(Target) %in% Terms))] # retain only columns containing terms
   Target <- na.omit(Target)
   suppressWarnings(gridded(Target) <- ~x+y) # establish a gridded data product ready for use in kriging
   Target@grid@cellsize[1] <- Target@grid@cellsize[2] # ensure that grid cells are square
