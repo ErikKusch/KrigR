@@ -113,7 +113,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   looptext <- "
   OriginK <- cbind(Origin, raster::extract(x = Data[[Iter_Krige]], y = Origin[,1:2], df=TRUE)[, 2]) # combine data of current data layer with training covariate data
   OriginK <- na.omit(OriginK) # get rid of NA cells
-  colnames(OriginK) <- c('x','y', Terms, terms(KrigingEquation)[[2]]) # assign column names
+  colnames(OriginK)[length(Terms)+3] <- c(terms(KrigingEquation)[[2]]) # assign column names
   suppressWarnings(gridded(OriginK) <-  ~x+y) # generate gridded product
   OriginK@grid@cellsize[1] <- OriginK@grid@cellsize[2] # ensure that grid cells are square
 
