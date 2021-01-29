@@ -1,14 +1,14 @@
 # KrigR
-An R Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the European Centre for Medium‐Range Weather Forecasts (ECMWF).
+An `R` Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the European Centre for Medium‐Range Weather Forecasts (ECMWF).
 
 KrigR contains functions for:  
 - Downloading Era5(Land) data directly from within R  
 - Downloading UERRA data directly from within R  
 - Downloading USGS GMTED 2010 elevation data  
 - Kriging spatial input to desired output using user-specified covariates  
-- Downloading and Kriging Era5(Land) data using USGS GMTED 2010 elevation as coviariate data in one function call  
+- Downloading and Kriging Era5(Land) data using USGS GMTED 2010 elevation as covariate data in one function call  
 
-**NOTE:** All kriging functionality can be parallelised for faster computing using the *Cores* argument.
+**NOTE:** All kriging functionality can be parallelised for faster computing using the `Cores` argument.
 
 # Abstract
 Here we present a new R-package (KrigR) for acquiring and statistically downscaling climate data for ecological applications. The package is principally designed to make use of two of the most recent global reanalysis climate products from the European Centre for Medium Range Weather Forecasting: ERA5 and ERA5-land. These reanalysis products include numerous climate variables relevant for ecological applications including air temperature, precipitation, and soil moisture at hourly resolution and spatial resolutions of 30 by 30km and 9 by 9 km respectively.
@@ -17,3 +17,6 @@ Reanalysis products resolve issues of biases, discontinuities and inconsistencie
 
 # Keywords
 Climate data, Climate reanalysis, Interdisciplinary ecology, Macroecology, R, R Package, Statistical downscaling
+
+# Workshop Material and Further Information
+We have put together a comprehensive [workshop](https://www.erikkusch.com/post/krigr-mats/krigrworkshop/) that walks you through the functionality of the KrigR package. This workshop was presented during the BIOCHANGE Methods Workshop Series at Aarhus University. A recording of this presentation can be found on [YouTube](https://www.youtube.com/watch?v=wwb107L4wVw&ab_channel=ErikKusch). For any additional information on the project please refer to my [website](https://www.erikkusch.com/project/krigr/).
