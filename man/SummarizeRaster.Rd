@@ -7,12 +7,11 @@
 SummarizeRaster(Object_ras = NULL)
 }
 \arguments{
-\item{Object_ras}{A raster object..}
+\item{Object_ras}{A raster object.}
+}
+\value{
+A list containing information about the input raster.
 }
 \description{
 This function is called upon in the krigR function and summarizes Raster characteristics without carrying along the raster file itself. This is used to create lists tracking calls to the function krigR without bloating them too much.
-}
-\examples{
-
-
 }

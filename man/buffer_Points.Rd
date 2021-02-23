@@ -13,10 +13,9 @@ buffer_Points(Points = NULL, Buffer = 0.5, ID = "ID")
 
 \item{ID}{Identifies which column in to use for creation of individual buffers.}
 }
-\description{
-Square Buffers Around Point Data
+\value{
+A shape made up of individual square buffers around point-location input.
 }
-\examples{
-
-
+\description{
+Allow for drawing of buffer zones around point-location data for downloading and kriging of spatial data around point-locations. Overlapping individual buffers are merged.
 }

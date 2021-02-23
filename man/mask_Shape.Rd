@@ -11,10 +11,9 @@ mask_Shape(base.map = NULL, Shape = NULL)
 
 \item{Shape}{A polygon(-collection) whose coverage of the raster object is to be found.}
 }
-\description{
-XXXX
+\value{
+A raster layer.
 }
-\examples{
-
-
+\description{
+Creating a raster mask identifying all cells in the original raster (`base.map`) which are at least partially covered by the supplied shapefile (`Shape`).
 }

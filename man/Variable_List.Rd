@@ -9,10 +9,14 @@ Variable_List(DataSet)
 \arguments{
 \item{DataSet}{Which ERA5 data set to download data from. 'era5', 'era5-land', or 'uerra'.}
 }
+\value{
+A data frame of clear names of variables contained within ECMWF data sets as well as their corresponding download names.
+}
 \description{
 This function presents the user with a selection of biologically relevant variables of the Era5-family which can be statistically downscaled. Notice that more variables are available and can be found here: \url{https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land?tab=form} for Era5-Land data and here: \url{https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels?tab=form} for Era5 data. Notice that variable names for download requests are written in all lower-case letters and substitute spaces for underscores.
 }
 \examples{
 Variable_List(DataSet = "era5")
+Variable_List(DataSet = "era5-land")
 
 }

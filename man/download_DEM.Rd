@@ -40,8 +40,29 @@ This function downloads and rescales the median statistic of the Global Multi-re
 }
 \examples{
 \dontrun{
-# Downloading GMTED2010-data at resolution and extent obtained by a call to download_ERA and a target resolution of .01.
-download_HWSD(Train_ras = download_ERA(...), Target_res = 0.01)
+# Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for 02/01/1995 - 04/01/1995 (DD/MM/YYYY). API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
+Extent <- extent(c(11.8,15.1,50.1,51.7)) # roughly the extent of Saxony
+API_User <- "..."
+API_Key <- "..."
+State_Raw <- download_ERA(
+Variable = "2m_temperature",
+DataSet = "era5-land",
+DateStart = "1995-01-02",
+DateStop = "1995-01-04",
+TResolution = "hour",
+TStep = 12,
+Extent = Extent,
+API_User = API_User,
+API_Key = API_Key
+)
+State_Raw # a raster brick with 6 layers at resolution of ~0.1Â°
+# Downloading GMTED2010-data at resolution and extent obtained by a call to download_ERA and a target resolution of .02.
+Covs_ls <- download_DEM(
+Train_ras = State_Raw,
+Target_res = .02,
+Keep_Temporary = TRUE
+)
+Covs_ls # a list with two elements: (1) GMTED 2010 data at training resolution, and (2) GMTED 2010 data aggregated as close as possible to a resolution of 0.02
 }
 
 }

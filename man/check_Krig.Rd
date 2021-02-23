@@ -2,7 +2,7 @@
 % Please edit documentation in R/misc.R
 \name{check_Krig}
 \alias{check_Krig}
-\title{List of available variables}
+\title{Sanity checks before Kriging commences}
 \usage{
 check_Krig(Data, CovariatesCoarse, CovariatesFine, KrigingEquation)
 }
@@ -15,13 +15,9 @@ check_Krig(Data, CovariatesCoarse, CovariatesFine, KrigingEquation)
 
 \item{KrigingEquation}{A formula object obtained from a character vector via as.formula() specifying the covariates to be used in kriging. The covariates used have to be present and named as layers in CovariatesCoarse and CovariatesFine.}
 }
+\value{
+A list containing a potentially altered KrigingEquation if needed as well as an identifier for data layers which need to be skipped when kriging due to a variety of reasons.
+}
 \description{
 This function is called upon in the krigR function and performs sanity checks for some of the most common error sources in krigin thereby attempting to return more sensible error messages to the user than what is returned by default.
-}
-\examples{
-\dontrun{
-check_Krig(????)
-}
-
-
 }

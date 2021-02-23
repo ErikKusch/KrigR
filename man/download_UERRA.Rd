@@ -56,7 +56,21 @@ This function downloads UERRA data from ECMWF servers according to user-specific
 \examples{
 \dontrun{
 # Downloading UERRA (uerra_harmonie) temperature data in 15m height in 6-hour intervals for the entire year of 2000 for Germany. API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
-download_UERRA(Variable = 'temperature', DataSet = 'height-levels', Origin = 'uerra_harmonie', Level = 15, DateStart = '2000-01-01', DateStop = '2000-12-31', TResolution = 'hour', TStep = 6, Extent = extent(6,15,47,55), API_User = NULL, API_Key = NULL)
+Extent <- extent(6,15,47,55) # roughly the extent of Saxony
+API_User <- "..."
+API_Key <- "..."
+download_UERRA(
+Variable = 'temperature',
+DataSet = 'height-levels',
+Origin = 'uerra_harmonie',
+Level = 15,
+DateStart = '2000-01-01',
+DateStop = '2000-12-31',
+TResolution = 'hour',
+TStep = 6,
+Extent = Extent,
+API_User = API_User,
+API_Key = API_Key)
 }
 
 }

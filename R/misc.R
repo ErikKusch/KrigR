@@ -3,8 +3,12 @@
 #' This function presents the user with a selection of biologically relevant variables of the Era5-family which can be statistically downscaled. Notice that more variables are available and can be found here: \url{https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land?tab=form} for Era5-Land data and here: \url{https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels?tab=form} for Era5 data. Notice that variable names for download requests are written in all lower-case letters and substitute spaces for underscores.
 #'
 #' @param DataSet Which ERA5 data set to download data from. 'era5', 'era5-land', or 'uerra'.
+#'
+#' @return A data frame of clear names of variables contained within ECMWF data sets as well as their corresponding download names.
+#'
 #' @examples
 #' Variable_List(DataSet = "era5")
+#' Variable_List(DataSet = "era5-land")
 #'
 #' @export
 Variable_List <- function(DataSet) {
@@ -579,7 +583,7 @@ Variable_List <- function(DataSet) {
   return(Variables)
 }
 
-#' List of available variables
+#' Sanity checks before Kriging commences
 #'
 #' This function is called upon in the krigR function and performs sanity checks for some of the most common error sources in krigin thereby attempting to return more sensible error messages to the user than what is returned by default.
 #'
@@ -587,11 +591,8 @@ Variable_List <- function(DataSet) {
 #' @param CovariatesCoarse A raster object containing covariates for kriging at training resolution.
 #' @param CovariatesFine A raster object containing covariates for kriging at target resolution.
 #' @param KrigingEquation A formula object obtained from a character vector via as.formula() specifying the covariates to be used in kriging. The covariates used have to be present and named as layers in CovariatesCoarse and CovariatesFine.
-#' @examples
-#' \dontrun{
-#' check_Krig(????)
-#' }
 #'
+#' @return A list containing a potentially altered KrigingEquation if needed as well as an identifier for data layers which need to be skipped when kriging due to a variety of reasons.
 #'
 check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   ### RESOLUTIONS ----
@@ -655,7 +656,6 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
       stop("Kriging terminated by user due to formula issues.")
     }
   }
-
   ### NA DATA IN LAYERS ----
   # CovariatesFine <- CovariatesFine[[which(names(CovariatesFine) %in% Terms_Present)]] # only look at layers that the krigignequation targets
   # if(nlayers(CovariatesFine) > 1){
@@ -672,9 +672,9 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
 #'
 #' This function is called upon in the krigR function and summarizes Raster characteristics without carrying along the raster file itself. This is used to create lists tracking calls to the function krigR without bloating them too much.
 #'
-#' @param Object_ras A raster object..
-#' @examples
+#' @param Object_ras A raster object.
 #'
+#' @return A list containing information about the input raster.
 #'
 SummarizeRaster <- function(Object_ras = NULL){
   Summary_ls <- list(Class = class(Object_ras),
@@ -689,13 +689,13 @@ SummarizeRaster <- function(Object_ras = NULL){
 
 #' Square Buffers Around Point Data
 #'
+#' Allow for drawing of buffer zones around point-location data for downloading and kriging of spatial data around point-locations. Overlapping individual buffers are merged.
+#'
 #' @param Points A data.frame containing geo-referenced points with Lat and Lon columns
 #' @param Buffer Identifies how big a rectangular buffer to draw around points. Expressed as centessimal degrees.
 #' @param ID Identifies which column in to use for creation of individual buffers.
 #'
-#' @param XXX
-#' @examples
-#'
+#' @return A shape made up of individual square buffers around point-location input.
 #'
 buffer_Points <- function(Points = NULL, Buffer = .5, ID = "ID"){
   # set the radius for the plots
@@ -728,12 +728,12 @@ buffer_Points <- function(Points = NULL, Buffer = .5, ID = "ID"){
 
 #' Range Masking with Edge Support
 #'
-#' XXXX
+#' Creating a raster mask identifying all cells in the original raster (`base.map`) which are at least partially covered by the supplied shapefile (`Shape`).
 #'
 #' @param base.map A raster within which coverage should be identified
 #' @param Shape A polygon(-collection) whose coverage of the raster object is to be found.
-#' @examples
 #'
+#' @return A raster layer.
 #'
 mask_Shape <- function(base.map = NULL, Shape = NULL){
   base.map[] <- NA

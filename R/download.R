@@ -21,8 +21,22 @@
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
-#' # Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for the entire year of 2000 for Germany. API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
-#' download_ERA(Variable = '2m_temperature', Type = 'reanalysis', DataSet = 'era5-land', DateStart = '2000-01-01', DateStop = '2000-12-31', TResolution = 'hour', TStep = 12, Extent = extent(6,15,47,55), API_User = NULL, API_Key = NULL)
+#' # Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for 02/01/1995 - 04/01/1995 (DD/MM/YYYY). API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
+#' Extent <- extent(11.8,15.1,50.1,51.7) # roughly the extent of Saxony
+#' API_User <- "..."
+#' API_Key <- "..."
+#' State_Raw <- download_ERA(
+#' Variable = "2m_temperature",
+#' DataSet = "era5-land",
+#' DateStart = "1995-01-02",
+#' DateStop = "1995-01-04",
+#' TResolution = "hour",
+#' TStep = 12,
+#' Extent = Extent,
+#' API_User = API_User,
+#' API_Key = API_Key
+#' )
+#' State_Raw # a raster brick with 6 layers at resolution of ~0.1°
 #' }
 #'
 #' @export
@@ -297,8 +311,29 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 #' @return A list containing two raster object ready to be used as covariates for kriging, and two NETCDF (.nc) files in the specified directory.
 #' @examples
 #' \dontrun{
-#' # Downloading GMTED2010-data at resolution and extent obtained by a call to download_ERA and a target resolution of .01.
-#' download_HWSD(Train_ras = download_ERA(...), Target_res = 0.01)
+#' # Downloading ERA5-Land air temperature reanalysis data in 12-hour intervals for 02/01/1995 - 04/01/1995 (DD/MM/YYYY). API User and Key in this example are non-functional. Substitute with your user number and key to run this example.
+#' Extent <- extent(c(11.8,15.1,50.1,51.7)) # roughly the extent of Saxony
+#' API_User <- "..."
+#' API_Key <- "..."
+#' State_Raw <- download_ERA(
+#' Variable = "2m_temperature",
+#' DataSet = "era5-land",
+#' DateStart = "1995-01-02",
+#' DateStop = "1995-01-04",
+#' TResolution = "hour",
+#' TStep = 12,
+#' Extent = Extent,
+#' API_User = API_User,
+#' API_Key = API_Key
+#' )
+#' State_Raw # a raster brick with 6 layers at resolution of ~0.1°
+#' # Downloading GMTED2010-data at resolution and extent obtained by a call to download_ERA and a target resolution of .02.
+#' Covs_ls <- download_DEM(
+#' Train_ras = State_Raw,
+#' Target_res = .02,
+#' Keep_Temporary = TRUE
+#' )
+#' Covs_ls # a list with two elements: (1) GMTED 2010 data at training resolution, and (2) GMTED 2010 data aggregated as close as possible to a resolution of 0.02
 #' }
 #'
 #' @export
