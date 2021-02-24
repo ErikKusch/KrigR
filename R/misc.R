@@ -747,7 +747,7 @@ mask_Shape <- function(base.map = NULL, Shape = NULL){
   range <- fasterize(select.ranges, base.map, fun = "first", background = 0)
   # Get edges (slower than fasterize but faster than rasterize)
   range.edges <- stars::st_rasterize(select.ranges.lines, stars.base.map, options = "ALL_TOUCHED=TRUE")
-  if(class(as.vector(range.edges[[1]])) == "stars"){
+  if(class(as.vector(range.edges[[1]])) == "stars"| class(as.vector(range.edges[[1]])) == "numeric"){
     range.edges <- as.vector(range.edges[[1]])
     range.edges <- ifelse(is.na(range.edges), 0, 1)
     # Merge
