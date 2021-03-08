@@ -78,7 +78,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       DataSet <- paste(DataSet, "single-levels", sep="-") # target reanalysis data sets of ECMWF servers
     }
     DataSet <- paste("reanalysis", DataSet, sep="-") # era5 family data sets must be adressed with "reanalysis-"
-    if(grep(DataSet, pattern = "preliminary") != 1){ # do not change preliminary data calls according to monthly means
+    if(length(grep(DataSet, pattern = "preliminary")) != 1){ # do not change preliminary data calls according to monthly means
     if(TResolution != "hour" & TResolution != "day"){ # sub-daily check
       DataSet <- paste0(DataSet, "-monthly", "-means") # address monthly means
       if(Type != "reanalysis" & DataSet == "reanalysis-era5-single-levels-monthly-means"){ # ensemble check: if ensemble measures are requested
