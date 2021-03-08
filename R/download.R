@@ -69,26 +69,28 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
   # Type (era5-land only provides reanalysis data and doesn't require a type argument, setting it to NA let's us ignore it further down the pipeline)
   TypeOrigin <- Type # save original type input
-  if(DataSet == "era5-land"){ # product check
-    Type <- NA # set Type to NA for later omission from request list when downloading era5-land data
-  } # end of product check
+    if(DataSet == "era5-land"){ # product check
+      Type <- NA # set Type to NA for later omission from request list when downloading era5-land data
+    } # end of product check
 
-  # Data Set (DataSet targeting in download calls is complicated and taken care of here)
-  if(DataSet == "era5"){ # only append "single-levels" to era5 specification
-    DataSet <- paste(DataSet, "single-levels", sep="-") # target reanalysis data sets of ECMWF servers
-  }
-  DataSet <- paste("reanalysis", DataSet, sep="-") # era5 family data sets must be adressed with "reanalysis-"
-  if(TResolution != "hour" & TResolution != "day"){ # sub-daily check
-    DataSet <- paste0(DataSet, "-monthly", "-means") # address monthly means
-    if(Type != "reanalysis" & DataSet == "reanalysis-era5-single-levels-monthly-means"){ # ensemble check: if ensemble measures are requested
-      Type <- paste0("monthly_averaged_", Type)
-    }else{
-      Type <- "monthly_averaged_reanalysis" # monthly averaged values are a product type that needs to be indexed for era5 and era5-land
-    } # end of ensemble check
-  } # end of subdaily check
-  if(TypeOrigin == "monthly_averaged_reanalysis_by_hour_of_day"){
-    Type <- TypeOrigin
-  }
+    # Data Set (DataSet targeting in download calls is complicated and taken care of here)
+    if(DataSet == "era5"){ # only append "single-levels" to era5 specification
+      DataSet <- paste(DataSet, "single-levels", sep="-") # target reanalysis data sets of ECMWF servers
+    }
+    DataSet <- paste("reanalysis", DataSet, sep="-") # era5 family data sets must be adressed with "reanalysis-"
+    if(grep(DataSet, pattern = "preliminary") != 1){ # do not change preliminary data calls according to monthly means
+    if(TResolution != "hour" & TResolution != "day"){ # sub-daily check
+      DataSet <- paste0(DataSet, "-monthly", "-means") # address monthly means
+      if(Type != "reanalysis" & DataSet == "reanalysis-era5-single-levels-monthly-means"){ # ensemble check: if ensemble measures are requested
+        Type <- paste0("monthly_averaged_", Type)
+      }else{
+        Type <- "monthly_averaged_reanalysis" # monthly averaged values are a product type that needs to be indexed for era5 and era5-land
+      } # end of ensemble check
+    } # end of subdaily check
+    } # end of preliminary check
+    if(TypeOrigin == "monthly_averaged_reanalysis_by_hour_of_day"){
+      Type <- TypeOrigin
+    }
 
   # Dates (this makes manipulation easier)
   DateStart <- as.Date(DateStart) # reformatting date
