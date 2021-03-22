@@ -606,7 +606,7 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   # if(extent(Data) == extent(-180, 180, -90, 90)){
   #   stop("You are attempting to use kriging at a global extent. For reasons of computational expense and identity of relationships between covariates and variables not being homogenous across the globe, this is not recommended. Instead, try kriging of latitude bands if global kriging is really your goal.")
   # }
-  if(extent(CovariatesCoarse) != extent(Data)){
+  if(!all.equal(extent(CovariatesCoarse), extent(Data))){
     stop("The extents of your data and training covariates don't match. Kriging can't be performed!")
   }
 
