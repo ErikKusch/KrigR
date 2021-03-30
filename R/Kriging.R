@@ -174,9 +174,9 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     print(paste0('Kriging failed for layer ', Iter_Krige, '. Error message produced by autoKrige function: ', geterrmessage()))
   }
 
-  Krig_ras <- raster(kriging_result$krige_output) # extract raster from kriging product
+  Krig_ras <- rasterize(x = kriging_result$krige_output, y = Covs_target)[[2]] # extract raster from kriging product
   crs(Krig_ras) <- crs(Data) # setting the crs according to the data
-  Var_ras <- stack(kriging_result$krige_output)[[3]] # extract raster from kriging product
+  Var_ras <- rasterize(x = kriging_result$krige_output, y = Covs_target)[[4]] # extract raster from kriging product
   crs(Var_ras) <- crs(Data) # setting the crs according to the data
 
   if(Cores == 1){
@@ -224,6 +224,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     foreach(Iter_Krige = Compute_Layers, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
             .packages = c("raster", "stringr", "automap", "ncdf4", "rgdal"), # import packages necessary to each itteration
             .export = ForeachObjects) %:% when(!paste0(str_pad(Iter_Krige,4,"left","0"), '_data.nc') %in% list.files(Dir.Temp)) %dopar% { # parallel kriging loop
+              # print("Done")
               Ras_Krig <- eval(parse(text=looptext)) # evaluate the kriging specification per cluster unit per layer
             } # end of parallel kriging loop
     stopCluster(cl) # close down cluster
