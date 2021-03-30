@@ -174,9 +174,9 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     print(paste0('Kriging failed for layer ', Iter_Krige, '. Error message produced by autoKrige function: ', geterrmessage()))
   }
 
-  Krig_ras <- rasterize(x = kriging_result$krige_output, y = Covs_target)[[2]] # extract raster from kriging product
+  Krig_ras <- rasterize(x = kriging_result$krige_output, y = Covariates_fine)[[2]] # extract raster from kriging product
   crs(Krig_ras) <- crs(Data) # setting the crs according to the data
-  Var_ras <- rasterize(x = kriging_result$krige_output, y = Covs_target)[[4]] # extract raster from kriging product
+  Var_ras <- rasterize(x = kriging_result$krige_output, y = Covariates_fine)[[4]] # extract raster from kriging product
   crs(Var_ras) <- crs(Data) # setting the crs according to the data
 
   if(Cores == 1){
