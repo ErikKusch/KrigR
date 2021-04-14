@@ -218,7 +218,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   }
   Era5_ras <- stack(Era5_ls)
 
-  if(Type == "ensemble_members"){ ## fixing indices of layers for ensemble means
+  if(Type == "ensemble_members" & TResolution == "hour"){ ## fixing indices of layers for ensemble means
     Indices <- sub(pattern = "X", replacement = "", names(Era5_ras))
     Indices <- sub(pattern = ".*\\_", replacement = "", Indices)
     Indices2 <- strsplit(x = Indices, split = ".", fixed = TRUE)
@@ -266,7 +266,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   }
 
   ### DAY/YEAR MEANS ----
-  if(TResolution == "day" & Type != "ensemble_members" | TResolution == "year" & Type != "ensemble_members"){ # day/year check: need to build averages for days (from hours) and years (from months), we pulled hourly data
+  if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months), we pulled hourly data
     if(TResolution == "day"){ # daily means
       if(Type == "reanalysis"){
         factor <- 24 # number of hours per day in reanalysis data
@@ -276,7 +276,11 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     }else{ # annual means
       factor <- 12 # number of months per year
     }
-    Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
+    if(Type != "ensemble_members"){
+      Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
+    }else{
+      Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
+    }
     Era5_ras <- stackApply(Era5_ras, Index, fun=FUN) # do the calculation
   }# end of day/year check
 
