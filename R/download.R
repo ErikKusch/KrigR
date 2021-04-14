@@ -69,16 +69,16 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
   # Type (era5-land only provides reanalysis data and doesn't require a type argument, setting it to NA let's us ignore it further down the pipeline)
   TypeOrigin <- Type # save original type input
-    if(DataSet == "era5-land"){ # product check
-      Type <- NA # set Type to NA for later omission from request list when downloading era5-land data
-    } # end of product check
+  if(DataSet == "era5-land"){ # product check
+    Type <- NA # set Type to NA for later omission from request list when downloading era5-land data
+  } # end of product check
 
-    # Data Set (DataSet targeting in download calls is complicated and taken care of here)
-    if(DataSet == "era5"){ # only append "single-levels" to era5 specification
-      DataSet <- paste(DataSet, "single-levels", sep="-") # target reanalysis data sets of ECMWF servers
-    }
-    DataSet <- paste("reanalysis", DataSet, sep="-") # era5 family data sets must be adressed with "reanalysis-"
-    if(length(grep(DataSet, pattern = "preliminary")) != 1){ # do not change preliminary data calls according to monthly means
+  # Data Set (DataSet targeting in download calls is complicated and taken care of here)
+  if(DataSet == "era5"){ # only append "single-levels" to era5 specification
+    DataSet <- paste(DataSet, "single-levels", sep="-") # target reanalysis data sets of ECMWF servers
+  }
+  DataSet <- paste("reanalysis", DataSet, sep="-") # era5 family data sets must be adressed with "reanalysis-"
+  if(length(grep(DataSet, pattern = "preliminary")) != 1){ # do not change preliminary data calls according to monthly means
     if(TResolution != "hour" & TResolution != "day"){ # sub-daily check
       DataSet <- paste0(DataSet, "-monthly", "-means") # address monthly means
       if(Type != "reanalysis" & DataSet == "reanalysis-era5-single-levels-monthly-means"){ # ensemble check: if ensemble measures are requested
@@ -87,10 +87,10 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
         Type <- "monthly_averaged_reanalysis" # monthly averaged values are a product type that needs to be indexed for era5 and era5-land
       } # end of ensemble check
     } # end of subdaily check
-    } # end of preliminary check
-    if(TypeOrigin == "monthly_averaged_reanalysis_by_hour_of_day"){
-      Type <- TypeOrigin
-    }
+  } # end of preliminary check
+  if(TypeOrigin == "monthly_averaged_reanalysis_by_hour_of_day"){
+    Type <- TypeOrigin
+  }
 
   # Dates (this makes manipulation easier)
   DateStart <- as.Date(DateStart) # reformatting date
@@ -218,6 +218,21 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   }
   Era5_ras <- stack(Era5_ls)
 
+  if(Type == "ensemble_members"){ ## fixing indices of layers for ensemble means
+    Indices <- sub(pattern = "X", replacement = "", names(Era5_ras))
+    Indices <- sub(pattern = ".*\\_", replacement = "", Indices)
+    Indices2 <- strsplit(x = Indices, split = ".", fixed = TRUE)
+    Len <- length(Indices2[[1]])
+    Indices3 <- str_pad(unlist(Indices2), 3, "left","0")
+    PairNumbers <- rep(1:(length(Indices3)/Len), each = Len)
+    Indices4 <- paste(Indices3[which(PairNumbers == 1)], collapse = "")
+    for(IndicesIter in 2:(length(Indices3)/Len)){
+      Indices4 <- c(Indices4, paste(Indices3[which(PairNumbers == IndicesIter)], collapse = ""))
+    }
+    Indices4 <- as.numeric(Indices4)
+    Era5_ras <- Era5_ras[[order(Indices4)]]
+  }
+
   ### PRECIP FIX ----
   if(PrecipFix == TRUE & TResolution == "day" | PrecipFix == TRUE & TResolution == "hour"){
     Era5_ras <- Era5_ras[[c(-1, -(nlayers(Era5_ras)-22):-nlayers(Era5_ras))]]
@@ -251,7 +266,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   }
 
   ### DAY/YEAR MEANS ----
-  if(TResolution == "day" | TResolution == "year"){ # day/year check: need to build averages for days (from hours) and years (from months), we pulled hourly data
+  if(TResolution == "day" & Type != "ensemble_members" | TResolution == "year" & Type != "ensemble_members"){ # day/year check: need to build averages for days (from hours) and years (from months), we pulled hourly data
     if(TResolution == "day"){ # daily means
       if(Type == "reanalysis"){
         factor <- 24 # number of hours per day in reanalysis data
@@ -280,18 +295,6 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     # Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
   }# end of Shape check
 
-  if(Type == "ensemble_members"){ ## fixing indices of layers for ensemble means
-    Indices <- sub(pattern = ".*\\_", replacement = "", names(Era5_ras))
-    Indices2 <- strsplit(x = Indices, split = ".", fixed = TRUE)
-    Indices3 <- str_pad(unlist(Indices2), 3, "left","0")
-    PairNumbers <- rep(1:(length(Indices3)/2), each = 2)
-    Indices4 <- paste(Indices3[which(PairNumbers == 1)], collapse = "")
-    for(IndicesIter in 2:(length(Indices3)/2)){
-      Indices4 <- c(Indices4, paste(Indices3[which(PairNumbers == IndicesIter)], collapse = ""))
-    }
-    Indices4 <- as.numeric(Indices4)
-    Era5_ras <- Era5_ras[[order(Indices4)]]
-  }
   ### SAVING DATA ----
   writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)
   unlink(Files_vec, recursive = TRUE)
