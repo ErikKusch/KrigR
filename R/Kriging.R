@@ -157,7 +157,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   if(!dir.exists(Dir.Temp)){dir.create(Dir.Temp)}
 
   ## KRIGING SPECIFICATION (this will be parsed and evaluated in parallel and non-parallel evaluations further down) ----
-  looptext <- "
+  # looptext <- "
   OriginK <- cbind(Origin, raster::extract(x = Data[[Iter_Krige]], y = Origin[,1:2], df=TRUE)[, 2]) # combine data of current data layer with training covariate data
   OriginK <- na.omit(OriginK) # get rid of NA cells
   colnames(OriginK)[length(Terms)+3] <- c(terms(KrigingEquation)[[2]]) # assign column names
@@ -176,10 +176,12 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
 
   ## retransform to raster
   try( # try fastest way - this fails with certain edge artefacts in meractor projection and is fixed by using rasterize
-    Krig_ras <- raster(x = kriging_result$krige_output, layer = 1) # extract raster from kriging product
+    Krig_ras <- raster(x = kriging_result$krige_output, layer = 1), # extract raster from kriging product
+    silent = TRUE
   )
   try(
-    Var_ras <- raster(x = kriging_result$krige_output, layer = 3) # extract raster from kriging product
+    Var_ras <- raster(x = kriging_result$krige_output, layer = 3), # extract raster from kriging product
+    silent = TRUE
   )
   if(!exists('Krig_ras') & !exists('Var_ras')){
     Krig_ras <- rasterize(x = kriging_result$krige_output, y = Covariates_fine[[1]])[[2]] # extract raster from kriging product
