@@ -174,9 +174,16 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     print(paste0('Kriging failed for layer ', Iter_Krige, '. Error message produced by autoKrige function: ', geterrmessage()))
   }
 
-  Krig_ras <- rasterize(x = kriging_result$krige_output, y = Covariates_fine)[[2]] # extract raster from kriging product
+  ## retransform to raster
+  try( # try fastest way - this fails with certain edge artefacts in meractor projection and is fixed by using rasterize
+    Krig_ras <- raster(x = kriging_result$krige_output, layer = 1) # extract raster from kriging product
+    Var_ras <- raster(x = kriging_result$krige_output, layer = 3) # extract raster from kriging product
+  )
+  if(!exists('Krig_ras') & !exists('Var_ras')){
+    Krig_ras <- rasterize(x = kriging_result$krige_output, y = Covariates_fine[[1]])[[2]] # extract raster from kriging product
+    Var_ras <- rasterize(x = kriging_result$krige_output, y = Covariates_fine)[[4]] # extract raster from kriging product
+  }
   crs(Krig_ras) <- crs(Data) # setting the crs according to the data
-  Var_ras <- rasterize(x = kriging_result$krige_output, y = Covariates_fine)[[4]] # extract raster from kriging product
   crs(Var_ras) <- crs(Data) # setting the crs according to the data
 
   if(Cores == 1){
