@@ -157,7 +157,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   if(!dir.exists(Dir.Temp)){dir.create(Dir.Temp)}
 
   ## KRIGING SPECIFICATION (this will be parsed and evaluated in parallel and non-parallel evaluations further down) ----
-  # looptext <- "
+  looptext <- "
   OriginK <- cbind(Origin, raster::extract(x = Data[[Iter_Krige]], y = Origin[,1:2], df=TRUE)[, 2]) # combine data of current data layer with training covariate data
   OriginK <- na.omit(OriginK) # get rid of NA cells
   colnames(OriginK)[length(Terms)+3] <- c(terms(KrigingEquation)[[2]]) # assign column names
@@ -217,7 +217,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   if(!is.null(DataSkips)){ # Skip check: if layers need to be skipped
     for(Iter_Skip in DataSkips){ # Skip loop: loop over all layers that need to be skipped
       Ras_Krig[[Iter_Skip]] <- Data[[Iter_Skip]] # add raw data (which should be empty) to list
-      writeRaster(x = Ras_Krig[[Iter_Skip]], filename = file.path(Dir.Temp, str_pad(Iter_Skip,4,'left','0')), overwrite = TRUE, format = "CDF") # save raw layer to temporary directory, needed for loading back in when parallel processing
+      writeRaster(x = Ras_Krig[[Iter_Skip]], filename = file.path(Dir.Temp, str_pad(Iter_Skip,4,'left','0')), overwrite = TRUE, format = 'CDF') # save raw layer to temporary directory, needed for loading back in when parallel processing
     } # end of Skip loop
     Layers_vec <- 1:nlayers(Data) # identify vector of all layers in data
     Compute_Layers <- Layers_vec[which(!Layers_vec %in% DataSkips)] # identify which layers can actually be computed on
