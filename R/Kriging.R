@@ -199,7 +199,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     if(Count_Krige == 1){ # count check: if this was the first actual computation
       T_End <- Sys.time() # record time at which kriging was done for current layer
       Duration <- as.numeric(T_End)-as.numeric(T_Begin) # calculate how long it took to krig on layer
-      print(paste('Kriging of remaining ', nlayers(Data)-Iter_Krige, ' data layers should finish around: ', as.POSIXlt(T_Begin + Duration*(nlayers(Data)-Iter_Krige), tz = Sys.timezone(location=TRUE)), sep='')) # console output with estimate of when the kriging should be done
+      print(paste('Kriging of remaining ', nlayers(Data)-Iter_Krige, ' data layers should finish around: ', as.POSIXlt(T_Begin + Duration*nlayers(Data), tz = Sys.timezone(location=TRUE)), sep='')) # console output with estimate of when the kriging should be done
       Count_Krige <- Count_Krige + 1 # raise count by one so the stimator isn't called again
     } # end of count check
     setTxtProgressBar(ProgBar, Iter_Krige) # update progress bar with number of current layer
