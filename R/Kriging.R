@@ -177,6 +177,8 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## retransform to raster
   try( # try fastest way - this fails with certain edge artefacts in meractor projection and is fixed by using rasterize
     Krig_ras <- raster(x = kriging_result$krige_output, layer = 1) # extract raster from kriging product
+  )
+  try(
     Var_ras <- raster(x = kriging_result$krige_output, layer = 3) # extract raster from kriging product
   )
   if(!exists('Krig_ras') & !exists('Var_ras')){
