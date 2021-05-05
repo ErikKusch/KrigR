@@ -16,8 +16,10 @@
 #' @param ID Optional. Identifies which column in Extent to use for creation of individual buffers if Extent is a data.frame.
 #' @param Dir Directory specifying where to download data to.
 #' @param FileName A file name for the netcdf produced. Default is a combination parameters in the function call.
-#' @param API_Key ECMWF cds API key.
-#' @param API_User ECMWF cds user number.
+#' @param API_Key Character; ECMWF cds API key.
+#' @param API_User Character; ECMWF cds user number.
+#' @param TryDown Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.
+#' @param verbose Optional, logical. Whether to report progress of the function int he console or not.
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
@@ -45,7 +47,9 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                          TResolution = "month", TStep = 1, FUN = 'mean',
                          Extent = extent(-180,180,-90,90), Buffer = 0.5, ID = "ID",
                          Dir = getwd(), FileName = NULL,
-                         API_User = NULL, API_Key = NULL) {
+                         API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE) {
+
+  if(isTRUE(verbose)){print("donwload_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
   ### PrecipFix Mispecification Check ----
   if(PrecipFix == TRUE & Variable != "total_precipitation"){
@@ -157,6 +161,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
   FileNames_vec <- paste0(str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
   ### BUILDING REQUEST ----
+  if(isTRUE(verbose)){print(paste("Staging", n_calls, "downloads sequentially."))}
   # Setting parameters of desired downloaded netcdf file according to user input
   for(Downloads_Iter in 1:n_calls){
     Request_ls <- list("dataset_short_name" = DataSet,
@@ -172,16 +177,31 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                        "grid"           = Grid)
 
     ### EXECUTING REQUEST ----
-    wf_request(user = as.character(API_User),
-               request = Request_ls,
-               transfer = TRUE,
-               path = Dir,
-               verbose = TRUE,
-               time_out = 36000)
+    if(file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){
+      if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], "already downloaded"))}
+      next()
+    }
+    if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], "download queried"))}
+    Down_try <- 1
+    while(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter])) & Down_try < TryDown){
+      if(Down_try>1){print("Retrying Download")}
+      try(wf_request(user = as.character(API_User),
+                     request = Request_ls,
+                     transfer = TRUE,
+                     path = Dir,
+                     verbose = TRUE,
+                     time_out = 36000)
+      )
+      Down_try <- Down_try+1
+    }
+    if(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){ # give error if kriging fails
+      print(paste('Downloading for month', Downloads_Iter, 'failed with error message above.'))
+    }
   }
 
   ### LOAD DATA BACK IN ----
-  Files_vec <- file.path(Dir, list.files(Dir, pattern = FileName)) # all files belonging to this query with folder paths
+  if(isTRUE(verbose)){print("Checking for known data issues.")}
+  Files_vec <- file.path(Dir, list.files(Dir, pattern = paste0("_", FileName))) # all files belonging to this query with folder paths
   if(is.na(Type)){Type <- "reanalysis"} # na Type is used for Era5-land data which is essentially just reanalysis
   if(Type == "ensemble_members"){ # ensemble_member check: if user downloaded ensemble_member data
     Layers <- 1:10 # ensemble members come in 10 distinct layers
@@ -206,17 +226,22 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   } # end of ensemble_member check
 
   ### loop over files and layers here
-  Era5_ls <- as.list(rep(NA, length(Layers))) # list for layer aggregation
-  for(LoadIter in Layers){
-    ERA5_ls <- as.list(rep(NA, n_calls)) # list for layer aggregation
-    for(LOADIter in 1:n_calls){
-      ERA5_ls[[LOADIter]] <- raster::brick(x = Files_vec[LOADIter], level = Layers[[LoadIter]]) # loading the data
+  if(isTRUE(verbose)){print("Loading downloaded data for masking and aggregation.")}
+  if(length(Layers) == 1 & Layers == 1){
+    Era5_ras <- stack(Files_vec)
+  }else{
+    Era5_ls <- as.list(rep(NA, length(Layers))) # list for layer aggregation
+    for(LoadIter in Layers){
+      ERA5_ls <- as.list(rep(NA, n_calls)) # list for layer aggregation
+      for(LOADIter in 1:n_calls){
+        ERA5_ls[[LOADIter]] <- raster::brick(x = Files_vec[LOADIter], level = Layers[[LoadIter]]) # loading the data
+      }
+      Era5_ras <- stack(ERA5_ls)
+      ### LIST SAVING
+      Era5_ls[[LoadIter]] <- Era5_ras
     }
-    Era5_ras <- stack(ERA5_ls)
-    ### LIST SAVING
-    Era5_ls[[LoadIter]] <- Era5_ras
+    Era5_ras <- stack(Era5_ls)
   }
-  Era5_ras <- stack(Era5_ls)
 
   if(Type == "ensemble_members" & TResolution == "hour"){ ## fixing indices of layers for ensemble means
     Indices <- sub(pattern = "X", replacement = "", names(Era5_ras))
@@ -233,7 +258,18 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     Era5_ras <- Era5_ras[[order(Indices4)]]
   }
 
+  ### MASKING ----
+  if(exists("Shape")){ # Shape check
+    if(isTRUE(verbose)){print("Masking according to shape/buffer polygon")}
+    range <- KrigR:::mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
+    Era5_ras <- mask(Era5_ras, range)
+    # Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
+    # Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
+    # Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
+  }# end of Shape check
+
   ### PRECIP FIX ----
+  if(isTRUE(verbose)){print("Aggregating to temporal resolution of choice")}
   if(PrecipFix == TRUE & TResolution == "day" | PrecipFix == TRUE & TResolution == "hour"){
     Era5_ras <- Era5_ras[[c(-1, -(nlayers(Era5_ras)-22):-nlayers(Era5_ras))]]
     counter <- 1
@@ -290,14 +326,6 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   }# end of sanity check for time step completeness
   Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
   Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN) # do the calculation
-  ### MASKING ----
-  if(exists("Shape")){ # Shape check
-    range <- KrigR:::mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
-    Era5_ras <- mask(Era5_ras, range)
-    # Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
-    # Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
-    # Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
-  }# end of Shape check
 
   ### SAVING DATA ----
   writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)

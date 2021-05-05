@@ -20,7 +20,9 @@ download_ERA(
   Dir = getwd(),
   FileName = NULL,
   API_User = NULL,
-  API_Key = NULL
+  API_Key = NULL,
+  TryDown = 10,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -52,9 +54,13 @@ download_ERA(
 
 \item{FileName}{A file name for the netcdf produced. Default is a combination parameters in the function call.}
 
-\item{API_User}{ECMWF cds user number.}
+\item{API_User}{Character; ECMWF cds user number.}
 
-\item{API_Key}{ECMWF cds API key.}
+\item{API_Key}{Character; ECMWF cds API key.}
+
+\item{TryDown}{Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.}
+
+\item{verbose}{Optional, logical. Whether to report progress of the function int he console or not.}
 }
 \value{
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
