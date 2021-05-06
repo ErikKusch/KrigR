@@ -31,6 +31,8 @@ krigR(
   Target_res,
   Source = "USGS",
   nmax = Inf,
+  TryDown = 10,
+  verbose = TRUE,
   ...
 )
 }
@@ -86,6 +88,10 @@ krigR(
 \item{Source}{Optional, character. Whether to attempt download from the official USGS data viewer (Source = "USGS") or a static copy of the data set on a  private drive (Source = "Drive"). Default is "USGS". Use this if the USGS viewer is unavailable. Passed on to download_DEM.}
 
 \item{nmax}{Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric).}
+
+\item{TryDown}{Optional, numeric. How often to attempt the download of each individual file (if querying data download) that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.}
+
+\item{verbose}{Optional, logical. Whether to report progress of data download (if queried) in the console or not.}
 
 \item{...}{further arguments passed to automap::autoKrige and/or gstat::krige. Does not work with multi-core kriging for now.}
 }

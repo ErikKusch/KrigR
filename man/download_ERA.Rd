@@ -60,7 +60,7 @@ download_ERA(
 
 \item{TryDown}{Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.}
 
-\item{verbose}{Optional, logical. Whether to report progress of the function int he console or not.}
+\item{verbose}{Optional, logical. Whether to report progress of the function in the console or not.}
 }
 \value{
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.

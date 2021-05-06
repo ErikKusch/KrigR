@@ -19,7 +19,7 @@
 #' @param API_Key Character; ECMWF cds API key.
 #' @param API_User Character; ECMWF cds user number.
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.
-#' @param verbose Optional, logical. Whether to report progress of the function int he console or not.
+#' @param verbose Optional, logical. Whether to report progress of the function in the console or not.
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
