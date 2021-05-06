@@ -204,6 +204,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
       T_End <- Sys.time() # record time at which kriging was done for current layer
       Duration <- as.numeric(T_End)-as.numeric(T_Begin) # calculate how long it took to krig on layer
       print(paste('Kriging of remaining ', nlayers(Data)-Iter_Krige, ' data layers should finish around: ', as.POSIXlt(T_Begin + Duration*nlayers(Data), tz = Sys.timezone(location=TRUE)), sep='')) # console output with estimate of when the kriging should be done
+      ProgBar <- txtProgressBar(min = 0, max = nlayers(Data), style = 3) # create progress bar when non-parallel processing
       Count_Krige <- Count_Krige + 1 # raise count by one so the stimator isn't called again
     } # end of count check
     setTxtProgressBar(ProgBar, Iter_Krige) # update progress bar with number of current layer
@@ -213,8 +214,8 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## KRIGING PREPARATION (establishing objects which the kriging refers to) ----
   Ras_Krig <- as.list(rep(NA, nlayers(Data))) # establish an empty list which will be filled with kriged layers
   Ras_Var <- as.list(rep(NA, nlayers(Data))) # establish an empty list which will be filled with kriged layers
-  if(Cores == 1){ProgBar <- txtProgressBar(min = 0, max = nlayers(Data), style = 3)} # create progress bar when non-parallel processing
 
+  print("Commencing Kriging")
   ## DATA SKIPS (if certain layers in the data are empty and need to be skipped, this is handled here) ---
   if(!is.null(DataSkips)){ # Skip check: if layers need to be skipped
     for(Iter_Skip in DataSkips){ # Skip loop: loop over all layers that need to be skipped
