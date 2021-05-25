@@ -10,6 +10,15 @@ KrigR contains functions for:
 
 **NOTE:** All kriging functionality can be parallelised for faster computing using the `Cores` argument.
 
+# Installation
+KrigR is not yet on CRAN, so it needs to be installed as such:
+
+```{r}
+Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
+devtools::install_github("https://github.com/ErikKusch/KrigR")
+library(KrigR)
+```
+
 # Abstract
 Here we present a new R-package (KrigR) for acquiring and statistically downscaling climate data for ecological applications. The package is principally designed to make use of two of the most recent global reanalysis climate products from the European Centre for Medium Range Weather Forecasting: ERA5 and ERA5-land. These reanalysis products include numerous climate variables relevant for ecological applications including air temperature, precipitation, and soil moisture at hourly resolution and spatial resolutions of 30 by 30km and 9 by 9 km respectively.
 
