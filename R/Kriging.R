@@ -108,7 +108,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   }
   ## CLIMATE DATA (call to download_ERA function if no Data set is specified) ----
   if(is.null(Data)){ # data check: if no data has been specified
-    Data <- download_ERA(Variable = Variable, PrecipFix = PrecipFix, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, FUN = FUN, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir, TryDown = TryDown, verbose = verbose)
+    Data <- download_ERA(Variable = Variable, PrecipFix = PrecipFix, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, FUN = FUN, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir, TryDown = TryDown, verbose = verbose, ID = ID)
   } # end of data check
 
   ## COVARIATE DATA (call to download_DEM function when no covariates are specified) ----
