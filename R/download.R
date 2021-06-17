@@ -271,7 +271,11 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   ### PRECIP FIX ----
   if(isTRUE(verbose)){print("Aggregating to temporal resolution of choice")}
   if(PrecipFix == TRUE & TResolution == "day" | PrecipFix == TRUE & TResolution == "hour"){
-    Era5_ras <- Era5_ras[[c(-1, -(nlayers(Era5_ras)-22):-nlayers(Era5_ras))]]
+    if(DateStart == "1981-01-01"){ ## apply fix for first hour of 1981 here, too
+      Era5_ras <- Era5_ras[[-(nlayers(Era5_ras)-22):-nlayers(Era5_ras)]]
+    }else{
+      Era5_ras <- Era5_ras[[c(-1, -(nlayers(Era5_ras)-22):-nlayers(Era5_ras))]]
+    }
     counter <- 1
     Era5_ls <- as.list(rep(NA, nlayers(Era5_ras)))
     names(Era5_ls) <- names(Era5_ras)
