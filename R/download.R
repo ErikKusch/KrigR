@@ -314,6 +314,9 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     }
     if(Type != "ensemble_members"){
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
+      if(DateStart == "1981-01-01"){
+        Index <- c(Index[-1], rep(31, 24)) # fix for missing first hour issue on first date
+      }
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
     }
