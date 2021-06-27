@@ -326,13 +326,15 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     }
     Era5_ras <- stackApply(Era5_ras, Index, fun=FUN) # do the calculation
   }# end of day/year check
-
+  if(exists("range")){Era5_ras <- mask(Era5_ras, range)} ## apply masking again for stackapply functions which don't track NAs properly
+  
   ### TIME STEP MEANS ----
   if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
     warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
   }# end of sanity check for time step completeness
   Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
   Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN) # do the calculation
+  if(exists("range")){Era5_ras <- mask(Era5_ras, range)} ## apply masking again for stackapply functions which don't track NAs properly
 
   ### SAVING DATA ----
   writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)
