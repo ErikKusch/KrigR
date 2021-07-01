@@ -5,6 +5,8 @@
 \title{Square Buffers Around Point Data}
 \usage{
 buffer_Points(Points = NULL, Buffer = 0.5, ID = "ID")
+
+buffer_Points(Points = NULL, Buffer = 0.5, ID = "ID")
 }
 \arguments{
 \item{Points}{A data.frame containing geo-referenced points with Lat and Lon columns}
@@ -15,7 +17,11 @@ buffer_Points(Points = NULL, Buffer = 0.5, ID = "ID")
 }
 \value{
 A shape made up of individual square buffers around point-location input.
+
+A shape made up of individual square buffers around point-location input.
 }
 \description{
+Allow for drawing of buffer zones around point-location data for downloading and kriging of spatial data around point-locations. Overlapping individual buffers are merged.
+
 Allow for drawing of buffer zones around point-location data for downloading and kriging of spatial data around point-locations. Overlapping individual buffers are merged.
 }

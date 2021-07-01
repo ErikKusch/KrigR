@@ -5,6 +5,8 @@
 \title{Range Masking with Edge Support}
 \usage{
 mask_Shape(base.map = NULL, Shape = NULL)
+
+mask_Shape(base.map = NULL, Shape = NULL)
 }
 \arguments{
 \item{base.map}{A raster within which coverage should be identified}
@@ -13,7 +15,11 @@ mask_Shape(base.map = NULL, Shape = NULL)
 }
 \value{
 A raster layer.
+
+A raster layer.
 }
 \description{
+Creating a raster mask identifying all cells in the original raster (`base.map`) which are at least partially covered by the supplied shapefile (`Shape`).
+
 Creating a raster mask identifying all cells in the original raster (`base.map`) which are at least partially covered by the supplied shapefile (`Shape`).
 }
