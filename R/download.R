@@ -261,8 +261,8 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   ### MASKING ----
   if(exists("Shape")){ # Shape check
     if(isTRUE(verbose)){print("Masking according to shape/buffer polygon")}
-    range <- KrigR:::mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
-    Era5_ras <- mask(Era5_ras, range)
+    range_m <- KrigR:::mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
+    Era5_ras <- mask(Era5_ras, range_m)
     # Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
     # Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
     # Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
@@ -326,15 +326,15 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     }
     Era5_ras <- stackApply(Era5_ras, Index, fun=FUN) # do the calculation
   }# end of day/year check
-  if(exists("range")){Era5_ras <- mask(Era5_ras, range)} ## apply masking again for stackapply functions which don't track NAs properly
-  
+  if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
+
   ### TIME STEP MEANS ----
   if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
     warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
   }# end of sanity check for time step completeness
   Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
   Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN) # do the calculation
-  if(exists("range")){Era5_ras <- mask(Era5_ras, range)} ## apply masking again for stackapply functions which don't track NAs properly
+  if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
 
   ### SAVING DATA ----
   writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)
@@ -441,13 +441,13 @@ download_DEM <- function(Train_ras = NULL,
 
   ### MASKING ----
   if(!is.null(Shape)){ # Shape check
-    range <- KrigR:::mask_Shape(base.map = GMTED2010Train_ras, Shape = Shape)
-    GMTED2010Train_ras <- mask(GMTED2010Train_ras, range)
-    range <- KrigR:::mask_Shape(base.map = GMTED2010Target_ras, Shape = Shape)
-    GMTED2010Target_ras <- mask(GMTED2010Target_ras, range)
+    range_m <- KrigR:::mask_Shape(base.map = GMTED2010Train_ras, Shape = Shape)
+    GMTED2010Train_ras <- mask(GMTED2010Train_ras, range_m)
+    range_m <- KrigR:::mask_Shape(base.map = GMTED2010Target_ras, Shape = Shape)
+    GMTED2010Target_ras <- mask(GMTED2010Target_ras, range_m)
   } # end of Shape check
   GMTED2010Target_ras <- setValues(raster(GMTED2010Target_ras), GMTED2010Target_ras[]) # remove attributes
-  
+
   ### SAVING DATA ----
   names(GMTED2010Train_ras) <- c("DEM") # setting layer name for later use in KrigingEquation
   names(GMTED2010Target_ras) <- c("DEM") # setting layer name for later use in KrigingEquation
