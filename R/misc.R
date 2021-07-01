@@ -594,6 +594,7 @@ Variable_List <- function(DataSet) {
 #'
 #' @return A list containing a potentially altered KrigingEquation if needed as well as an identifier for data layers which need to be skipped when kriging due to a variety of reasons.
 #'
+#'@export
 check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   ### RESOLUTIONS ----
   if(res(CovariatesFine)[1] < res(Data)[1]/10){
@@ -676,6 +677,7 @@ check_Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
 #'
 #' @return A list containing information about the input raster.
 #'
+#'@export
 SummarizeRaster <- function(Object_ras = NULL){
   Summary_ls <- list(Class = class(Object_ras),
                      Dimensions = list(nrow = nrow(Object_ras),
@@ -697,6 +699,7 @@ SummarizeRaster <- function(Object_ras = NULL){
 #'
 #' @return A shape made up of individual square buffers around point-location input.
 #'
+#' @export
 buffer_Points <- function(Points = NULL, Buffer = .5, ID = "ID"){
   # set the radius for the plots
   radius <- Buffer # radius in meters
@@ -735,6 +738,7 @@ buffer_Points <- function(Points = NULL, Buffer = .5, ID = "ID"){
 #'
 #' @return A raster layer.
 #'
+#' @export
 mask_Shape <- function(base.map = NULL, Shape = NULL){
   base.map[] <- NA
   stars.base.map <- stars::st_as_stars(base.map)

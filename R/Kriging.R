@@ -127,9 +127,9 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   KrigingEquation <- as.formula(KrigingEquation)
 
   ## CALL LIST (for storing how the function as called in the output) ----
-  Call_ls <- list(Data = KrigR:::SummarizeRaster(Data),
-                  Covariates_coarse = KrigR:::SummarizeRaster(Covariates_coarse),
-                  Covariates_fine = KrigR:::SummarizeRaster(Covariates_fine),
+  Call_ls <- list(Data = SummarizeRaster(Data),
+                  Covariates_coarse = SummarizeRaster(Covariates_coarse),
+                  Covariates_fine = SummarizeRaster(Covariates_fine),
                   KrigingEquation = KrigingEquation,
                   Cores = Cores,
                   FileName = FileName,
@@ -139,7 +139,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
                   misc = ...)
 
   ## SANITY CHECKS (step into check_Krig function to catch most common error messages) ----
-  Check_Product <- KrigR:::check_Krig(Data = Data, CovariatesCoarse = Covariates_coarse, CovariatesFine = Covariates_fine, KrigingEquation = KrigingEquation)
+  Check_Product <- check_Krig(Data = Data, CovariatesCoarse = Covariates_coarse, CovariatesFine = Covariates_fine, KrigingEquation = KrigingEquation)
   KrigingEquation <- Check_Product[[1]] # extract KrigingEquation (this may have changed in check_Krig)
   DataSkips <- Check_Product[[2]] # extract which layers to skip due to missing data (this is unlikely to ever come into action)
   Terms <- unique(unlist(strsplit(labels(terms(KrigingEquation)), split = ":"))) # identify which layers of data are needed
