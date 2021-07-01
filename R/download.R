@@ -118,7 +118,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
   # Extent vs. Shapefile vs. Points
   if(class(Extent) == "data.frame"){ # if we have been given point data
-    Extent <- KrigR:::buffer_Points(Points = Extent, Buffer = Buffer, ID = ID)
+    Extent <- buffer_Points(Points = Extent, Buffer = Buffer, ID = ID)
   }
 
   # Extent (prepare rectangular bounding box for download from user input)
@@ -261,7 +261,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   ### MASKING ----
   if(exists("Shape")){ # Shape check
     if(isTRUE(verbose)){print("Masking according to shape/buffer polygon")}
-    range_m <- KrigR:::mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
+    range_m <- mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
     Era5_ras <- mask(Era5_ras, range_m)
     # Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
     # Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
@@ -406,7 +406,7 @@ download_DEM <- function(Train_ras = NULL,
 
   # Extent vs. Shapefile vs. Points
   if(class(Shape) == "data.frame"){ # if we have been given point data
-    Shape <- KrigR:::buffer_Points(Points = Shape, Buffer = Buffer, ID = ID)
+    Shape <- buffer_Points(Points = Shape, Buffer = Buffer, ID = ID)
   }
 
   ### DOWNLOADING & UNPACKING -----
@@ -415,8 +415,8 @@ download_DEM <- function(Train_ras = NULL,
     dir.create(Dir.Data) # create folder for GMTED2010 data
     print("Downloading GMTED2010 covariate data.") # inform user of download in console
     httr::GET(Link,
-        write_disk(file.path(Dir.Data, "GMTED2010.zip")),
-        progress(), overwrite = TRUE)
+              write_disk(file.path(Dir.Data, "GMTED2010.zip")),
+              progress(), overwrite = TRUE)
     unzip(file.path(Dir.Data, "GMTED2010.zip"), # which file to unzip
           exdir = Dir.Data) # where to unzip to
   } # end of file check
@@ -439,14 +439,14 @@ download_DEM <- function(Train_ras = NULL,
     GMTED2010Target_ras <- suppressWarnings(aggregate(GMTED2010_ras, fact = Target_res[1]/res(GMTED2010_ras)[1])) # aggregate if output resolution was given
   }
 
+  GMTED2010Target_ras <- setValues(raster(GMTED2010Target_ras), GMTED2010Target_ras[]) # remove attributes
   ### MASKING ----
   if(!is.null(Shape)){ # Shape check
-    range_m <- KrigR:::mask_Shape(base.map = GMTED2010Train_ras, Shape = Shape)
+    range_m <- mask_Shape(base.map = GMTED2010Train_ras, Shape = Shape)
     GMTED2010Train_ras <- mask(GMTED2010Train_ras, range_m)
-    range_m <- KrigR:::mask_Shape(base.map = GMTED2010Target_ras, Shape = Shape)
+    range_m <- mask_Shape(base.map = GMTED2010Target_ras, Shape = Shape)
     GMTED2010Target_ras <- mask(GMTED2010Target_ras, range_m)
   } # end of Shape check
-  GMTED2010Target_ras <- setValues(raster(GMTED2010Target_ras), GMTED2010Target_ras[]) # remove attributes
 
   ### SAVING DATA ----
   names(GMTED2010Train_ras) <- c("DEM") # setting layer name for later use in KrigingEquation
