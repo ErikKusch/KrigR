@@ -4,7 +4,5 @@
 .Ruserdata
 
 packrat/lib*/
-Workshop/
-PersonalSettings.R
-**/Data/*
+**/Test/*
 
