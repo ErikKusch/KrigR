@@ -118,7 +118,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       if(file.exists(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))){
         if(isTRUE(verbose)){
           print(paste0(Var_down, " already downloaded for ", M_seq[Down_Iter], "/", Y_seq[Down_Iter]))}
-        Temp_Ras <- stack(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))
+        Temp_Ras <- raster::stack(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))
       }else{
         Temp_Ras <- download_ERA(
           Variable = Var_down,
@@ -162,10 +162,10 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   try(rm(Save_Ras), silent = TRUE)
   ### DATA LOADING ----
   setwd(Dir)
-  Tair_min <- stack(list.files(path = Dir, pattern = paste0(Vars[1], "-min")))
-  Tair_mean <- stack(list.files(path = Dir, pattern = paste0(Vars[1], "-mean")))
-  Tair_max <- stack(list.files(path = Dir, pattern = paste0(Vars[1], "-max")))
-  Water <- stack(list.files(path = Dir, pattern = paste0(Vars[2], "-", Fun_vec)))
+  Tair_min <- raster::stack(list.files(path = Dir, pattern = paste0(Vars[1], "-min")))
+  Tair_mean <- raster::stack(list.files(path = Dir, pattern = paste0(Vars[1], "-mean")))
+  Tair_max <- raster::stack(list.files(path = Dir, pattern = paste0(Vars[1], "-max")))
+  Water <- raster::stack(list.files(path = Dir, pattern = paste0(Vars[2], "-", Fun_vec)))
 
   ### QUARTER COMPUTATION ----
   Tair_mean_quarter <- stackApply(Tair_mean, indices = rep(1:4, each = 3, length.out = nlayers(Tair_mean)), mean)
@@ -246,7 +246,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   BIO19 <- raster::stackSelect(Water_quarter, raster::which.min(Tair_mean_quarter))
 
   ####### EXPORT #######
-  BIO_Ras <- stack(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9,
+  BIO_Ras <-raster::stack(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9,
                    BIO10, BIO11, BIO12, BIO13, BIO14, BIO15, BIO16, BIO17, BIO18, BIO19)
   names(BIO_Ras) <- paste0("BIO", 1:19)
   print(BIO_Ras)
