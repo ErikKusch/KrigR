@@ -244,7 +244,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   ### BIO19 = Precipitation of Coldest Quarter ----
   BIO19 <- raster::stackSelect(Water_quarter, raster::which.min(Tair_mean_quarter))
-  print(stack(BIO18, BIO19))
+  print(stack(BIO10,BIO11,BIO12,BIO13,BIO14,BIO15,BIO16,BIO17, BIO18, BIO19))
 
   ####### EXPORT #######
   BIO_Ras <-raster::stack(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9,
