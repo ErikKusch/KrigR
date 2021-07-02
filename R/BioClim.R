@@ -100,7 +100,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
       ## DATA CHECK (skip this iteration if data is already downloaded)
       if(file.exists(file.path(Dir, paste0(Var_down, "-", Fun_vec[length(Fun_vec)], "-", Y_seq[Down_Iter], "_", M_seq[Down_Iter], "MonthlyBC.nc")))){
-        if(isTRUE(verbose)){print(paste0(Var_down, " already downloaded and processed for ", M_seq[Down_Iter], "/", Y_seq[Down_Iter]))}
+        if(isTRUE(verbose)){print(paste0(Var_down, " already processed for ", M_seq[Down_Iter], "/", Y_seq[Down_Iter]))}
         next()
       }
       ## DATE HANDLER
@@ -115,24 +115,29 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       }else{
         AggrFUN <- mean
       }
+      if(file.exists(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))){
+        if(isTRUE(verbose)){print(paste0(Var_down, " already downloaded for ", M_seq[Down_Iter], "/", Y_seq[Down_Iter]))}
+        Temp_ras <- stack(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))
+      }else{
+        Temp_Ras <- download_ERA(
+          Variable = Var_down,
+          DataSet = DataSet,
+          Type = "reanalysis",
+          DateStart = month_start,
+          DateStop = month_end,
+          TResolution = T_res,
+          TStep = 1,
+          FUN = AggrFUN,
+          Extent = Extent,
+          Dir = Dir,
+          FileName = paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc"),
+          API_User = API_User,
+          API_Key = API_Key,
+          verbose = FALSE,
+          PrecipFix = PrecipFix
+        )
+      }
 
-      Temp_Ras <- download_ERA(
-        Variable = Var_down,
-        DataSet = DataSet,
-        Type = "reanalysis",
-        DateStart = month_start,
-        DateStop = month_end,
-        TResolution = T_res,
-        TStep = 1,
-        FUN = AggrFUN,
-        Extent = Extent,
-        Dir = Dir,
-        FileName = paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc"),
-        API_User = API_User,
-        API_Key = API_Key,
-        verbose = FALSE,
-        PrecipFix = PrecipFix
-      )
       ### PROCESSING
       for(Iter_fun in Fun_vec){
         Save_Ras <- stackApply(Temp_Ras, indices = rep(1, nlayers(Temp_Ras)), fun = Iter_fun)
@@ -194,22 +199,19 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   ### BIO3 = Isothermality (BIO2/BIO7) (*100) ----
   BIO3 <- BIO2/BIO7*100
-  print(BIO3)
 
   ### BIO8 = Mean Temperature of Wettest Quarter ----
-  print("BIO8")
+  print(which.max(Water_quarter))
+  print(Tair_mean_quarter)
   BIO8 <- raster::stackSelect(Tair_mean_quarter, which.max(Water_quarter))
 
   ### BIO9 = Mean Temperature of Driest Quarter ----
-  print("BIO9")
   BIO9 <- raster::stackSelect(Tair_mean_quarter, which.min(Water_quarter))
 
   ### BIO10 = Mean Temperature of Warmest Quarter ----
-  print("BIO10")
   BIO10 <- raster::stackSelect(Tair_mean_quarter, which.max(Tair_mean_quarter))
 
   ### BIO11 = Mean Temperature of Coldest Quarter ----
-  print("BIO11")
   BIO11 <- raster::stackSelect(Tair_mean_quarter, which.min(Tair_mean_quarter))
 
   ### BIO12 = Annual Precipitation ----
@@ -238,11 +240,9 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   BIO17 <- min(Water_quarter)
 
   ### BIO18 = Precipitation of Warmest Quarter ----
-  print("BIO18")
   BIO18 <- raster::stackSelect(Water_quarter, which.max(Tair_mean_quarter))
 
   ### BIO19 = Precipitation of Coldest Quarter ----
-  print("BIO19")
   BIO19 <- raster::stackSelect(Water_quarter, which.min(Tair_mean_quarter))
 
   ####### EXPORT #######
