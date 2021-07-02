@@ -214,7 +214,6 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   BIO11 <- raster::stackSelect(Tair_mean_quarter, raster::which.min(Tair_mean_quarter))
 
   ### BIO12 = Annual Precipitation ----
-  print("Water")
   if(Water_Var == "total_precipitation"){
     BIO12 <- sum(Water)
   }else{
@@ -224,7 +223,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
     range <- KrigR:::mask_Shape(base.map = BIO12, Shape = Shape)
     BIO12 <- mask(BIO12, range)
   }
-  print("Water done")
+
   ### BIO13 = Precipitation of Wettest Month ----
   BIO13 <- max(Water)
 
@@ -232,24 +231,31 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   BIO14 <- min(Water)
 
   ### BIO15 = Precipitation Seasonality (Coefficient of Variation) ----
+  print("BIO15")
   BIO15 <- calc(Water, sd)/BIO12 * 100
 
   ### BIO16 = Precipitation of Wettest Quarter ----
+  print("BIO16")
   BIO16 <- max(Water_quarter)
 
   ### BIO17 = Precipitation of Driest Quarter ----
+  print("BIO17")
   BIO17 <- min(Water_quarter)
 
   ### BIO18 = Precipitation of Warmest Quarter ----
+  print("BIO18")
   BIO18 <- raster::stackSelect(Water_quarter, raster::which.max(Tair_mean_quarter))
 
   ### BIO19 = Precipitation of Coldest Quarter ----
+  print("BIO19")
   BIO19 <- raster::stackSelect(Water_quarter, raster::which.min(Tair_mean_quarter))
 
   ####### EXPORT #######
+  print("Export")
   BIO_Ras <- stack(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9,
                    BIO10, BIO11, BIO12, BIO13, BIO14, BIO15, BIO16, BIO17, BIO18, BIO19)
   names(BIO_Ras) <- paste0("BIO", 1:19)
+  print("Writing")
   writeRaster(BIO_Ras, file.path(Dir, FileName), format = "CDF", overwrite = TRUE)
   if(!isTRUE(Keep_Monthly)){
     RM_fs <- list.files(Dir, pattern = "MonthlyBC.nc")
