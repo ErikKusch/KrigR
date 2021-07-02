@@ -55,7 +55,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   Vars <- c("2m_temperature", Water_Var)
 
-  if(Y_end == year(Sys.Date())){
+  if(Y_end == year(Sys.lubridate::date())){
     stop("Please note that calculation of bioclimatic variables requires consideration of data sets spanning full years. Therefore, the current year cannot be included in the calculation of bioclimatic variables.")
   }
 
@@ -72,8 +72,8 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   ####### DATA RETRIEVAL #######
   ### DATE HANDLER ----
-  Down_start <- date(paste0(Y_start, "-01-01"))
-  Down_end <- date(paste0(Y_end, "-12-31"))
+  Down_start <- lubridate::date(paste0(Y_start, "-01-01"))
+  Down_end <- lubridate::date(paste0(Y_end, "-12-31"))
   T_seq <- seq(Down_start, Down_end, by = "month")
   Y_seq <- year(T_seq)
   M_seq <- str_pad(month(T_seq), 2, "left", 0)
@@ -104,7 +104,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
         next()
       }
       ## DATE HANDLER
-      month_start <- date(paste(Y_seq[Down_Iter], M_seq[Down_Iter], "01", sep = "-")) # set start date
+      month_start <- lubridate::date(paste(Y_seq[Down_Iter], M_seq[Down_Iter], "01", sep = "-")) # set start date
       month_end <- month_start+(lubridate::days_in_month(month_start)-1) # find end date depending on days in current month
       # if(Y_seq[Down_Iter] == 1981 & M_seq[Down_Iter] == "01" & T_res == "day"){ # 00:00 for first of first years in reanalysis products is not available
       #   month_start <- month_start + 1 # skip first day of
