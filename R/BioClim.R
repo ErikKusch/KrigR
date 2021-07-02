@@ -110,7 +110,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       #   month_start <- month_start + 1 # skip first day of
       # }
       ### DOWNLOAD
-      if(Water_Var == "total_precipitation"){
+      if(Var_down == "total_precipitation"){
         AggrFUN <- sum
       }else{
         AggrFUN <- mean
