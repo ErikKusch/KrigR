@@ -181,14 +181,10 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   ####### BIOCLIMATIC VARIABLES #######
   ### BIO1 = Annual Mean Temperature ----
-  BIO1 <- mean(Tair_mean)
+  BIO1 <- raster::mean(Tair_mean)
 
   ### BIO2 = Mean Diurnal Range (Mean of monthly (max temp - min temp)) ----
-  print(Tair_max)
-  print(Tair_min)
-  print(Tair_max-Tair_min)
   BIO2 <- raster::mean(Tair_max-Tair_min, na.rm = TRUE)
-  print(BIO2)
 
   ### BIO4 = Temperature Seasonality (standard deviation * 100) ----
   BIO4 <- calc(Tair_mean, sd)*100
@@ -221,7 +217,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   if(Water_Var == "total_precipitation"){
     BIO12 <- sum(Water)
   }else{
-    BIO12 <- mean(Water)
+    BIO12 <- raster::mean(Water)
   }
   if(Water_Var == "total_precipitation" & exists("Shape")){
     range <- KrigR:::mask_Shape(base.map = BIO12, Shape = Shape)
