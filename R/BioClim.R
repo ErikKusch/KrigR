@@ -55,7 +55,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   Vars <- c("2m_temperature", Water_Var)
 
-  if(Y_end == year(Sys.lubridate::date())){
+  if(Y_end == year(Sys.Date())){
     stop("Please note that calculation of bioclimatic variables requires consideration of data sets spanning full years. Therefore, the current year cannot be included in the calculation of bioclimatic variables.")
   }
 
