@@ -248,6 +248,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   BIO_Ras <- stack(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9,
                    BIO10, BIO11, BIO12, BIO13, BIO14, BIO15, BIO16, BIO17, BIO18, BIO19)
   names(BIO_Ras) <- paste0("BIO", 1:19)
+  print(BIO_Ras)
   writeRaster(BIO_Ras, file.path(Dir, FileName), format = "CDF", overwrite = TRUE)
   if(!isTRUE(Keep_Monthly)){
     RM_fs <- list.files(Dir, pattern = "MonthlyBC.nc")
