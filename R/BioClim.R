@@ -194,6 +194,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   ### BIO3 = Isothermality (BIO2/BIO7) (*100) ----
   BIO3 <- BIO2/BIO7*100
+  print(BIO3)
 
   ### BIO8 = Mean Temperature of Wettest Quarter ----
   print("BIO8")
