@@ -186,7 +186,8 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   ### BIO2 = Mean Diurnal Range (Mean of monthly (max temp - min temp)) ----
   print(Tair_max)
   print(Tair_min)
-  BIO2 <- mean(Tair_max-Tair_min)
+  print(Tair_max-Tair_min)
+  BIO2 <- mean(Tair_max-Tair_min, na.rm = TRUE)
   print(BIO2)
 
   ### BIO4 = Temperature Seasonality (standard deviation * 100) ----
