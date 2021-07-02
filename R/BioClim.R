@@ -184,7 +184,10 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   BIO1 <- mean(Tair_mean)
 
   ### BIO2 = Mean Diurnal Range (Mean of monthly (max temp - min temp)) ----
+  print(Tair_max)
+  print(Tair_min)
   BIO2 <- mean(Tair_max-Tair_min)
+  print(BIO2)
 
   ### BIO4 = Temperature Seasonality (standard deviation * 100) ----
   BIO4 <- calc(Tair_mean, sd)*100
@@ -245,7 +248,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   ### BIO19 = Precipitation of Coldest Quarter ----
   BIO19 <- raster::stackSelect(Water_quarter, raster::which.min(Tair_mean_quarter))
   print(stack(
-    # BIO1,
+    BIO1,
     # BIO2,
     BIO3,BIO4,BIO5,BIO6,BIO7,BIO8,BIO9,BIO10,BIO11,BIO12,BIO13,BIO14,BIO15,BIO16,BIO17, BIO18, BIO19))
 
