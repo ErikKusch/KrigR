@@ -116,7 +116,8 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
         AggrFUN <- mean
       }
       if(file.exists(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))){
-        if(isTRUE(verbose)){print(paste0(Var_down, " already downloaded for ", M_seq[Down_Iter], "/", Y_seq[Down_Iter]))}
+        if(isTRUE(verbose)){
+          print(paste0(Var_down, " already downloaded for ", M_seq[Down_Iter], "/", Y_seq[Down_Iter]))
         Temp_ras <- stack(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))
       }else{
         Temp_Ras <- download_ERA(
