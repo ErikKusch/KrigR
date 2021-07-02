@@ -201,18 +201,16 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   BIO3 <- BIO2/BIO7*100
 
   ### BIO8 = Mean Temperature of Wettest Quarter ----
-  print(which.max(Water_quarter))
-  print(Tair_mean_quarter)
-  BIO8 <- raster::stackSelect(Tair_mean_quarter, which.max(Water_quarter))
+  BIO8 <- raster::stackSelect(Tair_mean_quarter, raster::which.max(Water_quarter))
 
   ### BIO9 = Mean Temperature of Driest Quarter ----
-  BIO9 <- raster::stackSelect(Tair_mean_quarter, which.min(Water_quarter))
+  BIO9 <- raster::stackSelect(Tair_mean_quarter, raster::which.min(Water_quarter))
 
   ### BIO10 = Mean Temperature of Warmest Quarter ----
-  BIO10 <- raster::stackSelect(Tair_mean_quarter, which.max(Tair_mean_quarter))
+  BIO10 <- raster::stackSelect(Tair_mean_quarter, raster::which.max(Tair_mean_quarter))
 
   ### BIO11 = Mean Temperature of Coldest Quarter ----
-  BIO11 <- raster::stackSelect(Tair_mean_quarter, which.min(Tair_mean_quarter))
+  BIO11 <- raster::stackSelect(Tair_mean_quarter, raster::which.min(Tair_mean_quarter))
 
   ### BIO12 = Annual Precipitation ----
   if(Water_Var == "total_precipitation"){
@@ -240,10 +238,10 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   BIO17 <- min(Water_quarter)
 
   ### BIO18 = Precipitation of Warmest Quarter ----
-  BIO18 <- raster::stackSelect(Water_quarter, which.max(Tair_mean_quarter))
+  BIO18 <- raster::stackSelect(Water_quarter, raster::which.max(Tair_mean_quarter))
 
   ### BIO19 = Precipitation of Coldest Quarter ----
-  BIO19 <- raster::stackSelect(Water_quarter, which.min(Tair_mean_quarter))
+  BIO19 <- raster::stackSelect(Water_quarter, raster::which.min(Tair_mean_quarter))
 
   ####### EXPORT #######
   BIO_Ras <- stack(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9,
