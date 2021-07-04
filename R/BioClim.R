@@ -85,7 +85,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
     Var_down <- Vars[Var_Iter]
     if(Var_down == "total_precipitation"){PrecipFix <- TRUE}else{PrecipFix <- FALSE}
     if(isTRUE(verbose)){
-      if(Water_Var == "total_precipitation"){
+      if(Var_down == "total_precipitation"){
         DowMul <- 2
       }else{
         DowMul <- 1
