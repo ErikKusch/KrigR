@@ -95,11 +95,6 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
     ## LOOP FOR EACH MONTH (immediate reducing of raster layers for storage purposes)
     looptext <- "
-      ## PROCESSING FUNCTIONS
-      Fun_vec <- 'mean' # for all water variables that are not total precip
-      if(Var_down == 'total_precipitation'){Fun_vec <- 'sum'}
-      if(Var_down == '2m_temperature'){Fun_vec <- c('min', 'mean', 'max')}
-
       ## DATA CHECK (skip this iteration if data is already downloaded)
       if(file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))){
         if(isTRUE(verbose)){print(paste0(Var_down, ' already processed for ', M_seq[Down_Iter], '/', Y_seq[Down_Iter]))}
@@ -159,8 +154,13 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       }
       "
 
+    ## PROCESSING FUNCTIONS
+    Fun_vec <- 'mean' # for all water variables that are not total precip
+    if(Var_down == 'total_precipitation'){Fun_vec <- 'sum'}
+    if(Var_down == '2m_temperature'){Fun_vec <- c('min', 'mean', 'max')}
+
     if(Cores > 1){ # Cores check: if parallel processing has been specified
-      ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw")
+      ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw", "Fun_vec")
       cl <- makeCluster(Cores) # Assuming Cores node cluster
       registerDoParallel(cl) # registering cores
       foreach(Down_Iter = 1:length(M_seq),
