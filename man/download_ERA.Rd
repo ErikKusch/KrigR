@@ -22,7 +22,8 @@ download_ERA(
   API_User = NULL,
   API_Key = NULL,
   TryDown = 10,
-  verbose = TRUE
+  verbose = TRUE,
+  Cores = 1
 )
 }
 \arguments{
@@ -61,6 +62,8 @@ download_ERA(
 \item{TryDown}{Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.}
 
 \item{verbose}{Optional, logical. Whether to report progress of the function in the console or not.}
+
+\item{Cores}{Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.}
 }
 \value{
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.

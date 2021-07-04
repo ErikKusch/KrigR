@@ -20,6 +20,7 @@
 #' @param API_User Character; ECMWF cds user number.
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.
 #' @param verbose Optional, logical. Whether to report progress of the function in the console or not.
+#' @param Cores Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
@@ -47,7 +48,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                          TResolution = "month", TStep = 1, FUN = 'mean',
                          Extent = extent(-180,180,-90,90), Buffer = 0.5, ID = "ID",
                          Dir = getwd(), FileName = NULL,
-                         API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE) {
+                         API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE, Cores = 1) {
 
   if(isTRUE(verbose)){print("donwload_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
@@ -161,30 +162,30 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
   FileNames_vec <- paste0(str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
   ### BUILDING REQUEST ----
-  if(isTRUE(verbose)){print(paste("Staging", n_calls, "downloads sequentially."))}
+  if(isTRUE(verbose)){print(paste("Staging", n_calls, "downloads."))}
   # Setting parameters of desired downloaded netcdf file according to user input
-  for(Downloads_Iter in 1:n_calls){
-    Request_ls <- list("dataset_short_name" = DataSet,
-                       "product_type"   = Type,
-                       "variable"       = Variable,
-                       "year"           = Calls_ls[[Downloads_Iter]][1],
-                       "month"          = Calls_ls[[Downloads_Iter]][2],
-                       "day"            = Calls_ls[[Downloads_Iter]][3:length(Calls_ls[[Downloads_Iter]])],
-                       "time"           = Times,
-                       "area"           = Extent,
-                       "format"         = "netcdf",
-                       "target"         = FileNames_vec[Downloads_Iter],
-                       "grid"           = Grid)
+  looptext <- "
+    Request_ls <- list('dataset_short_name' = DataSet,
+                       'product_type'   = Type,
+                       'variable'       = Variable,
+                       'year'           = Calls_ls[[Downloads_Iter]][1],
+                       'month'          = Calls_ls[[Downloads_Iter]][2],
+                       'day'            = Calls_ls[[Downloads_Iter]][3:length(Calls_ls[[Downloads_Iter]])],
+                       'time'           = Times,
+                       'area'           = Extent,
+                       'format'         = 'netcdf',
+                       'target'         = FileNames_vec[Downloads_Iter],
+                       'grid'           = Grid)
 
     ### EXECUTING REQUEST ----
     if(file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){
-      if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], "already downloaded"))}
+      if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], 'already downloaded'))}
       next()
     }
-    if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], "download queried"))}
+    if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], 'download queried'))}
     Down_try <- 1
     while(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter])) & Down_try < TryDown){
-      if(Down_try>1){print("Retrying Download")}
+      if(Down_try>1){print('Retrying Download')}
       try(wf_request(user = as.character(API_User),
                      request = Request_ls,
                      transfer = TRUE,
@@ -197,7 +198,21 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     if(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){ # give error if kriging fails
       print(paste('Downloading for month', Downloads_Iter, 'failed with error message above.'))
     }
-  }
+    "
+
+  if(Cores > 1){ # Cores check: if parallel processing has been specified
+    ForeachObjects <- c("DataSet", "Type", "Variable", "Calls_ls", "Times", "Extent", "FileNames_vec", "Grid", "API_Key", "API_User", "Dir", "verbose", "TryDown")
+    cl <- makeCluster(Cores) # Assuming Cores node cluster
+    registerDoParallel(cl) # registering cores
+    foreach(Downloads_Iter = 1:n_calls,
+            .packages = c("ecmwfr"), # import packages necessary to each itteration
+            .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))) %dopar% {
+              eval(parse(text=looptext))
+            } # end of parallel kriging loop
+    stopCluster(cl) # close down cluster
+  }else{ # if non-parallel processing has been specified
+    for(Downloads_Iter in 1:n_calls){eval(parse(text=looptext))}
+  } # end of non-parallel loop
 
   ### LOAD DATA BACK IN ----
   if(isTRUE(verbose)){print("Checking for known data issues.")}

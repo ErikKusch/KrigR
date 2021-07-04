@@ -17,6 +17,7 @@
 #' @param verbose Optional, logical. Whether to report progress of the function in the console or not.
 #' @param Keep_Raw Logical. Whether to keep monthly netcdf files of raw data aggregated to temporal resolution of `T_res`. Default FALSE.
 #' @param Keep_Monthly Logical. Whether to keep monthly netcdf files of raw data aggregated to temporal resolution of months. Default FALSE.
+#' @param Cores Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
@@ -50,7 +51,8 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
                     Buffer = .5,
                     ID = "ID",
                     API_User = API_User,
-                    API_Key = API_Key){
+                    API_Key = API_Key,
+                    Cores = 1){
 
 
   Vars <- c("2m_temperature", Water_Var)
@@ -88,42 +90,42 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       }else{
         DowMul <- 1
       }
-      print(paste("The KrigR::BioClim() function is going to sequentially stage", length(T_seq)*DowMul, "downloads for", Var_down, "data now."))
+      print(paste("The KrigR::BioClim() function is going to stage", length(T_seq)*DowMul, "downloads for", Var_down, "data now."))
     }
 
-    ## LOOP FOR EACH YEAR (immediate reducing of raster layers for storage purposes)
-    for(Down_Iter in 1:length(M_seq)){
+    ## LOOP FOR EACH MONTH (immediate reducing of raster layers for storage purposes)
+    looptext <- "
       ## PROCESSING FUNCTIONS
-      Fun_vec <- "mean" # for all water variables that are not total precip
-      if(Var_down == "total_precipitation"){Fun_vec <- "sum"}
-      if(Var_down == "2m_temperature"){Fun_vec <- c("min", "mean", "max")}
+      Fun_vec <- 'mean' # for all water variables that are not total precip
+      if(Var_down == 'total_precipitation'){Fun_vec <- 'sum'}
+      if(Var_down == '2m_temperature'){Fun_vec <- c('min', 'mean', 'max')}
 
       ## DATA CHECK (skip this iteration if data is already downloaded)
-      if(file.exists(file.path(Dir, paste0(Var_down, "-", Fun_vec[length(Fun_vec)], "-", Y_seq[Down_Iter], "_", M_seq[Down_Iter], "MonthlyBC.nc")))){
-        if(isTRUE(verbose)){print(paste0(Var_down, " already processed for ", M_seq[Down_Iter], "/", Y_seq[Down_Iter]))}
+      if(file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))){
+        if(isTRUE(verbose)){print(paste0(Var_down, ' already processed for ', M_seq[Down_Iter], '/', Y_seq[Down_Iter]))}
         next()
       }
       ## DATE HANDLER
-      month_start <- lubridate::date(paste(Y_seq[Down_Iter], M_seq[Down_Iter], "01", sep = "-")) # set start date
+      month_start <- lubridate::date(paste(Y_seq[Down_Iter], M_seq[Down_Iter], '01', sep = '-')) # set start date
       month_end <- month_start+(lubridate::days_in_month(month_start)-1) # find end date depending on days in current month
-      # if(Y_seq[Down_Iter] == 1981 & M_seq[Down_Iter] == "01" & T_res == "day"){ # 00:00 for first of first years in reanalysis products is not available
+      # if(Y_seq[Down_Iter] == 1981 & M_seq[Down_Iter] == '01' & T_res == 'day'){ # 00:00 for first of first years in reanalysis products is not available
       #   month_start <- month_start + 1 # skip first day of
       # }
       ### DOWNLOAD
-      if(Var_down == "total_precipitation"){
+      if(Var_down == 'total_precipitation'){
         AggrFUN <- sum
       }else{
         AggrFUN <- mean
       }
-      if(file.exists(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))){
+      if(file.exists(file.path(Dir, paste0(Var_down, '_Temporary_', Y_seq[Down_Iter], '_', M_seq[Down_Iter], '.nc')))){
         if(isTRUE(verbose)){
-          print(paste0(Var_down, " already downloaded for ", M_seq[Down_Iter], "/", Y_seq[Down_Iter]))}
-        Temp_Ras <- raster::stack(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))
+          print(paste0(Var_down, ' already downloaded for ', M_seq[Down_Iter], '/', Y_seq[Down_Iter]))}
+        Temp_Ras <- raster::stack(file.path(Dir, paste0(Var_down, '_Temporary_', Y_seq[Down_Iter], '_', M_seq[Down_Iter], '.nc')))
       }else{
         Temp_Ras <- download_ERA(
           Variable = Var_down,
           DataSet = DataSet,
-          Type = "reanalysis",
+          Type = 'reanalysis',
           DateStart = month_start,
           DateStop = month_end,
           TResolution = T_res,
@@ -131,7 +133,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
           FUN = AggrFUN,
           Extent = Extent,
           Dir = Dir,
-          FileName = paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc"),
+          FileName = paste0(Var_down, '_Temporary_', Y_seq[Down_Iter], '_', M_seq[Down_Iter], '.nc'),
           API_User = API_User,
           API_Key = API_Key,
           verbose = FALSE,
@@ -143,21 +145,35 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       for(Iter_fun in Fun_vec){
         Save_Ras <- stackApply(Temp_Ras, indices = rep(1, nlayers(Temp_Ras)), fun = Iter_fun)
 
-        if(Iter_fun == "sum" & exists("Shape")){
+        if(Iter_fun == 'sum' & exists('Shape')){
           range <- KrigR:::mask_Shape(base.map = Save_Ras[[1]], Shape = Shape)
           Save_Ras <- mask(Save_Ras, range)
         }
         writeRaster(x = Save_Ras,
-                    filename = file.path(Dir, paste0(Var_down, "-", Iter_fun, "-", Y_seq[Down_Iter], "_", M_seq[Down_Iter], "MonthlyBC.nc")),
-                    format = "CDF", overwrite = TRUE)
+                    filename = file.path(Dir, paste0(Var_down, '-', Iter_fun, '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')),
+                    format = 'CDF', overwrite = TRUE)
       }
       ### DELETING RAW
       if(!isTRUE(Keep_Raw)){
-        unlink(file.path(Dir, paste0(Var_down, "_Temporary_", Y_seq[Down_Iter], "_", M_seq[Down_Iter], ".nc")))
+        unlink(file.path(Dir, paste0(Var_down, '_Temporary_', Y_seq[Down_Iter], '_', M_seq[Down_Iter], '.nc')))
       }
+      "
 
-    }
-  }
+    if(Cores > 1){ # Cores check: if parallel processing has been specified
+      ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw")
+      cl <- makeCluster(Cores) # Assuming Cores node cluster
+      registerDoParallel(cl) # registering cores
+      foreach(Down_Iter = 1:length(M_seq),
+              .packages = c("KrigR"), # import packages necessary to each itteration
+              .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))) %dopar% {
+                eval(parse(text=looptext))
+              } # end of parallel kriging loop
+      stopCluster(cl) # close down cluster
+    }else{ # if non-parallel processing has been specified
+      for(Down_Iter in 1:length(M_seq)){eval(parse(text=looptext))}
+    } # end of non-parallel loop
+  } # end of Cores check
+
   try(rm(Temp_Ras), silent = TRUE) # remove this, in case it is large
   try(rm(Save_Ras), silent = TRUE)
   ### DATA LOADING ----
@@ -247,7 +263,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   ####### EXPORT #######
   BIO_Ras <-raster::stack(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9,
-                   BIO10, BIO11, BIO12, BIO13, BIO14, BIO15, BIO16, BIO17, BIO18, BIO19)
+                          BIO10, BIO11, BIO12, BIO13, BIO14, BIO15, BIO16, BIO17, BIO18, BIO19)
   names(BIO_Ras) <- paste0("BIO", 1:19)
   writeRaster(BIO_Ras, file.path(Dir, FileName), format = "CDF", overwrite = TRUE)
   if(!isTRUE(Keep_Monthly)){

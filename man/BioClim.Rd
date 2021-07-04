@@ -19,7 +19,8 @@ BioClim(
   Buffer = 0.5,
   ID = "ID",
   API_User = API_User,
-  API_Key = API_Key
+  API_Key = API_Key,
+  Cores = 1
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ BioClim(
 \item{API_User}{Character; ECMWF cds user number.}
 
 \item{API_Key}{Character; ECMWF cds API key.}
+
+\item{Cores}{Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.}
 }
 \value{
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
