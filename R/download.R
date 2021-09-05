@@ -332,10 +332,12 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       factor <- 12 # number of months per year
     }
     if(Type != "ensemble_members"){
-      Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
       if(TResolution == "hour" | TResolution == "day" & DateStart == "1981-01-01"){
-        Index <- c(Index[-1], rep(31, 24)) # fix for missing first hour issue on first date
+        Index <- rep(1:((nlayers(Era5_ras)+1)/factor), each = factor)[-1] # fix first-hour issue for 01-01-1981
+      }else{
+        Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
       }
+    }
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
     }
