@@ -337,7 +337,6 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       }else{
         Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
       }
-    }
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
     }
