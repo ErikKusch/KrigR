@@ -158,7 +158,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   if(is.null(FileName)){
     FileName <- paste(Variable, DateStart, DateStop, TResolution, sep="_")
   }
-  FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
+  # FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
   FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
   FileNames_vec <- paste0(str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
   ### BUILDING REQUEST ----

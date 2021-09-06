@@ -150,7 +150,7 @@ download_UERRA <- function(Variable = NULL, DataSet = NULL, Origin = "mescan_sur
   if(is.null(FileName)){
     FileName <- paste(Variable, DateStart, DateStop, TResolution, sep="_")
   }
-  FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
+  # FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
   FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
 
   ### BUILDING REQUEST ----
