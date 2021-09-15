@@ -196,7 +196,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       Down_try <- Down_try+1
     }
     if(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){ # give error if kriging fails
-      print(paste('Downloading for month', Downloads_Iter, 'failed with error message above.'))
+      stop(paste('Downloading for month', Downloads_Iter, 'failed with error message above.'))
     }
     "
 
