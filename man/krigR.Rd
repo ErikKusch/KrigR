@@ -92,8 +92,6 @@ krigR(
 \item{TryDown}{Optional, numeric. How often to attempt the download of each individual file (if querying data download) that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.}
 
 \item{verbose}{Optional, logical. Whether to report progress of data download (if queried) in the console or not.}
-
-\item{...}{further arguments passed to automap::autoKrige and/or gstat::krige. Does not work with multi-core kriging for now.}
 }
 \value{
 A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.

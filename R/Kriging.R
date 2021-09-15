@@ -35,7 +35,6 @@
 #' @param nmax Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric).
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file (if querying data download) that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.
 #' @param verbose Optional, logical. Whether to report progress of data download (if queried) in the console or not.
-#' @param ... further arguments passed to automap::autoKrige and/or gstat::krige. Does not work with multi-core kriging for now.
 #' @return A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.
 #' @examples
 #' \dontrun{
