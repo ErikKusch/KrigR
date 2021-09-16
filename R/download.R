@@ -183,7 +183,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       next()
     }
     if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], 'download queried'))}
-    Down_try <- 1
+    Down_try <- 0
     while(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter])) & Down_try < TryDown){
       if(Down_try>1){print('Retrying Download')}
       try(wf_request(user = as.character(API_User),
