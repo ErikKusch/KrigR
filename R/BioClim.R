@@ -245,9 +245,18 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   ### BIO13 = Precipitation of Wettest Month ----
   BIO13 <- max(Water)
+  if(Water_Var == "total_precipitation" & exists("Shape")){
+    range <- KrigR:::mask_Shape(base.map = BIO13, Shape = Shape)
+    BIO13 <- mask(BIO13, range)
+  }
 
   ### BIO14 = Precipitation of Driest Month ----
   BIO14 <- min(Water)
+  BIO14 <- max(Water)
+  if(Water_Var == "total_precipitation" & exists("Shape")){
+    range <- KrigR:::mask_Shape(base.map = BIO14, Shape = Shape)
+    BIO14 <- mask(BIO14, range)
+  }
 
   ### BIO15 = Precipitation Seasonality (Coefficient of Variation) ----
   BIO15 <- calc(Water, sd)/BIO12 * 100
