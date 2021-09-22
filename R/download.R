@@ -286,11 +286,11 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   ### PRECIP FIX ----
   if(isTRUE(verbose)){print("Aggregating to temporal resolution of choice")}
   if(PrecipFix == TRUE & TResolution == "day" | PrecipFix == TRUE & TResolution == "hour"){
-    if(DateStart == "1981-01-01"){ ## apply fix for first hour of 1981 here, too
-      Era5_ras <- Era5_ras[[-(nlayers(Era5_ras)-22):-nlayers(Era5_ras)]]
-    }else{
+    # if(DateStart == "1981-01-01"){ ## apply fix for first-hour of 1981 here, too
+    #   Era5_ras <- Era5_ras[[-(nlayers(Era5_ras)-22):-nlayers(Era5_ras)]]
+    # }else{
       Era5_ras <- Era5_ras[[c(-1, -(nlayers(Era5_ras)-22):-nlayers(Era5_ras))]]
-    }
+    # }
     counter <- 1
     Era5_ls <- as.list(rep(NA, nlayers(Era5_ras)))
     names(Era5_ls) <- names(Era5_ras)
@@ -332,11 +332,11 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       factor <- 12 # number of months per year
     }
     if(Type != "ensemble_members"){
-      if(TResolution == "hour" | TResolution == "day" & DateStart == "1981-01-01"){
-        Index <- rep(1:((nlayers(Era5_ras)+1)/factor), each = factor)[-1] # fix first-hour issue for 01-01-1981
-      }else{
+      # if(TResolution == "hour" | TResolution == "day" & DateStart == "1981-01-01"){
+      #   Index <- rep(1:((nlayers(Era5_ras)+1)/factor), each = factor)[-1] # fix first-hour issue for 01-01-1981
+      # }else{
         Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
-      }
+      # }
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
     }
