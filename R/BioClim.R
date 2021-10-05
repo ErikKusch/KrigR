@@ -19,6 +19,7 @@
 #' @param Keep_Monthly Logical. Whether to keep monthly netcdf files of raw data aggregated to temporal resolution of months. Default FALSE.
 #' @param Cores Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.
+#' @param TimeOut Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
@@ -54,7 +55,8 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
                     API_User = API_User,
                     API_Key = API_Key,
                     Cores = 1,
-                    TryDown = 10){
+                    TryDown = 10,
+                    TimeOut = 36000){
 
 
   Vars <- c("2m_temperature", Water_Var)
@@ -135,7 +137,8 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
           API_Key = API_Key,
           verbose = FALSE,
           PrecipFix = PrecipFix,
-          TryDown = TryDown
+          TryDown = TryDown,
+          TimeOut = TimeOut
         )
       }
 
