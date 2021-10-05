@@ -237,7 +237,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   ### BIO12 = Annual Precipitation ----
   if(Water_Var == "total_precipitation"){
-    BIO12 <- sum(Water)
+    BIO12 <- sum(Water)/(nlayers(Water)/12)
   }else{
     BIO12 <- raster::mean(Water)
   }
@@ -255,7 +255,6 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
   ### BIO14 = Precipitation of Driest Month ----
   BIO14 <- min(Water)
-  BIO14 <- max(Water)
   if(Water_Var == "total_precipitation" & exists("Shape")){
     range <- KrigR:::mask_Shape(base.map = BIO14, Shape = Shape)
     BIO14 <- mask(BIO14, range)
