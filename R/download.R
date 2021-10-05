@@ -21,6 +21,7 @@
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.
 #' @param verbose Optional, logical. Whether to report progress of the function in the console or not.
 #' @param Cores Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.
+#' @param TimeOut Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
@@ -48,7 +49,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                          TResolution = "month", TStep = 1, FUN = 'mean',
                          Extent = extent(-180,180,-90,90), Buffer = 0.5, ID = "ID",
                          Dir = getwd(), FileName = NULL,
-                         API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE, Cores = 1) {
+                         API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE, Cores = 1, TimeOut = 36000) {
 
   if(isTRUE(verbose)){print("donwload_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
@@ -191,7 +192,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                      transfer = TRUE,
                      path = Dir,
                      verbose = TRUE,
-                     time_out = 36000)
+                     time_out = TimeOut)
       )
       Down_try <- Down_try+1
     }
@@ -286,11 +287,11 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   ### PRECIP FIX ----
   if(isTRUE(verbose)){print("Aggregating to temporal resolution of choice")}
   if(PrecipFix == TRUE & TResolution == "day" | PrecipFix == TRUE & TResolution == "hour"){
-    # if(DateStart == "1981-01-01"){ ## apply fix for first-hour of 1981 here, too
-    #   Era5_ras <- Era5_ras[[-(nlayers(Era5_ras)-22):-nlayers(Era5_ras)]]
-    # }else{
+    if(DateStart == "1950-01-01"){ ## apply fix for first-hour of 1981 here, too
+      Era5_ras <- Era5_ras[[-(nlayers(Era5_ras)-22):-nlayers(Era5_ras)]]
+    }else{
       Era5_ras <- Era5_ras[[c(-1, -(nlayers(Era5_ras)-22):-nlayers(Era5_ras))]]
-    # }
+    }
     counter <- 1
     Era5_ls <- as.list(rep(NA, nlayers(Era5_ras)))
     names(Era5_ls) <- names(Era5_ras)
@@ -335,7 +336,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       # if(TResolution == "hour" | TResolution == "day" & DateStart == "1981-01-01"){
       #   Index <- rep(1:((nlayers(Era5_ras)+1)/factor), each = factor)[-1] # fix first-hour issue for 01-01-1981
       # }else{
-        Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
+      Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
       # }
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index

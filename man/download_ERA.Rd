@@ -23,7 +23,8 @@ download_ERA(
   API_Key = NULL,
   TryDown = 10,
   verbose = TRUE,
-  Cores = 1
+  Cores = 1,
+  TimeOut = 36000
 )
 }
 \arguments{
@@ -64,6 +65,8 @@ download_ERA(
 \item{verbose}{Optional, logical. Whether to report progress of the function in the console or not.}
 
 \item{Cores}{Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.}
+
+\item{TimeOut}{Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).}
 }
 \value{
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
