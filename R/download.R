@@ -187,13 +187,17 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     Down_try <- 0
     while(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter])) & Down_try < TryDown){
       if(Down_try>1){print('Retrying Download')}
-      try(wf_request(user = as.character(API_User),
+            try(API_request <- wf_request(user = as.character(API_User),
                      request = Request_ls,
                      transfer = TRUE,
                      path = Dir,
-                     verbose = TRUE,
-                     time_out = TimeOut)
-      )
+                     verbose = verbose,
+                     time_out = TimeOut))
+      if(length(API_request == 1)){
+        wf_delete(user = as.character(API_User),
+                      url = API_request$request_id,
+                      service = API_Service)
+      }
       Down_try <- Down_try+1
     }
     if(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){ # give error if kriging fails
