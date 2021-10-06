@@ -20,6 +20,7 @@
 #' @param Cores Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.
 #' @param TimeOut Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).
+#' @param SingularDL Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
@@ -56,7 +57,8 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
                     API_Key = API_Key,
                     Cores = 1,
                     TryDown = 10,
-                    TimeOut = 36000){
+                    TimeOut = 36000,
+                    SingularDL = FALSE){
 
 
   Vars <- c("2m_temperature", Water_Var)
@@ -88,14 +90,6 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   for(Var_Iter in 1:length(Vars)){ ## LOOP FOR EACH VARIABLE
     Var_down <- Vars[Var_Iter]
     if(Var_down == "total_precipitation"){PrecipFix <- TRUE}else{PrecipFix <- FALSE}
-    if(isTRUE(verbose)){
-      if(Var_down == "total_precipitation"){
-        DowMul <- 2
-      }else{
-        DowMul <- 1
-      }
-      print(paste("The KrigR::BioClim() function is going to stage", length(T_seq)*DowMul, "downloads for", Var_down, "data now."))
-    }
 
     ## LOOP FOR EACH MONTH (immediate reducing of raster layers for storage purposes)
     looptext <- "
@@ -165,20 +159,89 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
     if(Var_down == 'total_precipitation'){Fun_vec <- 'sum'}
     if(Var_down == '2m_temperature'){Fun_vec <- c('min', 'mean', 'max')}
 
-    if(Cores > 1){ # Cores check: if parallel processing has been specified
-      ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw", "Fun_vec", "TryDown", "TimeOut")
-      cl <- makeCluster(Cores) # Assuming Cores node cluster
-      registerDoParallel(cl) # registering cores
-      foreach(Down_Iter = 1:length(M_seq),
-              .packages = c("KrigR"), # import packages necessary to each itteration
-              .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))) %dopar% {
-                eval(parse(text=looptext))
-              } # end of parallel kriging loop
-      stopCluster(cl) # close down cluster
-    }else{ # if non-parallel processing has been specified
-      for(Down_Iter in 1:length(M_seq)){eval(parse(text=looptext))}
-    } # end of non-parallel loop
-  } # end of Cores check
+    ## DOWNLOADS OF DATA
+    if(SingularDL){
+      ## DATA CHECK (skip this iteration if data is already downloaded)
+      if(file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], 'MonthlyBC.nc')))){
+        if(isTRUE(verbose)){print(paste(Var_down, "already processed"))}
+        next()
+      }
+      ### DOWNLOAD
+      if(Var_down == 'total_precipitation'){
+        AggrFUN <- sum
+      }else{
+        AggrFUN <- mean
+      }
+      if(file.exists(file.path(Dir, paste0(Var_down, '_Temporary.nc')))){
+        if(isTRUE(verbose)){print(paste(Var_down, "already downloaded"))}
+        Temp_Ras <- raster::stack(file.path(Dir, paste0(Var_down, '_Temporary.nc')))
+      }else{
+        Temp_Ras <- download_ERA(
+          Variable = Var_down,
+          DataSet = "era5", #DataSet,
+          Type = 'reanalysis',
+          DateStart = Down_start,
+          DateStop = Down_end,
+          TResolution = T_res,
+          TStep = 1,
+          FUN = AggrFUN,
+          Extent = Extent,
+          Dir = Dir,
+          FileName = paste0(Var_down, '_Temporary'),
+          API_User = API_User,
+          API_Key = API_Key,
+          verbose = TRUE,
+          PrecipFix = PrecipFix,
+          TryDown = TryDown,
+          TimeOut = TimeOut,
+          SingularDL = TRUE
+        )
+      }
+
+      ### PROCESSING
+      for(Iter_fun in Fun_vec){
+        Save_Ras <- stackApply(Temp_Ras, indices = month(seq(Down_start, Down_end, by = "day")), fun = Iter_fun)
+
+        if(Iter_fun == 'sum' & exists('Shape')){
+          range <- KrigR:::mask_Shape(base.map = Save_Ras[[1]], Shape = Shape)
+          Save_Ras <- mask(Save_Ras, range)
+        }
+        writeRaster(x = Save_Ras,
+                    filename = file.path(Dir, paste0(Var_down, '-', Iter_fun, 'MonthlyBC.nc')),
+                    format = 'CDF', overwrite = TRUE)
+      }
+      ### DELETING RAW
+      if(!isTRUE(Keep_Raw)){
+        unlink(file.path(Dir, paste0(paste0(Var_down, '_Temporary'), '.nc')))
+      }
+
+
+    }else{
+
+      if(isTRUE(verbose)){
+        if(Var_down == "total_precipitation"){
+          DowMul <- 2
+        }else{
+          DowMul <- 1
+        }
+        print(paste("The KrigR::BioClim() function is going to stage", length(T_seq)*DowMul, "downloads for", Var_down, "data now."))
+      }
+
+      if(Cores > 1){ # Cores check: if parallel processing has been specified
+        ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw", "Fun_vec", "TryDown", "TimeOut")
+        cl <- makeCluster(Cores) # Assuming Cores node cluster
+        registerDoParallel(cl) # registering cores
+        foreach(Down_Iter = 1:length(M_seq),
+                .packages = c("KrigR"), # import packages necessary to each itteration
+                .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))) %dopar% {
+                  eval(parse(text=looptext))
+                } # end of parallel kriging loop
+        stopCluster(cl) # close down cluster
+      }else{ # if non-parallel processing has been specified
+        for(Down_Iter in 1:length(M_seq)){eval(parse(text=looptext))}
+      } # end of non-parallel loop
+    } # end of Cores check
+  }
 
   try(rm(Temp_Ras), silent = TRUE) # remove this, in case it is large
   try(rm(Save_Ras), silent = TRUE)

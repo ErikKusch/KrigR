@@ -22,7 +22,8 @@ BioClim(
   API_Key = API_Key,
   Cores = 1,
   TryDown = 10,
-  TimeOut = 36000
+  TimeOut = 36000,
+  SingularDL = FALSE
 )
 }
 \arguments{
@@ -61,6 +62,8 @@ BioClim(
 \item{TryDown}{Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.}
 
 \item{TimeOut}{Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).}
+
+\item{SingularDL}{Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.}
 }
 \value{
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.

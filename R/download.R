@@ -22,6 +22,7 @@
 #' @param verbose Optional, logical. Whether to report progress of the function in the console or not.
 #' @param Cores Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.
 #' @param TimeOut Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).
+#' @param SingularDL Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
@@ -49,7 +50,8 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                          TResolution = "month", TStep = 1, FUN = 'mean',
                          Extent = extent(-180,180,-90,90), Buffer = 0.5, ID = "ID",
                          Dir = getwd(), FileName = NULL,
-                         API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE, Cores = 1, TimeOut = 36000) {
+                         API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE,
+                         Cores = 1, TimeOut = 36000, SingularDL = FALSE) {
 
   if(isTRUE(verbose)){print("donwload_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
@@ -162,22 +164,8 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   # FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
   FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
   FileNames_vec <- paste0(str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
-  ### BUILDING REQUEST ----
-  if(isTRUE(verbose)){print(paste("Staging", n_calls, "downloads."))}
-  # Setting parameters of desired downloaded netcdf file according to user input
-  looptext <- "
-    Request_ls <- list('dataset_short_name' = DataSet,
-                       'product_type'   = Type,
-                       'variable'       = Variable,
-                       'year'           = Calls_ls[[Downloads_Iter]][1],
-                       'month'          = Calls_ls[[Downloads_Iter]][2],
-                       'day'            = Calls_ls[[Downloads_Iter]][3:length(Calls_ls[[Downloads_Iter]])],
-                       'time'           = Times,
-                       'area'           = Extent,
-                       'format'         = 'netcdf',
-                       'target'         = FileNames_vec[Downloads_Iter],
-                       'grid'           = Grid)
-
+  ### REQUEST DATA ----
+  looptextExec <- "
     ### EXECUTING REQUEST ----
     if(file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){
       if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], 'already downloaded'))}
@@ -188,12 +176,21 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     while(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter])) & Down_try < TryDown){
       if(Down_try>1){print('Retrying Download')}
         API_request <- 1
-        try(API_request <- wf_request(user = as.character(API_User),
+        if(DataSet == 'reanalysis-era5-land'){
+          try(API_request <- wf_requestEra5Land(user = as.character(API_User),
                      request = Request_ls,
                      transfer = TRUE,
                      path = Dir,
                      verbose = verbose,
                      time_out = TimeOut))
+        }else{
+          try(API_request <- wf_request(user = as.character(API_User),
+                     request = Request_ls,
+                     transfer = TRUE,
+                     path = Dir,
+                     verbose = verbose,
+                     time_out = TimeOut))
+        }
       if(length(API_request) != 1){
         wf_delete(user = as.character(API_User),
                       url = API_request$request_id,
@@ -206,19 +203,79 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     }
     "
 
-  if(Cores > 1){ # Cores check: if parallel processing has been specified
-    ForeachObjects <- c("DataSet", "Type", "Variable", "Calls_ls", "Times", "Extent", "FileNames_vec", "Grid", "API_Key", "API_User", "Dir", "verbose", "TryDown", "TimeOut", "API_Service")
-    cl <- makeCluster(Cores) # Assuming Cores node cluster
-    registerDoParallel(cl) # registering cores
-    foreach(Downloads_Iter = 1:n_calls,
-            .packages = c("ecmwfr"), # import packages necessary to each itteration
-            .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))) %dopar% {
-              eval(parse(text=looptext))
-            } # end of parallel kriging loop
-    stopCluster(cl) # close down cluster
-  }else{ # if non-parallel processing has been specified
-    for(Downloads_Iter in 1:n_calls){eval(parse(text=looptext))}
-  } # end of non-parallel loop
+  if(SingularDL){ # If user forced download to happen in one
+    ### Preparing Singular Download
+    Downloads_Iter <- 1 # needed for evaluation of looptextExec
+    if(verbose){print("Staging your request as a singular download now. This may fail due to size of required product.")}
+    ## finding the start and stop dates for SingularDownload
+    SingularDL_Start <- as.Date(paste(
+      min(unique(sapply(Calls_ls, "[[", 1))),
+      min(unique(sapply(Calls_ls, "[[", 2))),
+      str_pad(min(as.numeric(unique(unlist(lapply(Calls_ls, function(x) x[-1:-2]))))), 2, "left", "0"),
+      sep = "-"))
+    SingularDL_Stop <- as.Date(paste(
+      max(unique(sapply(Calls_ls, "[[", 1))),
+      max(unique(sapply(Calls_ls, "[[", 2))),
+      str_pad(max(as.numeric(unique(unlist(lapply(Calls_ls, function(x) x[-1:-2]))))), 2, "left", "0"),
+      sep = "-"))
+    ## notify user of mismatch in time windows if there is one
+    if(SingularDL_Start != DateStart | SingularDL_Stop != DateStop){
+      message(paste("Setting SingularDL to TRUE has forced your download to retrieve data in intervals of", TStep, TResolution, "between", SingularDL_Start, "(YYYY-MM-DD) and", SingularDL_Stop, "(YYYY-MM-DD). KrigR will limit the data to your originally desired time range of", DateStart, "(YYYY-MM-DD) to", DateStop, "(YYYY-MM-DD).")
+      )
+    }
+
+    ### Requesting Download
+    Request_ls <- list('dataset_short_name' = DataSet,
+                       'product_type'   = Type,
+                       'type'           = Type2,
+                       'variable'       = Variable,
+                       'year'           = unique(sapply(Calls_ls, "[[", 1)),
+                       'month'          = unique(sapply(Calls_ls, "[[", 2)),
+                       'day'            = str_pad(unique(unlist(lapply(Calls_ls, function(x) x[-1:-2]))), 2, "left", 0),
+                       'time'           = Times,
+                       'step'           = Steps,
+                       'area'           = Extent,
+                       'format'         = 'netcdf',
+                       'target'         = FileNames_vec[1],
+                       'grid'           = Grid
+    )
+    ### Executing Download
+    eval(parse(text=looptextExec))
+  }else{ # if user lets KrigR break downloads up by months
+    # Setting parameters of desired downloaded netcdf file according to user input
+    looptextPar <- "
+    Request_ls <- list('dataset_short_name' = DataSet,
+                       'product_type'   = Type,
+                       'variable'       = Variable,
+                       'year'           = Calls_ls[[Downloads_Iter]][1],
+                       'month'          = Calls_ls[[Downloads_Iter]][2],
+                       'day'            = Calls_ls[[Downloads_Iter]][3:length(Calls_ls[[Downloads_Iter]])],
+                       'time'           = Times,
+                       'area'           = Extent,
+                       'format'         = 'netcdf',
+                       'target'         = FileNames_vec[Downloads_Iter],
+                       'grid'           = Grid)
+                       "
+
+    if(isTRUE(verbose)){print(paste("Staging", n_calls, "downloads."))}
+    if(Cores > 1){ # Cores check: if parallel processing has been specified
+      ForeachObjects <- c("DataSet", "Type", "Variable", "Calls_ls", "Times", "Extent", "FileNames_vec", "Grid", "API_Key", "API_User", "Dir", "verbose", "TryDown", "TimeOut", "API_Service")
+      cl <- makeCluster(Cores) # Assuming Cores node cluster
+      registerDoParallel(cl) # registering cores
+      foreach(Downloads_Iter = 1:n_calls,
+              .packages = c("ecmwfr"), # import packages necessary to each itteration
+              .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))) %dopar% {
+                eval(parse(text=looptextPar))
+                eval(parse(text=looptextExec))
+              } # end of parallel kriging loop
+      stopCluster(cl) # close down cluster
+    }else{ # if non-parallel processing has been specified
+      for(Downloads_Iter in 1:n_calls){
+        eval(parse(text=looptextPar))
+        eval(parse(text=looptextExec))
+      }
+    } # end of non-parallel loop
+  }
 
   ### LOAD DATA BACK IN ----
   if(isTRUE(verbose)){print("Checking for known data issues.")}
@@ -262,6 +319,31 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       Era5_ls[[LoadIter]] <- Era5_ras
     }
     Era5_ras <- stack(Era5_ls)
+  }
+
+  ### SingularDL limiting of data to original time-series requirements
+  ## time-sequence of requested download by user
+  if(TResolution == "day" | TResolution == "hour"){
+    Layer_seq <- paste(rep(seq.Date(from = DateStart, to = DateStop, by = "day"), each = 24), paste0(str_pad(1:24, 2, "left", 0), ":00"), sep = "_")
+  }else{
+    Layer_seq <- seq.Date(from = DateStart, to = DateStop, by = "month")
+  }
+  ## subsetting of downloaded data
+  if(SingularDL){
+    ## time-sequence of requested download by SingularDL
+    # LayerDL_seq is actually downloaded
+    # Layer_seq is not actually downloaded, but requested by user
+    if(TResolution == "day" | TResolution == "hour"){
+      LayerDL_seq <- paste(rep(seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = "day"), each = 24), paste0(str_pad(1:24, 2, "left", 0), ":00"), sep = "_")
+    }else{
+      LayerDL_seq <- seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = "month")
+    }
+    if(PrecipFix & DateStart == "1950-01-01"){
+      Layer_seq <- Layer_seq[-1]
+      LayerDL_seq <- LayerDL_seq[-1]
+    }
+    ## subsetting
+    Era5_ras <- Era5_ras[[which(LayerDL_seq %in% Layer_seq)]]
   }
 
   if(Type == "ensemble_members" & TResolution == "hour"){ ## fixing indices of layers for ensemble means
