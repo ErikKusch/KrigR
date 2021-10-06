@@ -78,7 +78,10 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   # Type (era5-land only provides reanalysis data and doesn't require a type argument, setting it to NA let's us ignore it further down the pipeline)
   TypeOrigin <- Type # save original type input
   if(DataSet == "era5-land"){ # product check
-    Type <- NA # set Type to NA for later omission from request list when downloading era5-land data
+    Type <- NA
+    Type2 <- Variable_List2("era5-land")$Type[Variable_List2("era5-land")$Download == Variable] # set Type to required type to Era5-land since 06/10/2021
+  }else{
+    Type2 <- "NotForecast"
   } # end of product check
 
   # Data Set (DataSet targeting in download calls is complicated and taken care of here)
@@ -202,6 +205,16 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       stop(paste('Downloading for month', Downloads_Iter, 'failed with error message above.'))
     }
     "
+
+  if(Type2 == "forecast"){
+    Times <- "00:00"
+    Steps <- "ALL"
+    # Steps[1] <- "1_hour"
+  }else{
+    Steps <- NA
+    Type2 <- NA
+  }
+
 
   if(SingularDL){ # If user forced download to happen in one
     ### Preparing Singular Download
