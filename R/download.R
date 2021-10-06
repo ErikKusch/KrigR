@@ -79,7 +79,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   TypeOrigin <- Type # save original type input
   if(DataSet == "era5-land"){ # product check
     Type <- NA
-    Type2 <- Variable_List("era5-land")$Type[Variable_List2("era5-land")$Download == Variable] # set Type to required type to Era5-land since 06/10/2021
+    Type2 <- Variable_List("era5-land")$Type[Variable_List("era5-land")$Download == Variable] # set Type to required type to Era5-land since 06/10/2021
   }else{
     Type2 <- "NotForecast"
   } # end of product check
