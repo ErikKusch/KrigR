@@ -259,11 +259,13 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     looptextPar <- "
     Request_ls <- list('dataset_short_name' = DataSet,
                        'product_type'   = Type,
+                       'type'           = Type2,
                        'variable'       = Variable,
                        'year'           = Calls_ls[[Downloads_Iter]][1],
                        'month'          = Calls_ls[[Downloads_Iter]][2],
                        'day'            = Calls_ls[[Downloads_Iter]][3:length(Calls_ls[[Downloads_Iter]])],
                        'time'           = Times,
+                       'step'           = Steps,
                        'area'           = Extent,
                        'format'         = 'netcdf',
                        'target'         = FileNames_vec[Downloads_Iter],
