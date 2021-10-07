@@ -211,7 +211,9 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
   if(Type2 == "forecast"){
     Times <- "00:00"
-    Steps <- "ALL"
+    Steps <- paste0(1:24, "_hours")
+    Steps[1] <- "1_hour"
+      # "ALL"
   }else{
     Steps <- NA
     Type2 <- NA
