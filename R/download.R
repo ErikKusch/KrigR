@@ -228,7 +228,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     SingularDL_Stop <- as.Date(paste(
       max(unique(sapply(Calls_ls, "[[", 1))),
       max(unique(sapply(Calls_ls, "[[", 2))),
-      str_pad(max(as.numeric(unique(unlist(lapply(Calls_ls, function(x) x[-1:-2]))))), 2, "left", "0"),
+      days_in_month(Dates_seq[length(Dates_seq)]),
       sep = "-"))
     ## notify user of mismatch in time windows if there is one
     if(SingularDL_Start != DateStart | SingularDL_Stop != DateStop){
