@@ -178,7 +178,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       }else{
         Temp_Ras <- download_ERA(
           Variable = Var_down,
-          DataSet = "era5", #DataSet,
+          DataSet = DataSet,
           Type = 'reanalysis',
           DateStart = Down_start,
           DateStop = Down_end,
