@@ -77,7 +77,9 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
   # Type (era5-land only provides reanalysis data and doesn't require a type argument, setting it to NA let's us ignore it further down the pipeline)
   TypeOrigin <- Type # save original type input
-  if(DataSet == "era5-land"){ # product check
+  if(DataSet == "era5-land" & T_Resolution == "month" | DataSet == "era5-land" & T_Resolution == "year"){ # product check
+    Type <- NA}
+  if(DataSet == "era5-land" & T_Resolution == "hour" | DataSet == "era5-land" & T_Resolution == "day"){ # product check
     Type <- NA
     Type2 <- Variable_List("era5-land")$Type[Variable_List("era5-land")$Download == Variable] # set Type to required type to Era5-land since 06/10/2021
   }else{
@@ -182,7 +184,8 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     while(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter])) & Down_try < TryDown){
       if(Down_try>1){print('Retrying Download')}
         API_request <- 1
-        if(DataSet == 'reanalysis-era5-land'){
+        if(DataSet == 'reanalysis-era5-land' & T_Resolution == 'hour' | DataSet == 'reanalysis-era5-land' & T_Resolution == 'day'){ # product check
+    Type <- NA){
           try(API_request <- wf_requestEra5Land(user = as.character(API_User),
                      request = Request_ls,
                      transfer = TRUE,
