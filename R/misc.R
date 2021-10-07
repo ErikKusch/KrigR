@@ -858,7 +858,7 @@ wf_requestEra5Land <- function(request,
     call_list <- lapply(call, eval)
     call[names(call_list)[-1]] <- call_list[-1]
 
-    script <- make_script(call = call, name = job_name)
+    script <- ecmwfr:::make_script(call = call, name = job_name)
     if (!requireNamespace("rstudioapi", quietly = TRUE)) {
       stop("Jobs are only supported in RStudio.")
     }
