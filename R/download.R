@@ -185,7 +185,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       if(Down_try>1){print('Retrying Download')}
         API_request <- 1
         if(DataSet == 'reanalysis-era5-land' & TResolution == 'hour' | DataSet == 'reanalysis-era5-land' & TResolution == 'day'){ # product check
-    Type <- NA){
+    Type <- NA{
           try(API_request <- wf_requestEra5Land(user = as.character(API_User),
                      request = Request_ls,
                      transfer = TRUE,
