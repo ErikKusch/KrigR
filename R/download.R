@@ -280,7 +280,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
     if(isTRUE(verbose)){print(paste("Staging", n_calls, "downloads."))}
     if(Cores > 1){ # Cores check: if parallel processing has been specified
-      ForeachObjects <- c("DataSet", "Type", "Variable", "Calls_ls", "Times", "Extent", "FileNames_vec", "Grid", "API_Key", "API_User", "Dir", "verbose", "TryDown", "TimeOut", "API_Service", "Type2", "Steps")
+      ForeachObjects <- c("DataSet", "Type", "Variable", "Calls_ls", "Times", "Extent", "FileNames_vec", "Grid", "API_Key", "API_User", "Dir", "verbose", "TryDown", "TimeOut", "API_Service", "Type2", "Steps", "TResolution")
       cl <- makeCluster(Cores) # Assuming Cores node cluster
       registerDoParallel(cl) # registering cores
       foreach(Downloads_Iter = 1:n_calls,
