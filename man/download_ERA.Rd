@@ -24,7 +24,8 @@ download_ERA(
   TryDown = 10,
   verbose = TRUE,
   Cores = 1,
-  TimeOut = 36000
+  TimeOut = 36000,
+  SingularDL = FALSE
 )
 }
 \arguments{
@@ -67,6 +68,8 @@ download_ERA(
 \item{Cores}{Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.}
 
 \item{TimeOut}{Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).}
+
+\item{SingularDL}{Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.}
 }
 \value{
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.

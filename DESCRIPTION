@@ -1,7 +1,7 @@
 Package: KrigR
 Type: Package
 Title: Downloading, Aggregating, and Kriging of ERA5(Land)-Data
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: as.person(c(
     "Erik Kusch <erik@i-solution.de> [aut, cre]", 
     "Richard Davy <Richard.Davy@nersc.no> [aut]"
@@ -9,7 +9,6 @@ Authors@R: as.person(c(
 Description: An R Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the European Centre for Medium‐Range Weather Forecasts (ECMWF).
     KrigR contains functions for:
     - Downloading Era5(Land) data directly from within R
-    - Downloading UERRA data directly from within R
     - Downloading USGS GMTED 2010 elevation data
     - Kriging spatial input to desired output using user-specified covariates
     - Downloading and Kriging Era5(Land) data using USGS GMTED 2010 elevation as coviariate data in one function call

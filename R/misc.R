@@ -311,6 +311,7 @@ Variable_List <- function(DataSet) {
                                       "Surface solar radiation downwards",
                                       "Surface thermal radiation downwards",
                                       "Temperature of snow layer",
+                                      "Total evaporation",
                                       "Total precipitation",
                                       "Volumetric soil water layer 1",
                                       "Volumetric soil water layer 2",
@@ -361,6 +362,7 @@ Variable_List <- function(DataSet) {
                                          "surface_solar_radiation_downwards",
                                          "surface_thermal_radiation_downwards",
                                          "temperature_of_snow_layer",
+                                         "total_evaporation",
                                          "total_precipitation",
                                          "volumetric_soil_water_layer_1",
                                          "volumetric_soil_water_layer_2",
@@ -412,171 +414,68 @@ Variable_List <- function(DataSet) {
                                      "J/m^2",
                                      "K",
                                      "m",
-                                     "m^3/m^3",
-                                     "m^3/m^3",
-                                     "m^3/m^3",
-                                     "m^3/m^3")
-
-    )
-  }
-
-  if(DataSet == "uerra"){
-    Variables <- data.frame(Clear = c("Pressure",
-                                      "Relative humidity",
-                                      "Temperature",
-                                      "Wind direction",
-                                      "Wind speed",
-                                      "Geopotential",
-                                      "Geopotential height",
-                                      "U-component of wind",
-                                      "V-component of wind",
-                                      "10m wind direction",
-                                      "10m wind speed",
-                                      "2m relative humidity",
-                                      "2m temperature",
-                                      "Albedo",
-                                      "High cloud cover",
-                                      "Land-sea mask",
-                                      "Low cloud cover",
-                                      "Mean sea level pressure",
-                                      "Medium cloud cover",
-                                      "Orography",
-                                      "Skin temperature",
-                                      "Snow density",
-                                      "Snow depth water equivalent",
-                                      "Surface pressure",
-                                      "Surface roughness",
-                                      "Total cloud cover",
-                                      "Total column integrated water vapour",
-                                      "Total precipitation",
-                                      "Soil temperature",
-                                      "Volumetric soil moisture",
-                                      "Volumetric transpiration stress-onset (soil moisture)",
-                                      "Volumetric wilting point"),
-                            Download = c("pressure",
-                                         "relative_humidity",
-                                         "temperature",
-                                         "wind_direction",
-                                         "wind_speed",
-                                         "geopotential",
-                                         "geopotential_height",
-                                         "u-component_of_wind",
-                                         "v-component_of_wind",
-                                         "10m_wind_direction",
-                                         "10m_wind_speed",
-                                         "2m_relative_humidity",
-                                         "2m_temperature",
-                                         "albedo",
-                                         "high_cloud_cover",
-                                         "land-sea mask",
-                                         "low_cloud_cover",
-                                         "mean_sea_level_pressure",
-                                         "medium_cloud_cover",
-                                         "orography",
-                                         "skin_temperature",
-                                         "snow_density",
-                                         "snow_depth_water_equivalent",
-                                         "surface_pressure",
-                                         "surface_roughness",
-                                         "total_cloud_cover",
-                                         "total_column_integrated_water_vapour",
-                                         "total_precipitation",
-                                         "soil_temperature",
-                                         "volumetric_soil_moisture",
-                                         "volumetric_transpiration_stress-onset",
-                                         "volumetric_wilting point"),
-                            Unit = c("Pa",
-                                     "%",
-                                     "K",
-                                     "Degrees",
-                                     "m/s",
-                                     "m^2/s^2",
-                                     "gpm",
-                                     "m/s",
-                                     "m/s",
-                                     "Degrees",
-                                     "m/s",
-                                     "%",
-                                     "K",
-                                     "%",
-                                     "%",
-                                     "Dimensionless",
-                                     "%",
-                                     "Pa",
-                                     "%",
-                                     "gpm",
-                                     "K",
-                                     "kg/m^3",
-                                     "kg/m^2",
-                                     "Pa",
                                      "m",
-                                     "%",
-                                     "kg/m^2",
-                                     "kg/m^2",
-                                     "K",
+                                     "m^3/m^3",
                                      "m^3/m^3",
                                      "m^3/m^3",
                                      "m^3/m^3"),
-                            DataSet = c("height-levels",
-                                        "height-levels/pressure-levels",
-                                        "height-levels/pressure-levels",
-                                        "height-levels",
-                                        "height-levels",
-                                        "pressure-levels",
-                                        "pressure-levels",
-                                        "pressure-levels",
-                                        "pressure-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "soil-levels",
-                                        "soil-levels",
-                                        "soil-levels",
-                                        "soil-levels"),
-                            Origin = c(rep(NA, 9), # no origin specified for height and pressure levels
-                                       "mescan_surfex/uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "mescan_surfex",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "mescan_surfex",
-                                       "mescan_surfex")
+                            Type = c("forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis",
+                                     "forecast",
+                                     "analysis",
+                                     "forecast",
+                                     "analysis",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "forecast",
+                                     "analysis",
+                                     "forecast",
+                                     "forecast",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis",
+                                     "analysis"
                             )
+
+    )
   }
 
-  if(DataSet != "era5" & DataSet != "era5-land" & DataSet != "uerra"){
+  if(DataSet != "era5" & DataSet != "era5-land"){
     stop("Please select a DataSet from 'era5' or 'era5-land'.")
   }
 
@@ -756,590 +655,6 @@ mask_Shape <- function(base.map = NULL, Shape = NULL){
   range[range==0] <- NA # set all cells which the shape doesn't touch to NA
   return(range)
 }
-#' List of available variables
-#'
-#' This function presents the user with a selection of biologically relevant variables of the Era5-family which can be statistically downscaled. Notice that more variables are available and can be found here: \url{https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land?tab=form} for Era5-Land data and here: \url{https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels?tab=form} for Era5 data. Notice that variable names for download requests are written in all lower-case letters and substitute spaces for underscores.
-#'
-#' @param DataSet Which ERA5 data set to download data from. 'era5', 'era5-land', or 'uerra'.
-#'
-#' @return A data frame of clear names of variables contained within ECMWF data sets as well as their corresponding download names.
-#'
-#' @examples
-#' Variable_List(DataSet = "era5")
-#' Variable_List(DataSet = "era5-land")
-#'
-#' @export
-Variable_List <- function(DataSet) {
-  if(DataSet == "era5"){
-    Variables <- data.frame(Clear = c("100m u-component of wind",
-                                      "100m v-component of wind",
-                                      "10m u-component of wind",
-                                      "10m v-component of wind",
-                                      "10m u-component of neutral wind",
-                                      "10m v-component of neutral wind",
-                                      "10m wind speed",
-                                      "2m dewpoint temperature",
-                                      "2m temperature",
-                                      "Angle of subgridscale orography",
-                                      "Anisotropy of subgridscale orography",
-                                      "Benjamin Feir index",
-                                      "Boundary layer dissipation",
-                                      "Boundary layer height",
-                                      "Charnok",
-                                      "clear_sky_direct_solar_radiation_at_surface",
-                                      "cloud_base_height",
-                                      "convective_available_potential_energy",
-                                      "downward_uv_radiation_at_the_surface",
-                                      "eastward_turbulent_surface_stress",
-                                      "evaporation",
-                                      "Forecast albedo",
-                                      "friction_velocity",
-                                      "high_cloud_cover",
-                                      "Lake bottom temperature",
-                                      "Lake depth",
-                                      "Lake ice depth",
-                                      "Lake ice temperature",
-                                      "Lake mix-layer depth",
-                                      "Lake mix-layer temperature",
-                                      "Lake shape factor",
-                                      "Lake total layer temperature",
-                                      "land_sea_mask",
-                                      "Leaf area index, high vegetation",
-                                      "Leaf area index, low vegetation",
-                                      "low_cloud_cover",
-                                      "mean_potential_evaporation_rate",
-                                      "mean_runoff_rate",
-                                      "mean_sea_level_pressure",
-                                      "mean_sub_surface_runoff_rate",
-                                      "mean_surface_direct_short_wave_radiation_flux",
-                                      "mean_surface_downward_long_wave_radiation_flux",
-                                      "mean_surface_downward_short_wave_radiation_flux",
-                                      "mean_surface_downward_uv_radiation_flux",
-                                      "mean_surface_latent_heat_flux",
-                                      "mean_surface_net_long_wave_radiation_flux",
-                                      "mean_surface_net_short_wave_radiation_flux",
-                                      "mean_surface_sensible_heat_flux",
-                                      "mean_surface_runoff_rate",
-                                      "mean_total_precipitation_rate",
-                                      "medium_cloud_cover",
-                                      "orography",
-                                      "Potential evaporation",
-                                      "precipitation_type",
-                                      "Runoff",
-                                      "Skin reservoir content",
-                                      "Skin temperature",
-                                      "Snow albedo",
-                                      "Snow cover",
-                                      "Snow density",
-                                      "Snow depth",
-                                      "Snow evaporation",
-                                      "Snowfall",
-                                      "Snowmelt",
-                                      "Soil temperature level 1",
-                                      "Soil temperature level 2",
-                                      "Soil temperature level 3",
-                                      "Soil temperature level 4",
-                                      "Sub-surface runoff",
-                                      "Surface latent heat flux",
-                                      "Surface net solar radiation",
-                                      "Surface net thermal radiation",
-                                      "Surface pressure",
-                                      "Surface runoff",
-                                      "Surface sensible heat flux",
-                                      "Surface solar radiation downwards",
-                                      "Surface thermal radiation downwards",
-                                      "Temperature of snow layer",
-                                      "Total precipitation",
-                                      "Volumetric soil water layer 1",
-                                      "Volumetric soil water layer 2",
-                                      "Volumetric soil water layer 3",
-                                      "Volumetric soil water layer 4"),
-                            Download = c("100m_u_component_of_wind",
-                                         "100m_v_component_of_wind",
-                                         "10m_u_component_of_wind",
-                                         "10m_v_component_of_wind",
-                                         "10m_u_component_of_neutral_wind",
-                                         "10m_v_component_of_neutral_wind",
-                                         "10m_wind_speed",
-                                         "2m_dewpoint_temperature",
-                                         "2m_temperature",
-                                         "angle_of_sub_gridscale_orography",
-                                         "anisotropy_of_sub_gridscale_orography",
-                                         "benjamin_feir_index",
-                                         "boundary_layer_dissipation",
-                                         "boundary_layer_height",
-                                         "Charnok",
-                                         "clear_sky_direct_solar_radiation_at_surface",
-                                         "cloud_base_height",
-                                         "convective_available_potential_energy",
-                                         "downward_uv_radiation_at_the_surface",
-                                         "eastward_turbulent_surface_stress",
-                                         "evaporation",
-                                         "forecast_albedo",
-                                         "friction_velocity",
-                                         "high_cloud_cover",
-                                         "lake_bottom_temperature",
-                                         "lake_depth",
-                                         "lake_ice_depth",
-                                         "lake_ice_temperature",
-                                         "lake_mix_layer_depth",
-                                         "lake_mix_layer_temperature",
-                                         "lake_shape_factor",
-                                         "lake_total_layer_temperature",
-                                         "land_sea_mask",
-                                         "leaf_area_index_high_vegetation",
-                                         "leaf_area_index_low_vegetation",
-                                         "low_cloud_cover",
-                                         "mean_potential_evaporation_rate",
-                                         "mean_runoff_rate",
-                                         "mean_sea_level_pressure",
-                                         "mean_sub_surface_runoff_rate",
-                                         "mean_surface_direct_short_wave_radiation_flux",
-                                         "mean_surface_downward_long_wave_radiation_flux",
-                                         "mean_surface_downward_short_wave_radiation_flux",
-                                         "mean_surface_downward_uv_radiation_flux",
-                                         "mean_surface_latent_heat_flux",
-                                         "mean_surface_net_long_wave_radiation_flux",
-                                         "mean_surface_net_short_wave_radiation_flux",
-                                         "mean_surface_sensible_heat_flux",
-                                         "mean_surface_runoff_rate",
-                                         "mean_total_precipitation_rate",
-                                         "medium_cloud_cover",
-                                         "orography",
-                                         "potential_evaporation",
-                                         "precipitation_type",
-                                         "runoff",
-                                         "skin_reservoir_content",
-                                         "skin_temperature",
-                                         "snow_albedo",
-                                         "snow_cover",
-                                         "snow_density",
-                                         "snow_depth",
-                                         "snow_evaporation",
-                                         "snowfall",
-                                         "snowmelt",
-                                         "soil_temperature_level_1",
-                                         "soil_temperature_level_2",
-                                         "soil_temperature_level_3",
-                                         "soil_temperature_level_4",
-                                         "sub_surface_runoff",
-                                         "surface_latent_heat_flux",
-                                         "surface_net_solar_radiation",
-                                         "surface_net_thermal_radiation",
-                                         "surface_pressure",
-                                         "surface_runoff",
-                                         "surface_sensible_heat_flux",
-                                         "surface_solar_radiation_downwards",
-                                         "surface_thermal_radiation_downwards",
-                                         "temperature_of_snow_layer",
-                                         "total_precipitation",
-                                         "volumetric_soil_water_layer_1",
-                                         "volumetric_soil_water_layer_2",
-                                         "volumetric_soil_water_layer_3",
-                                         "volumetric_soil_water_layer_4"),
-                            Unit = c("m/s",
-                                     "m/s",
-                                     "m/s",
-                                     "m/s",
-                                     "m/s",
-                                     "m/s",
-                                     "m/s",
-                                     "K",
-                                     "K",
-                                     "Radians",
-                                     " ",
-                                     " ",
-                                     "J/m^2",
-                                     "m",
-                                     " ",
-                                     "J/m^2",
-                                     "m",
-                                     "J/kg",
-                                     "J/m^2",
-                                     "N/m^2",
-                                     "kg/m^2",
-                                     "(0 - 1)",
-                                     "m/s",
-                                     "%",
-                                     "K",
-                                     "m",
-                                     "m",
-                                     "K",
-                                     "m",
-                                     "K",
-                                     "dimensionless",
-                                     "K",
-                                     "(0-1)",
-                                     "m^2/m^2",
-                                     "m^2/m^2",
-                                     "%",
-                                     "kg/(m^2*s)",
-                                     "m/s",
-                                     "Pa",
-                                     "kg/(m^2*s)",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "kg/(m^2*s)",
-                                     "kg/(m^2*s)",
-                                     "%",
-                                     "m",
-                                     "m",
-                                     " ",
-                                     "m",
-                                     "m of water equivalent",
-                                     "K",
-                                     "(0 - 1)",
-                                     "%",
-                                     "kg/m^3",
-                                     "m",
-                                     "m of water equivalent",
-                                     "m of water equivalent",
-                                     "m of water equivalent",
-                                     "K",
-                                     "K",
-                                     "K",
-                                     "K",
-                                     "m",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "Pa",
-                                     "m",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "K",
-                                     "m",
-                                     "m^3/m^3",
-                                     "m^3/m^3",
-                                     "m^3/m^3",
-                                     "m^3/m^3")
-    )
-  }
-
-  if(DataSet == "era5-land"){
-    Variables <- data.frame(Clear = c("10m u-component of wind",
-                                      "10m v-component of wind",
-                                      "2m dewpoint temperature",
-                                      "2m temperature",
-                                      "Evaporation from bare soil",
-                                      "Evaporation from open water surfaces excluding oceans",
-                                      "Evaporation from the top of canopy",
-                                      "Evaporation from vegetation transpiration",
-                                      "Evapotranspiration",
-                                      "Forecast albedo",
-                                      "Lake bottom temperature",
-                                      "Lake ice depth",
-                                      "Lake ice temperature",
-                                      "Lake mix-layer depth",
-                                      "Lake mix-layer temperature",
-                                      "Lake shape factor",
-                                      "Lake total layer temperature",
-                                      "Leaf area index, high vegetation",
-                                      "Leaf area index, low vegetation",
-                                      "Potential evaporation",
-                                      "Runoff",
-                                      "Skin reservoir content",
-                                      "Skin temperature",
-                                      "Snow albedo",
-                                      "Snow cover",
-                                      "Snow density",
-                                      "Snow depth",
-                                      "Snow depth water equivalent",
-                                      "Snow evaporation",
-                                      "Snowfall",
-                                      "Snowmelt",
-                                      "Soil temperature level 1",
-                                      "Soil temperature level 2",
-                                      "Soil temperature level 3",
-                                      "Soil temperature level 4",
-                                      "Sub-surface runoff",
-                                      "Surface latent heat flux",
-                                      "Surface net solar radiation",
-                                      "Surface net thermal radiation",
-                                      "Surface pressure",
-                                      "Surface runoff",
-                                      "Surface sensible heat flux",
-                                      "Surface solar radiation downwards",
-                                      "Surface thermal radiation downwards",
-                                      "Temperature of snow layer",
-                                      "Total precipitation",
-                                      "Volumetric soil water layer 1",
-                                      "Volumetric soil water layer 2",
-                                      "Volumetric soil water layer 3",
-                                      "Volumetric soil water layer 4"),
-                            Download = c("10m_u_component_of_wind",
-                                         "10m_v_component_of_wind",
-                                         "2m_dewpoint_temperature",
-                                         "2m_temperature",
-                                         "evaporation_from_bare_soil",
-                                         "evaporation_from_open_water_surfaces_excluding_oceans",
-                                         "evaporation_from_the_top_of_canopy",
-                                         "evaporation_from_vegetation_transpiration",
-                                         "evapotranspiration",
-                                         "forecast_albedo",
-                                         "lake_bottom_temperature",
-                                         "lake_ice_depth",
-                                         "lake_ice_temperature",
-                                         "lake_mix_layer_depth",
-                                         "lake_mix_layer_temperature",
-                                         "lake_shape_factor",
-                                         "lake_total_layer_temperature",
-                                         "leaf_area_index_high_vegetation",
-                                         "leaf_area_index_low_vegetation",
-                                         "potential_evaporation",
-                                         "runoff",
-                                         "skin_reservoir_content",
-                                         "skin_temperature",
-                                         "snow_albedo",
-                                         "snow_cover",
-                                         "snow_density",
-                                         "snow_depth",
-                                         "snow_depth_water_equivalent",
-                                         "snow_evaporation",
-                                         "snowfall",
-                                         "snowmelt",
-                                         "soil_temperature_level_1",
-                                         "soil_temperature_level_2",
-                                         "soil_temperature_level_3",
-                                         "soil_temperature_level_4",
-                                         "sub_surface_runoff",
-                                         "surface_latent_heat_flux",
-                                         "surface_net_solar_radiation",
-                                         "surface_net_thermal_radiation",
-                                         "surface_pressure",
-                                         "surface_runoff",
-                                         "surface_sensible_heat_flux",
-                                         "surface_solar_radiation_downwards",
-                                         "surface_thermal_radiation_downwards",
-                                         "temperature_of_snow_layer",
-                                         "total_precipitation",
-                                         "volumetric_soil_water_layer_1",
-                                         "volumetric_soil_water_layer_2",
-                                         "volumetric_soil_water_layer_3",
-                                         "volumetric_soil_water_layer_4"),
-                            Unit = c("m/s",
-                                     "m/s",
-                                     "K",
-                                     "K",
-                                     "m of water equivalent",
-                                     "m of water equivalent",
-                                     "m of water equivalent",
-                                     "m of water equivalent",
-                                     "m of water equivalent",
-                                     "(0 - 1)",
-                                     "K",
-                                     "m",
-                                     "K",
-                                     "m",
-                                     "K",
-                                     "dimensionless",
-                                     "K",
-                                     "m^2/m^2",
-                                     "m^2/m^2",
-                                     "m",
-                                     "m",
-                                     "m of water equivalent",
-                                     "K",
-                                     "(0 - 1)",
-                                     "%",
-                                     "kg/m^3",
-                                     "m",
-                                     "m of water equivalent",
-                                     "m of water equivalent",
-                                     "m of water equivalent",
-                                     "m of water equivalent",
-                                     "K",
-                                     "K",
-                                     "K",
-                                     "K",
-                                     "m",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "Pa",
-                                     "m",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "J/m^2",
-                                     "K",
-                                     "m",
-                                     "m^3/m^3",
-                                     "m^3/m^3",
-                                     "m^3/m^3",
-                                     "m^3/m^3")
-
-    )
-  }
-
-  if(DataSet == "uerra"){
-    Variables <- data.frame(Clear = c("Pressure",
-                                      "Relative humidity",
-                                      "Temperature",
-                                      "Wind direction",
-                                      "Wind speed",
-                                      "Geopotential",
-                                      "Geopotential height",
-                                      "U-component of wind",
-                                      "V-component of wind",
-                                      "10m wind direction",
-                                      "10m wind speed",
-                                      "2m relative humidity",
-                                      "2m temperature",
-                                      "Albedo",
-                                      "High cloud cover",
-                                      "Land-sea mask",
-                                      "Low cloud cover",
-                                      "Mean sea level pressure",
-                                      "Medium cloud cover",
-                                      "Orography",
-                                      "Skin temperature",
-                                      "Snow density",
-                                      "Snow depth water equivalent",
-                                      "Surface pressure",
-                                      "Surface roughness",
-                                      "Total cloud cover",
-                                      "Total column integrated water vapour",
-                                      "Total precipitation",
-                                      "Soil temperature",
-                                      "Volumetric soil moisture",
-                                      "Volumetric transpiration stress-onset (soil moisture)",
-                                      "Volumetric wilting point"),
-                            Download = c("pressure",
-                                         "relative_humidity",
-                                         "temperature",
-                                         "wind_direction",
-                                         "wind_speed",
-                                         "geopotential",
-                                         "geopotential_height",
-                                         "u-component_of_wind",
-                                         "v-component_of_wind",
-                                         "10m_wind_direction",
-                                         "10m_wind_speed",
-                                         "2m_relative_humidity",
-                                         "2m_temperature",
-                                         "albedo",
-                                         "high_cloud_cover",
-                                         "land-sea mask",
-                                         "low_cloud_cover",
-                                         "mean_sea_level_pressure",
-                                         "medium_cloud_cover",
-                                         "orography",
-                                         "skin_temperature",
-                                         "snow_density",
-                                         "snow_depth_water_equivalent",
-                                         "surface_pressure",
-                                         "surface_roughness",
-                                         "total_cloud_cover",
-                                         "total_column_integrated_water_vapour",
-                                         "total_precipitation",
-                                         "soil_temperature",
-                                         "volumetric_soil_moisture",
-                                         "volumetric_transpiration_stress-onset",
-                                         "volumetric_wilting point"),
-                            Unit = c("Pa",
-                                     "%",
-                                     "K",
-                                     "Degrees",
-                                     "m/s",
-                                     "m^2/s^2",
-                                     "gpm",
-                                     "m/s",
-                                     "m/s",
-                                     "Degrees",
-                                     "m/s",
-                                     "%",
-                                     "K",
-                                     "%",
-                                     "%",
-                                     "Dimensionless",
-                                     "%",
-                                     "Pa",
-                                     "%",
-                                     "gpm",
-                                     "K",
-                                     "kg/m^3",
-                                     "kg/m^2",
-                                     "Pa",
-                                     "m",
-                                     "%",
-                                     "kg/m^2",
-                                     "kg/m^2",
-                                     "K",
-                                     "m^3/m^3",
-                                     "m^3/m^3",
-                                     "m^3/m^3"),
-                            DataSet = c("height-levels",
-                                        "height-levels/pressure-levels",
-                                        "height-levels/pressure-levels",
-                                        "height-levels",
-                                        "height-levels",
-                                        "pressure-levels",
-                                        "pressure-levels",
-                                        "pressure-levels",
-                                        "pressure-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "single-levels",
-                                        "soil-levels",
-                                        "soil-levels",
-                                        "soil-levels",
-                                        "soil-levels"),
-                            Origin = c(rep(NA, 9), # no origin specified for height and pressure levels
-                                       "mescan_surfex/uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "mescan_surfex/uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "mescan_surfex",
-                                       "uerra_harmonie",
-                                       "uerra_harmonie",
-                                       "mescan_surfex",
-                                       "mescan_surfex")
-    )
-  }
-
-  if(DataSet != "era5" & DataSet != "era5-land" & DataSet != "uerra"){
-    stop("Please select a DataSet from 'era5' or 'era5-land'.")
-  }
-
-  return(Variables)
-}
 
 #' Sanity checks before Kriging commences
 #'
@@ -1517,4 +832,312 @@ mask_Shape <- function(base.map = NULL, Shape = NULL){
   }
   range[range==0] <- NA # set all cells which the shape doesn't touch to NA
   return(range)
+}
+
+#' ECMWFR function adaptation for C3S Era5-Land data
+#'
+#' A altered version of `wf_request` from the `ecmwfr` package. This function solves the download issue introduced by CDS restructuring on 06/10/2021.
+#'
+wf_requestEra5Land <- function(request,
+                               user,
+                               transfer = TRUE,
+                               path = tempdir(),
+                               time_out = 3600,
+                               job_name,
+                               verbose = TRUE) {
+  if (!missing(job_name)) {
+    if (make.names(job_name) != job_name) {
+      stop("job_name '",
+           job_name,
+           "' is not a syntactically valid variable name.")
+    }
+
+    # Evaluates all arguments.
+    call <- match.call()
+    call$path <- path
+    call_list <- lapply(call, eval)
+    call[names(call_list)[-1]] <- call_list[-1]
+
+    script <- make_script(call = call, name = job_name)
+    if (!requireNamespace("rstudioapi", quietly = TRUE)) {
+      stop("Jobs are only supported in RStudio.")
+    }
+
+    if (!rstudioapi::isAvailable("1.2")) {
+      stop(
+        "Need at least version 1.2 of RStudio to use jobs. Currently running ",
+        rstudioapi::versionInfo()$version,
+        "."
+      )
+    }
+
+    job <-
+      rstudioapi::jobRunScript(path = script,
+                               name = job_name,
+                               exportEnv = "R_GlobalEnv")
+    return(invisible(job))
+  }
+
+  if (!is.list(request) | is.character(request)) {
+    stop(
+      "`request` must be a named list. \n",
+      "If you are passing the user as first argument, notice that argument ",
+      "order was changed in version 1.1.1."
+    )
+  }
+
+  # check the login credentials
+  if (missing(request)) {
+    stop("Please provide ECMWF or CDS login credentials and data request!")
+  }
+
+  if (missing(user)) {
+    user <-
+      rbind(
+        keyring::key_list(service = make_key_service(c("webapi"))),
+        keyring::key_list(service = make_key_service(c("cds"))),
+        keyring::key_list(service = make_key_service(c("ads")))
+      )
+    serv <- make_key_service()
+    user <-
+      user[substr(user$service, 1,  nchar(serv)) == serv, ][["username"]]
+  }
+
+  # checks user login, the request layout and
+  # returns the service to use if successful
+  wf_check <-
+    lapply(user, function(u)
+      try(wf_check_request(u, request), silent = TRUE))
+  correct <- which(!vapply(wf_check, inherits, TRUE, "try-error"))
+
+  if (length(correct) == 0) {
+    stop(
+      sprintf(
+        "Data identifier %s is not found in Web API, CDS or ADS datasets.
+                 Or your login credentials do not match your request.",
+        request$dataset_short_name
+      ),
+      call. = FALSE
+    )
+  }
+
+  wf_check <- wf_check[[correct]]
+  user <- user[correct]
+
+  if (verbose)
+  {
+    message("Requesting data to the ",
+            wf_check$service,
+            " service with username ",
+            user)
+  }
+
+  # split out data
+  service <- wf_check$service
+  url <- wf_check$url
+
+  # get key
+  key <- wf_get_key(user = user, service = service)
+
+  # getting api url: different handling if 'dataset = "mars"',
+  # requests to 'dataset = "mars"' require a non-public user
+  # account (member states/commercial).
+
+  # depending on the service get the response
+  # for the query provided
+  if (service == "webapi") {
+    response <- httr::POST(
+      url,
+      httr::add_headers(
+        "Accept" = "application/json",
+        "Content-Type" = "application/json",
+        "From" = user,
+        "X-ECMWF-KEY" = key
+      ),
+      body = request,
+      encode = "json"
+    )
+  }
+
+  if (service == "cds"){
+    response <- httr::POST(
+      sprintf(
+        "%s/resources/%s",
+        url,
+        request$dataset_short_name
+      ),
+      httr::authenticate(user, key),
+      httr::add_headers("Accept" = "application/json",
+                        "Content-Type" = "application/json"),
+      body = request[c(-1, -2)], # this is the important bit where I shave off the short data set descriptor,
+      encode = "json"
+    )
+  }
+
+  if (service == "ads"){
+
+    # fix strange difference in processing queries
+    # from CDS
+    body <- request
+    body$dataset_short_name <- NULL
+    body$target <- NULL
+    response <- httr::POST(
+      sprintf(
+        "%s/resources/%s",
+        url,
+        request$dataset_short_name
+      ),
+      httr::authenticate(user, key),
+      httr::add_headers("Accept" = "application/json",
+                        "Content-Type" = "application/json"),
+      body = body,
+      encode = "json"
+    )
+  }
+
+  # trap general http error
+  if (httr::http_error(response)) {
+    stop(httr::content(response),
+         call. = FALSE)
+  }
+
+  # grab content, to look at the status
+  ct <- httr::content(response)
+
+  # first run is always 202
+  if ((service == "cds" | service == "ads")) {
+    ct$code <- 202
+  }
+
+  # some verbose feedback
+  if (verbose) {
+    message("- staging data transfer at url endpoint or request id:")
+    message("  ", switch(service,
+                         "cds" = ct$request_id,
+                         "ads" = ct$request_id,
+                         "webapi" = ct$href), "\n")
+  }
+
+  # only return the content of the query
+  if (!transfer) {
+    message("  No download requests will be made, however...\n")
+    exit_message(
+      url = switch(service,
+                   "cds" = ct$request_id,
+                   "ads" = ct$request_id,
+                   "webapi" = ct$href),
+      path = path,
+      file = request$target,
+      service = service
+    )
+    return(invisible(ct))
+  }
+
+  # set time-out counter
+  if (verbose) {
+    message(sprintf("- timeout set to %.1f hours", time_out / 3600))
+  }
+
+  # set time-out
+  time_out <- Sys.time() + time_out
+
+  # Temporary file name, will be used in combination with tempdir() when
+  # calling wf_transfer.
+  tmp_file <- basename(tempfile("ecmwfr_"))
+
+  # keep waiting for the download order to come online
+  # with status code 303. 202 = connection accepted, but job queued.
+  # http error codes (>400) will be trapped by the wf_transfer()
+  # function call
+  while (ct$code == 202) {
+    # check formatting state variable CDS
+
+    # exit routine when the time out
+    if (Sys.time() > time_out) {
+      if (verbose) {
+        message("  Your download timed out, however ...\n")
+        exit_message(
+          url = switch(service,
+                       "cds" = ct$request_id,
+                       "ads" = ct$request_id,
+                       "webapi" = ct$href),
+          path = path,
+          file = request$target,
+          service = service
+        )
+      }
+      return(ct)
+    }
+
+    # set retry rate, dynamic for WebAPI, static 10 seconds CDS
+    retry <- as.numeric(ifelse((service == "cds" | service == "ads"),
+                               5, ct$retry))
+
+    if (verbose) {
+      # let a spinner spin for "retry" seconds
+      ecmwfr:::spinner(retry)
+    } else {
+      # sleep
+      Sys.sleep(retry)
+    }
+
+    # attempt a download. Use 'input_user', can also
+    # be NULL (load user information from '.ecmwfapirc'
+    # file inside wf_transfer).
+    ct <- wf_transfer(
+      url = switch(service,
+                   "cds" = ct$request_id,
+                   "ads" = ct$request_id,
+                   "webapi" = ct$href),
+      user    = user,
+      service  = service,
+      filename = tmp_file,
+      verbose  = verbose
+    )
+  }
+
+  # Copy data from temporary file to final location
+  # and delete original, with an exception for tempdir() location.
+  # The latter to facilitate package integration.
+  if (path != tempdir()) {
+    src <- file.path(tempdir(), tmp_file)
+    dst <- file.path(path, request$target)
+
+    # rename / move file
+    move <- suppressWarnings(file.rename(src, dst))
+
+    # check if the move was succesful
+    # fails for separate disks/partitions
+    # then copy and remove
+    if (!move) {
+      file.copy(src, dst, overwrite = TRUE)
+      file.remove(src)
+    }
+
+    if (verbose) {
+      message(sprintf("- moved temporary file to -> %s", dst))
+    }
+
+  } else {
+    dst <- file.path(path, tmp_file)
+    message("- file not copied and removed (path == tempdir())")
+  }
+
+  # delete the request upon succesful download
+  # to free up other download slots. Not possible
+  # for ECMWF mars requests (skip)
+  if (!request$dataset == "mars") {
+    wf_delete(
+      user   = user,
+      url = switch(service,
+                   "cds" = ct$request_id,
+                   "ads" = ct$request_id,
+                   "webapi" = ct$href),
+      verbose = verbose,
+      service = service
+    )
+  }
+
+  # return final file name/path (dst = destination).
+  return(invisible(dst))
 }
