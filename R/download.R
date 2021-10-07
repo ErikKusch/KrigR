@@ -170,11 +170,11 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     FileName <- paste(Variable, DateStart, DateStop, TResolution, sep="_")
   }
   # FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
-  if(DataSet == "reanalysis-era5-land" & TResolution == "hour" | DataSet == "reanalysis-era5-land" & TResolution == "day"){
-    FileName <- paste0(FileName, ".zip") # adding zip archive ending to file name for era5-land hourly data
-  }else{
-    FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
-  }
+  # if(DataSet == "reanalysis-era5-land" & TResolution == "hour" | DataSet == "reanalysis-era5-land" & TResolution == "day"){
+  #   FileName <- paste0(FileName, ".zip") # adding zip archive ending to file name for era5-land hourly data
+  # }else{
+  FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
+  # }
   FileNames_vec <- paste0(str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
   ### REQUEST DATA ----
   looptextExec <- "
