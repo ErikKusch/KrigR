@@ -35,6 +35,8 @@
 #' @param nmax Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric).
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file (if querying data download) that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.
 #' @param verbose Optional, logical. Whether to report progress of data download (if queried) in the console or not.
+#' @param TimeOut Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).
+#' @param SingularDL Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.
 #' @return A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.
 #' @examples
 #' \dontrun{
@@ -90,7 +92,7 @@
 #' }
 #'
 #' @export
-krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, PrecipFix = FALSE, Type = "reanalysis", DataSet = "era5-land", DateStart, DateStop, TResolution = "month", TStep = 1, FUN = 'mean', Extent, Buffer = 0.5, ID = "ID", API_Key, API_User, Target_res, Source = "USGS", nmax = Inf,  TryDown = 10, verbose = TRUE, ...){
+krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL, KrigingEquation = "ERA ~ DEM", Cores = detectCores(), Dir = getwd(), FileName, Keep_Temporary = TRUE, SingularTry = 10, Variable, PrecipFix = FALSE, Type = "reanalysis", DataSet = "era5-land", DateStart, DateStop, TResolution = "month", TStep = 1, FUN = 'mean', Extent, Buffer = 0.5, ID = "ID", API_Key, API_User, Target_res, Source = "USGS", nmax = Inf,  TryDown = 10, verbose = TRUE, TimeOut = 36000, SingularDL = FALSE, ...){
   ## CALL LIST (for storing how the function as called in the output) ----
   if(is.null(Data)){
     Data_Retrieval <- list(Variable = Variable,
@@ -107,7 +109,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   }
   ## CLIMATE DATA (call to download_ERA function if no Data set is specified) ----
   if(is.null(Data)){ # data check: if no data has been specified
-    Data <- download_ERA(Variable = Variable, PrecipFix = PrecipFix, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, FUN = FUN, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir, TryDown = TryDown, verbose = verbose, ID = ID, Cores = Cores)
+    Data <- download_ERA(Variable = Variable, PrecipFix = PrecipFix, Type = Type, DataSet = DataSet, DateStart = DateStart, DateStop = DateStop, TResolution = TResolution, TStep = TStep, FUN = FUN, Extent = Extent, API_User = API_User, API_Key = API_Key, Dir = Dir, TryDown = TryDown, verbose = verbose, ID = ID, Cores = Cores, TimeOut = TimeOut, SingularDL = SingularDL)
   } # end of data check
 
   ## COVARIATE DATA (call to download_DEM function when no covariates are specified) ----
