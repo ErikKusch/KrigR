@@ -153,7 +153,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   Extent <-
     # try(paste(
     Corner_vec
-    # , collapse="/")) # break Extent object down into character
+  # , collapse="/")) # break Extent object down into character
 
   # Time (set time for download depending on temporal resolution)
   if(TResolution == "hour" | TResolution == "day"){ # time check: if we need sub-daily data
@@ -170,7 +170,11 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     FileName <- paste(Variable, DateStart, DateStop, TResolution, sep="_")
   }
   # FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
-  FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
+  if(DataSet == "reanalysis-era5-land" & TResolution == "hour" | DataSet == "reanalysis-era5-land" & TResolution == "day"){
+    FileName <- paste0(FileName, ".zip") # adding zip archive ending to file name for era5-land hourly data
+  }else{
+    FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
+  }
   FileNames_vec <- paste0(str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
   ### REQUEST DATA ----
   looptextExec <- "
@@ -185,12 +189,19 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       if(Down_try>1){print('Retrying Download')}
         API_request <- 1
         if(DataSet == 'reanalysis-era5-land' & TResolution == 'hour' | DataSet == 'reanalysis-era5-land' & TResolution == 'day'){
-          try(API_request <- wf_requestEra5Land(user = as.character(API_User),
+          try(API_request <- KrigR:::wf_requestEra5Land(user = as.character(API_User),
                      request = Request_ls,
                      transfer = TRUE,
                      path = Dir,
                      verbose = verbose,
                      time_out = TimeOut))
+          ZipFiles <- unzip(zipfile = file.path(Dir, FileNames_vec[Downloads_Iter]), exdir = Dir, list = TRUE)
+          ExtractFiles <- ZipFiles$Name[which(ZipFiles$Name %in% paste0('date_', Dates_seq, '.nc'))]
+          unzip(zipfile = file.path(Dir, FileNames_vec[Downloads_Iter]), exdir = Dir, files = ExtractFiles)
+          Zip_ras <- stack(file.path(Dir, sort(ExtractFiles)))
+          writeRaster(Zip_ras, filename = paste0(tools::file_path_sans_ext(FileNames_vec[Downloads_Iter]), '.nc'), format='CDF', varname = Variable)
+          unlink(file.path(Dir, sort(ExtractFiles)))
+          unlink(file.path(Dir, FileNames_vec[Downloads_Iter]))
         }else{
           try(API_request <- wf_request(user = as.character(API_User),
                      request = Request_ls,
@@ -206,16 +217,13 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       }
       Down_try <- Down_try+1
     }
-    if(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){ # give error if kriging fails
-      stop(paste('Downloading for month', Downloads_Iter, 'failed with error message above.'))
-    }
     "
 
   if(Type2 == "forecast"){
     Times <- "00:00"
     Steps <- paste0(1:24, "_hours")
     Steps[1] <- "1_hour"
-      # "ALL"
+    # "ALL"
   }else{
     Steps <- NA
     Type2 <- NA
@@ -298,6 +306,8 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     } # end of non-parallel loop
   }
 
+  FileName <- tools::file_path_sans_ext(FileName)
+
   ### LOAD DATA BACK IN ----
   if(isTRUE(verbose)){print("Checking for known data issues.")}
   Files_vec <- file.path(Dir, list.files(Dir, pattern = paste0("_", FileName))) # all files belonging to this query with folder paths
@@ -342,30 +352,30 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     Era5_ras <- stack(Era5_ls)
   }
 
-  ### SingularDL limiting of data to original time-series requirements
-  ## time-sequence of requested download by user
-  if(TResolution == "day" | TResolution == "hour"){
-    Layer_seq <- paste(rep(seq.Date(from = DateStart, to = DateStop, by = "day"), each = 24), paste0(str_pad(1:24, 2, "left", 0), ":00"), sep = "_")
-  }else{
-    Layer_seq <- seq.Date(from = DateStart, to = DateStop, by = "month")
-  }
-  ## subsetting of downloaded data
-  if(SingularDL){
-    ## time-sequence of requested download by SingularDL
-    # LayerDL_seq is actually downloaded
-    # Layer_seq is not actually downloaded, but requested by user
-    if(TResolution == "day" | TResolution == "hour"){
-      LayerDL_seq <- paste(rep(seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = "day"), each = 24), paste0(str_pad(1:24, 2, "left", 0), ":00"), sep = "_")
-    }else{
-      LayerDL_seq <- seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = "month")
-    }
-    if(PrecipFix & DateStart == "1950-01-01"){
-      Layer_seq <- Layer_seq[-1]
-      LayerDL_seq <- LayerDL_seq[-1]
-    }
-    ## subsetting
-    Era5_ras <- Era5_ras[[which(LayerDL_seq %in% Layer_seq)]]
-  }
+  # ### SingularDL limiting of data to original time-series requirements
+  # ## time-sequence of requested download by user
+  # if(TResolution == "day" | TResolution == "hour"){
+  #   Layer_seq <- paste(rep(seq.Date(from = DateStart, to = DateStop, by = "day"), each = 24), paste0(str_pad(1:24, 2, "left", 0), ":00"), sep = "_")
+  # }else{
+  #   Layer_seq <- seq.Date(from = DateStart, to = DateStop, by = "month")
+  # }
+  # ## subsetting of downloaded data
+  # if(SingularDL){
+  #   ## time-sequence of requested download by SingularDL
+  #   # LayerDL_seq is actually downloaded
+  #   # Layer_seq is not actually downloaded, but requested by user
+  #   if(TResolution == "day" | TResolution == "hour"){
+  #     LayerDL_seq <- paste(rep(seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = "day"), each = 24), paste0(str_pad(1:24, 2, "left", 0), ":00"), sep = "_")
+  #   }else{
+  #     LayerDL_seq <- seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = "month")
+  #   }
+  #   if(PrecipFix & DateStart == "1950-01-01"){
+  #     Layer_seq <- Layer_seq[-1]
+  #     LayerDL_seq <- LayerDL_seq[-1]
+  #   }
+  #   ## subsetting
+  #   Era5_ras <- Era5_ras[[which(LayerDL_seq %in% Layer_seq)]]
+  # }
 
   if(Type == "ensemble_members" & TResolution == "hour"){ ## fixing indices of layers for ensemble means
     Indices <- sub(pattern = "X", replacement = "", names(Era5_ras))
