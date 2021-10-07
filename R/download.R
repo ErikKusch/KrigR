@@ -190,14 +190,16 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     while(!file.exists(file.path(Dir, paste0(tools::file_path_sans_ext(FileNames_vec[Downloads_Iter]), '.nc'))) & Down_try < TryDown){
       if(Down_try>1){print('Retrying Download')}
         API_request <- 1
-        if(Type2 == 'analysis' | Type2 == 'forecast'){
+        Type3 <- Type2
+        if(is.na(Type3)){Type3 <- 'NotEra5LandHourly'}
+        if(Type3 == 'analysis' | Type3 == 'forecast'){
           try(API_request <- KrigR:::wf_requestEra5Land(user = as.character(API_User),
                      request = Request_ls,
                      transfer = TRUE,
                      path = Dir,
                      verbose = verbose,
                      time_out = TimeOut))
-          if(Type2 == 'forecast'){
+          if(Type3 == 'forecast'){
           ZipFiles <- sort(unzip(zipfile = file.path(Dir, FileNames_vec[Downloads_Iter]), exdir = Dir, list = TRUE)$Name)
           unzip(zipfile = file.path(Dir, FileNames_vec[Downloads_Iter]), exdir = Dir, files = ZipFiles)
           Zip_ras <- stack(file.path(Dir, sort(ZipFiles)))
