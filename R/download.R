@@ -77,12 +77,16 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
   # Type (era5-land only provides reanalysis data and doesn't require a type argument, setting it to NA let's us ignore it further down the pipeline)
   TypeOrigin <- Type # save original type input
-  if(DataSet == "era5-land"){ # product check
+  if(DataSet == "era5-land" & TResolution == "month" | DataSet == "era5-land" & TResolution == "year"){ # product check
+    Type <- NA}
+  if(DataSet == "era5-land" & TResolution == "hour" | DataSet == "era5-land" & TResolution == "day"){ # product check
     Type <- NA
     Type2 <- Variable_List("era5-land")$Type[Variable_List("era5-land")$Download == Variable] # set Type to required type to Era5-land since 06/10/2021
   }else{
     Type2 <- "NotForecast"
   } # end of product check
+
+  if(Type2 == 'forecast'){stop("CDS Backend issues currently make retrieval of this variable impossible. Both through their website and through KrigR. We will address this issue as soon as the backend problems are fixed. Sorry about this.")}
 
   # Data Set (DataSet targeting in download calls is complicated and taken care of here)
   if(DataSet == "era5"){ # only append "single-levels" to era5 specification
@@ -148,7 +152,10 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       Corner_vec[Iter_Corners] <- Musts_vec[Iter_Corners]
     }
   }
-  Extent <- try(paste(Corner_vec, collapse="/")) # break Extent object down into character
+  Extent <-
+    # try(paste(
+    Corner_vec
+  # , collapse="/")) # break Extent object down into character
 
   # Time (set time for download depending on temporal resolution)
   if(TResolution == "hour" | TResolution == "day"){ # time check: if we need sub-daily data
@@ -164,8 +171,12 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   if(is.null(FileName)){
     FileName <- paste(Variable, DateStart, DateStop, TResolution, sep="_")
   }
-  # FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
-  FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
+  FileName <- strsplit(FileName, split =".nc") # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
+  if(Type2 == "forecast"){
+    FileName <- paste0(FileName, ".zip") # adding zip archive ending to file name for era5-land hourly data
+  }else{
+    FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
+  }
   FileNames_vec <- paste0(str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
   ### REQUEST DATA ----
   looptextExec <- "
@@ -176,16 +187,26 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     }
     if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], 'download queried'))}
     Down_try <- 0
-    while(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter])) & Down_try < TryDown){
+    while(!file.exists(file.path(Dir, paste0(tools::file_path_sans_ext(FileNames_vec[Downloads_Iter]), '.nc'))) & Down_try < TryDown){
       if(Down_try>1){print('Retrying Download')}
         API_request <- 1
-        if(DataSet == 'reanalysis-era5-land'){
-          try(API_request <- wf_requestEra5Land(user = as.character(API_User),
+        Type3 <- Type2
+        if(is.na(Type3)){Type3 <- 'NotEra5LandHourly'}
+        if(Type3 == 'analysis' | Type3 == 'forecast'){
+          try(API_request <- KrigR:::wf_requestEra5Land(user = as.character(API_User),
                      request = Request_ls,
                      transfer = TRUE,
                      path = Dir,
                      verbose = verbose,
                      time_out = TimeOut))
+          if(Type3 == 'forecast'){
+          ZipFiles <- sort(unzip(zipfile = file.path(Dir, FileNames_vec[Downloads_Iter]), exdir = Dir, list = TRUE)$Name)
+          unzip(zipfile = file.path(Dir, FileNames_vec[Downloads_Iter]), exdir = Dir, files = ZipFiles)
+          Zip_ras <- stack(file.path(Dir, sort(ZipFiles)))
+          writeRaster(Zip_ras, filename = paste0(tools::file_path_sans_ext(FileNames_vec[Downloads_Iter]), '.nc'), format='CDF', varname = Variable, overwrite = TRUE)
+          unlink(file.path(Dir, sort(ZipFiles)))
+          unlink(file.path(Dir, FileNames_vec[Downloads_Iter]))
+          }
         }else{
           try(API_request <- wf_request(user = as.character(API_User),
                      request = Request_ls,
@@ -201,19 +222,18 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       }
       Down_try <- Down_try+1
     }
-    if(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){ # give error if kriging fails
-      stop(paste('Downloading for month', Downloads_Iter, 'failed with error message above.'))
-    }
     "
 
-  if(Type2 == "forecast"){
-    Times <- "00:00"
-    Steps <- "ALL"
+  Steps <- NA
+  if(Type2 != "NotForecast"){
+    if(Type2 == "forecast"){
+      Times <- "00:00"
+      Steps <- paste0(1:24, "_hours")
+      Steps[1] <- "1_hour"
+    }
   }else{
-    Steps <- NA
     Type2 <- NA
   }
-
 
   if(SingularDL){ # If user forced download to happen in one
     ### Preparing Singular Download
@@ -228,7 +248,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     SingularDL_Stop <- as.Date(paste(
       max(unique(sapply(Calls_ls, "[[", 1))),
       max(unique(sapply(Calls_ls, "[[", 2))),
-      str_pad(max(as.numeric(unique(unlist(lapply(Calls_ls, function(x) x[-1:-2]))))), 2, "left", "0"),
+      days_in_month(Dates_seq[length(Dates_seq)]),
       sep = "-"))
     ## notify user of mismatch in time windows if there is one
     if(SingularDL_Start != DateStart | SingularDL_Stop != DateStop){
@@ -273,7 +293,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
     if(isTRUE(verbose)){print(paste("Staging", n_calls, "downloads."))}
     if(Cores > 1){ # Cores check: if parallel processing has been specified
-      ForeachObjects <- c("DataSet", "Type", "Variable", "Calls_ls", "Times", "Extent", "FileNames_vec", "Grid", "API_Key", "API_User", "Dir", "verbose", "TryDown", "TimeOut", "API_Service", "Type2", "Steps")
+      ForeachObjects <- c("DataSet", "Type", "Variable", "Calls_ls", "Times", "Extent", "FileNames_vec", "Grid", "API_Key", "API_User", "Dir", "verbose", "TryDown", "TimeOut", "API_Service", "Type2", "Steps", "TResolution")
       cl <- makeCluster(Cores) # Assuming Cores node cluster
       registerDoParallel(cl) # registering cores
       foreach(Downloads_Iter = 1:n_calls,
@@ -290,6 +310,8 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       }
     } # end of non-parallel loop
   }
+
+  FileName <- tools::file_path_sans_ext(FileName)
 
   ### LOAD DATA BACK IN ----
   if(isTRUE(verbose)){print("Checking for known data issues.")}
