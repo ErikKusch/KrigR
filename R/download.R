@@ -148,7 +148,10 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
       Corner_vec[Iter_Corners] <- Musts_vec[Iter_Corners]
     }
   }
-  Extent <- try(paste(Corner_vec, collapse="/")) # break Extent object down into character
+  Extent <-
+    # try(paste(
+    Corner_vec
+    # , collapse="/")) # break Extent object down into character
 
   # Time (set time for download depending on temporal resolution)
   if(TResolution == "hour" | TResolution == "day"){ # time check: if we need sub-daily data
