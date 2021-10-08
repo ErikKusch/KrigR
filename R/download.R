@@ -183,8 +183,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     ### EXECUTING REQUEST ----
     if(file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))){
       if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], 'already downloaded'))}
-      next()
-    }
+    }else{
     if(isTRUE(verbose)){print(paste(FileNames_vec[Downloads_Iter], 'download queried'))}
     Down_try <- 0
     while(!file.exists(file.path(Dir, paste0(tools::file_path_sans_ext(FileNames_vec[Downloads_Iter]), '.nc'))) & Down_try < TryDown){
@@ -221,6 +220,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                       service = API_Service)
       }
       Down_try <- Down_try+1
+    }
     }
     "
 
