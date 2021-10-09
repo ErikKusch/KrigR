@@ -1,6 +1,6 @@
 #' Computation of Bioclimatic Variables
 #'
-#' This function queries download of required essential climate variables and subsequent calculation of bioclimatic variables for user-defined regions and time-frames. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
+#' This function queries download of required essential climate variables from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s) for retrieval of climate data and subsequent calculation of bioclimatic variables for user-defined regions and time-frames.
 #'
 #' @param Water_Var ERA5(Land)-contained climate variable targeting water availability information. See 'download' output of Variable_List() for possible values. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".
 #' @param DataSet Which ERA5 data set to download data from. 'era5' or 'era5-land'.
@@ -60,7 +60,6 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
                     TimeOut = 36000,
                     SingularDL = FALSE){
 
-
   Vars <- c("2m_temperature", Water_Var)
 
   if(Y_end == year(Sys.Date())){
@@ -114,7 +113,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   }
 
   ## ensuring that water var is pulled at monthly resolution
-  if(Var_Iter == 2){
+  if(Var_Iter == 2 & Down_start >= '1981-01-01'){ # 1981 is the earliest date for monthly aggregates for both era5 and era5-land
     T_resDL <- 'month'
   }else{
     T_resDL <- T_res
@@ -149,11 +148,13 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
         SingularDL = SingularDL
       )
     }
-      ## PROCESSING
-  if(Var_Iter == 1){
+  ## PROCESSING
+  if(Var_Iter == 1 | Down_start < '1981-01-01'){ # 1981 is the earliest date for monthly aggregates for both era5 and era5-land
   Counter <- 1
       for(Iter_fun in Fun_vec){
-        Save_Ras <- stackApply(Temp_Ras, indices = rep(1, nlayers(Temp_Ras)), fun = Iter_fun)
+        Save_Ras <- stackApply(Temp_Ras,
+                               indices = month(seq.Date(as.Date(month_start), as.Date(month_end), by = T_res)),
+                               fun = Iter_fun)
 
         if(Iter_fun == 'sum' & exists('Shape')){
           range <- KrigR:::mask_Shape(base.map = Save_Ras[[1]], Shape = Shape)
