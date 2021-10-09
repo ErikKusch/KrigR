@@ -1,14 +1,16 @@
 # KrigR
-An `R` Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the European Centre for Medium‐Range Weather Forecasts (ECMWF).
-
-KrigR contains functions for:  
-- Downloading Era5(Land) data directly from within R  
-- Downloading UERRA data directly from within R  
-- Downloading USGS GMTED 2010 elevation data  
-- Kriging spatial input to desired output using user-specified covariates  
-- Downloading and Kriging Era5(Land) data using USGS GMTED 2010 elevation as covariate data in one function call  
+An R Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the [European Centre for Medium‐Range Weather Forecasts (ECMWF)](https://www.ecmwf.int/).The package interfaces with the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s) for retrieval of climate data.
+    
+KrigR contains functions for:
+    - Downloading Era5(-Land) data directly from within `R` via a wrapper function for the [`ecmwfr` package](https://github.com/bluegreen-labs/ecmwfr)
+    - Downloading [USGS GMTED 2010](https://www.usgs.gov/core-science-systems/eros/coastal-changes-and-impacts/gmted2010?qt-science_support_page_related_con=0#qt-science_support_page_related_con) elevation data  
+    - Kriging spatial input to desired output using user-specified covariates via a wrapper for the [`automap` package](https://github.com/cran/automap)
+    - Downloading and Kriging Era5(Land) data using USGS GMTED 2010 elevation as covariate data in one function call  
 
 **NOTE:** All kriging functionality can be parallelised for faster computing using the `Cores` argument.
+
+# How to Cite
+KrigR is currently under review and a preprint is available on [arXiv](https://arxiv.org/abs/2106.12046). 
 
 # Installation
 KrigR is not yet on CRAN, so it needs to be installed as such:
@@ -18,14 +20,18 @@ Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
 devtools::install_github("https://github.com/ErikKusch/KrigR")
 library(KrigR)
 ```
+Users require personal API-access tokens which can be obtained [here](https://cds.climate.copernicus.eu/api-how-to).
+
+# Workshop Material and Further Information
+We have put together a comprehensive [workshop](https://www.erikkusch.com/post/krigr-mats/krigrworkshop/) that walks you through the functionality of the KrigR package. This workshop was presented during the BIOCHANGE Methods Workshop Series at Aarhus University. A recording of this presentation can be found on [YouTube](https://www.youtube.com/watch?v=wwb107L4wVw&ab_channel=ErikKusch). For any additional information on the project please refer to the project [website](https://www.erikkusch.com/project/krigr/). Upates will be available on said website as well as the KrigR [twitter profile](https://twitter.com/ERAKrigR)
 
 # Abstract
-Here we present a new R-package (KrigR) for acquiring and statistically downscaling climate data for ecological applications. The package is principally designed to make use of two of the most recent global reanalysis climate products from the European Centre for Medium Range Weather Forecasting: ERA5 and ERA5-land. These reanalysis products include numerous climate variables relevant for ecological applications including air temperature, precipitation, and soil moisture at hourly resolution and spatial resolutions of 30 by 30km and 9 by 9 km respectively.
+Advances in climate science have rendered obsolete the gridded observation data widely used in downstream applications. Novel climate reanalysis products outperform legacy data products in accuracy, temporal resolution, and provision of uncertainty metrics. Consequently, there is an urgent need to develop a workflow through which to integrate these improved data into biological analyses. The ERA5 product family (ERA5 and ERA5-Land) are the latest and most advanced global reanalysis products created by the European Center for Medium-range Weather Forecasting (ECMWF). These data products offer up to 83 essential climate variables (ECVs) at hourly intervals for the time-period of 1981 to today with preliminary back-extensions being available for 1950-1981. Spatial resolutions range from 30x30km (ERA5) to 11x11km (ERA5-Land) and can be statistically downscaled to study-requirements at finer spatial resolutions. Kriging is one such method to interpolate data to finer resolutions and has the advantages that one can leverage additional covariate information and obtain the uncertainty associated with the downscaling. 
 
-Reanalysis products resolve issues of biases, discontinuities and inconsistencies within individual observational products (e.g. WorldClim, CRU), and represent the state-of-the-art knowledge on historical climate. While the hourly temporal resolution of the ERA5 data family marks a great improvement over many other climate data sets, this can be further improved using statistical downscaling to match the spatial resolution of such legacy datasets. Our package uses kriging to downscale the reanalysis output to a user-specified resolution, reliably up to one order of magnitude finer than the reanalysis product. Our approach in designing KrigR was to give the user as much freedom as possible while making the existing downloading and kriging methodology more streamlined. KrigR allows one to download any ERA5-family variable, at any given temporal resolution, in any chosen region (rectangular or as a shape) across the globe. Furthermore, while we supply the user with a downloading function for the covariates used for kriging, our kriging method does allow for user-input not generated by our download functions.
+The KrigR R-package enables users to (1) download ERA5(-Land) climate reanalysis data for a user-specified region, and time-period, (2) aggregate these climate products to desired temporal resolutions and metrics, (3) acquire topographical co-variates, and (4) statistically downscale spatial data to a user-specified resolution using co-variate data via kriging. KrigR can execute all these tasks in a single function call, thus enabling the user to obtain any of 83 (ERA5) / 50 (ERA5-Land) climate variables at high spatial and temporal resolution with a single R-command. Additionally, KrigR contains functionality for computation of bioclimatic variables and aggregate metrics from the variables offered by ERA5(-Land).
+
+This R-package provides an easy-to-implement workflow for implementation of state-of-the-art climate data while avoiding issues of storage limitations at high temporal and spatial resolutions by providing data according to user-needs rather than in global data sets. 
+Consequently, KrigR provides a toolbox to obtain a wide range of tailored climate data at unprecedented combinations of high temporal and spatial resolutions thus enabling the use of world-leading climate data through the R-interface and beyond.
 
 # Keywords
 Climate data, Climate reanalysis, Interdisciplinary ecology, Macroecology, R, R Package, Statistical downscaling
-
-# Workshop Material and Further Information
-We have put together a comprehensive [workshop](https://www.erikkusch.com/post/krigr-mats/krigrworkshop/) that walks you through the functionality of the KrigR package. This workshop was presented during the BIOCHANGE Methods Workshop Series at Aarhus University. A recording of this presentation can be found on [YouTube](https://www.youtube.com/watch?v=wwb107L4wVw&ab_channel=ErikKusch). For any additional information on the project please refer to my [website](https://www.erikkusch.com/project/krigr/).

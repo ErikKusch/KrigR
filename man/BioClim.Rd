@@ -69,7 +69,7 @@ BioClim(
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 }
 \description{
-This function queries download of required essential climate variables and subsequent calculation of bioclimatic variables for user-defined regions and time-frames. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
+This function queries download of required essential climate variables from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s) for retrieval of climate data and subsequent calculation of bioclimatic variables for user-defined regions and time-frames.
 }
 \examples{
 \dontrun{

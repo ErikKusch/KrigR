@@ -75,7 +75,10 @@ download_ERA(
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 }
 \description{
-This function breaks down download calls into monthly intervals, downloads ERA5(-Land) data from ECMWF servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an API key (https://cds.climate.copernicus.eu/api-how-to) to be set up.
+This function is used to obtain Era5/Era5-Land data from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s). By default, this function breaks down download calls into monthly intervals, downloads Era5(-Land) data from [ECMWF](https://www.ecmwf.int/) servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an [API key](https://cds.climate.copernicus.eu/api-how-to) for download staging.
+}
+\details{
+Use optional arguments verbose, Cores, and SingularDL for updates on function progress, parallel download staging and execution, and forcing of downloads into one singular download, espectively.
 }
 \examples{
 \dontrun{
