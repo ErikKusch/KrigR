@@ -139,7 +139,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
         FUN = AggrFUN,
         Extent = Extent,
         Dir = Dir,
-        FileName = str_remove(TempName, paste0(Dir, '/')),
+        FileName = strsplit(TempName, '/')[[1]][length(strsplit(TempName, '/')[[1]])],
         API_User = API_User,
         API_Key = API_Key,
         verbose = verbose,
@@ -151,6 +151,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
     }
       ## PROCESSING
   if(Var_Iter == 1){
+  Counter <- 1
       for(Iter_fun in Fun_vec){
         Save_Ras <- stackApply(Temp_Ras, indices = rep(1, nlayers(Temp_Ras)), fun = Iter_fun)
 
@@ -159,8 +160,9 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
           Save_Ras <- mask(Save_Ras, range)
         }
         writeRaster(x = Save_Ras,
-                    filename = file.path(Dir, paste0(Var_down, '-', Iter_fun, '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')),
+                    filename = CheckName[Counter],
                     format = 'CDF', overwrite = TRUE)
+        Counter <- Counter + 1
       }
   }else{
     file.copy(from = TempName, to = CheckName)
