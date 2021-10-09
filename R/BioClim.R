@@ -124,8 +124,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       if(verbose){
         message(ifelse(SingularDL, paste(Var_down, 'already downloaded'), paste0(Var_down, ' already downloaded for ', M_seq[Down_Iter], '/', Y_seq[Down_Iter])))
       }
-      Temp_ras <- stack(TempName)
-
+      Temp_Ras <- stack(TempName)
     }else{
       Temp_Ras <- download_ERA(
         Variable = Var_down,
