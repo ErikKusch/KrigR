@@ -174,7 +174,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     Iter_Try <- Iter_Try +1
   }
   if(class(kriging_result)[1] != 'autoKrige'){ # give error if kriging fails
-    print(paste0('Kriging failed for layer ', Iter_Krige, '. Error message produced by autoKrige function: ', geterrmessage()))
+    message(paste0('Kriging failed for layer ', Iter_Krige, '. Error message produced by autoKrige function: ', geterrmessage()))
   }
 
   ## retransform to raster
@@ -204,7 +204,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     if(Count_Krige == 1){ # count check: if this was the first actual computation
       T_End <- Sys.time() # record time at which kriging was done for current layer
       Duration <- as.numeric(T_End)-as.numeric(T_Begin) # calculate how long it took to krig on layer
-      print(paste('Kriging of remaining ', nlayers(Data)-Iter_Krige, ' data layers should finish around: ', as.POSIXlt(T_Begin + Duration*nlayers(Data), tz = Sys.timezone(location=TRUE)), sep='')) # console output with estimate of when the kriging should be done
+      message(paste('Kriging of remaining ', nlayers(Data)-Iter_Krige, ' data layers should finish around: ', as.POSIXlt(T_Begin + Duration*nlayers(Data), tz = Sys.timezone(location=TRUE)), sep='')) # console output with estimate of when the kriging should be done
       ProgBar <- txtProgressBar(min = 0, max = nlayers(Data), style = 3) # create progress bar when non-parallel processing
       Count_Krige <- Count_Krige + 1 # raise count by one so the stimator isn't called again
     } # end of count check
@@ -216,7 +216,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   Ras_Krig <- as.list(rep(NA, nlayers(Data))) # establish an empty list which will be filled with kriged layers
   Ras_Var <- as.list(rep(NA, nlayers(Data))) # establish an empty list which will be filled with kriged layers
 
-  print("Commencing Kriging")
+  if(verbose){message("Commencing Kriging")}
   ## DATA SKIPS (if certain layers in the data are empty and need to be skipped, this is handled here) ---
   if(!is.null(DataSkips)){ # Skip check: if layers need to be skipped
     for(Iter_Skip in DataSkips){ # Skip loop: loop over all layers that need to be skipped
@@ -239,7 +239,6 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     foreach(Iter_Krige = Compute_Layers, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
             .packages = c("raster", "stringr", "automap", "ncdf4", "rgdal"), # import packages necessary to each itteration
             .export = ForeachObjects) %:% when(!paste0(str_pad(Iter_Krige,4,"left","0"), '_data.nc') %in% list.files(Dir.Temp)) %dopar% { # parallel kriging loop
-              # print("Done")
               Ras_Krig <- eval(parse(text=looptext)) # evaluate the kriging specification per cluster unit per layer
             } # end of parallel kriging loop
     stopCluster(cl) # close down cluster
