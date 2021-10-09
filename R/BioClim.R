@@ -86,57 +86,71 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   Y_seq <- year(T_seq)
   M_seq <- str_pad(month(T_seq), 2, "left", 0)
 
-  ### DATA DOWNLOAD ----
-  for(Var_Iter in 1:length(Vars)){ ## LOOP FOR EACH VARIABLE
-    Var_down <- Vars[Var_Iter]
-    if(Var_down == "total_precipitation"){PrecipFix <- TRUE}else{PrecipFix <- FALSE}
+  ## LOOP FOR EACH MONTH (immediate reducing of raster layers for storage purposes) or in one-go (reducing of download calls)
+  looptext <- "
+  # check name (file(s) that will be written)
+  if(SingularDL){
+    CheckName <- file.path(Dir, paste0(Var_down, '-', Fun_vec, 'MonthlyBC.nc'))
+    TempName <- file.path(Dir, paste0(Var_down, '_Temporary.nc'))
+  }else{
+    CheckName <- file.path(Dir, paste0(Var_down, '-', Fun_vec, '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc'))
+    TempName <- file.path(Dir, paste0(Var_down, '_Temporary_', Y_seq[Down_Iter], '_', M_seq[Down_Iter], '.nc'))
+  }
 
-    ## LOOP FOR EACH MONTH (immediate reducing of raster layers for storage purposes)
-    looptext <- "
-      ## DATA CHECK (skip this iteration if data is already downloaded)
-      if(file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))){
-        if(isTRUE(verbose)){print(paste0(Var_down, ' already processed for ', M_seq[Down_Iter], '/', Y_seq[Down_Iter]))}
-        next()
-      }
-      ## DATE HANDLER
-      month_start <- lubridate::date(paste(Y_seq[Down_Iter], M_seq[Down_Iter], '01', sep = '-')) # set start date
-      month_end <- month_start+(lubridate::days_in_month(month_start)-1) # find end date depending on days in current month
-      # if(Y_seq[Down_Iter] == 1981 & M_seq[Down_Iter] == '01' & T_res == 'day'){ # 00:00 for first of first years in reanalysis products is not available
-      #   month_start <- month_start + 1 # skip first day of
-      # }
-      ### DOWNLOAD
-      if(Var_down == 'total_precipitation'){
-        AggrFUN <- sum
-      }else{
-        AggrFUN <- mean
-      }
-      if(file.exists(file.path(Dir, paste0(Var_down, '_Temporary_', Y_seq[Down_Iter], '_', M_seq[Down_Iter], '.nc')))){
-        if(isTRUE(verbose)){
-          print(paste0(Var_down, ' already downloaded for ', M_seq[Down_Iter], '/', Y_seq[Down_Iter]))}
-        Temp_Ras <- raster::stack(file.path(Dir, paste0(Var_down, '_Temporary_', Y_seq[Down_Iter], '_', M_seq[Down_Iter], '.nc')))
-      }else{
-        Temp_Ras <- download_ERA(
-          Variable = Var_down,
-          DataSet = DataSet,
-          Type = 'reanalysis',
-          DateStart = month_start,
-          DateStop = month_end,
-          TResolution = T_res,
-          TStep = 1,
-          FUN = AggrFUN,
-          Extent = Extent,
-          Dir = Dir,
-          FileName = paste0(Var_down, '_Temporary_', Y_seq[Down_Iter], '_', M_seq[Down_Iter], '.nc'),
-          API_User = API_User,
-          API_Key = API_Key,
-          verbose = FALSE,
-          PrecipFix = PrecipFix,
-          TryDown = TryDown,
-          TimeOut = TimeOut
-        )
-      }
+  # DATA CHECK (skip this iteration if data is already downloaded)
+  if(all(file.exists(CheckName))){
+    if(verbose){
+      message(ifelse(SingularDL, paste(Var_down, 'already processed'), paste0(Var_down, ' already processed for ', M_seq[Down_Iter], '/', Y_seq[Down_Iter])))
+    }
+    next()
+  }
+  ## DATE HANDLER
+  if(SingularDL){
+    month_start <- paste0(Y_start, '-01-01')
+    month_end <- paste0(Y_end, '-12-31')
+  }else{
+    month_start <- lubridate::date(paste(Y_seq[Down_Iter], M_seq[Down_Iter], '01', sep = '-')) # set start date
+    month_end <- month_start+(lubridate::days_in_month(month_start)-1) # find end date depending on days in current month
+  }
 
-      ### PROCESSING
+  ## ensuring that water var is pulled at monthly resolution
+  if(Var_Iter == 2){
+    T_resDL <- 'month'
+  }else{
+    T_resDL <- T_res
+  }
+
+  ## DOWNLOAD
+  if(file.exists(TempName)){
+      if(verbose){
+        message(ifelse(SingularDL, paste(Var_down, 'already downloaded'), paste0(Var_down, ' already downloaded for ', M_seq[Down_Iter], '/', Y_seq[Down_Iter])))
+      }
+      Temp_ras <- stack(file.path(Dir, TempName))
+
+    }else{
+      Temp_Ras <- download_ERA(
+        Variable = Var_down,
+        DataSet = DataSet,
+        Type = 'reanalysis',
+        DateStart = month_start,
+        DateStop = month_end,
+        TResolution = T_resDL,
+        TStep = 1,
+        FUN = AggrFUN,
+        Extent = Extent,
+        Dir = Dir,
+        FileName = str_remove(TempName, paste0(Dir, '/')),
+        API_User = API_User,
+        API_Key = API_Key,
+        verbose = verbose,
+        PrecipFix = PrecipFix,
+        TryDown = TryDown,
+        TimeOut = TimeOut,
+        SingularDL = SingularDL
+      )
+    }
+      ## PROCESSING
+  if(Var_Iter == 1){
       for(Iter_fun in Fun_vec){
         Save_Ras <- stackApply(Temp_Ras, indices = rep(1, nlayers(Temp_Ras)), fun = Iter_fun)
 
@@ -148,103 +162,57 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
                     filename = file.path(Dir, paste0(Var_down, '-', Iter_fun, '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')),
                     format = 'CDF', overwrite = TRUE)
       }
-      ### DELETING RAW
+  }else{
+    file.copy(from = TempName, to = CheckName)
+  }
+      ## DELETING RAW
       if(!isTRUE(Keep_Raw)){
-        unlink(file.path(Dir, paste0(Var_down, '_Temporary_', Y_seq[Down_Iter], '_', M_seq[Down_Iter], '.nc')))
+        unlink(TempName)
       }
       "
+
+  ### DATA DOWNLOAD ----
+  for(Var_Iter in 1:length(Vars)){ ## LOOP FOR EACH VARIABLE
+
+    ## VARIABLE IDENTIFICATION
+    Var_down <- Vars[Var_Iter]
+    if(Var_down == "total_precipitation"){PrecipFix <- TRUE}else{PrecipFix <- FALSE}
 
     ## PROCESSING FUNCTIONS
     Fun_vec <- 'mean' # for all water variables that are not total precip
     if(Var_down == 'total_precipitation'){Fun_vec <- 'sum'}
     if(Var_down == '2m_temperature'){Fun_vec <- c('min', 'mean', 'max')}
 
-    ## DOWNLOADS OF DATA
-    if(SingularDL){
-      ## DATA CHECK (skip this iteration if data is already downloaded)
-      if(file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], 'MonthlyBC.nc')))){
-        if(isTRUE(verbose)){print(paste(Var_down, "already processed"))}
-        next()
-      }
-      ### DOWNLOAD
-      if(Var_down == 'total_precipitation'){
-        AggrFUN <- sum
-      }else{
-        AggrFUN <- mean
-      }
-      if(file.exists(file.path(Dir, paste0(Var_down, '_Temporary.nc')))){
-        if(isTRUE(verbose)){print(paste(Var_down, "already downloaded"))}
-        Temp_Ras <- raster::stack(file.path(Dir, paste0(Var_down, '_Temporary.nc')))
-      }else{
-        Temp_Ras <- download_ERA(
-          Variable = Var_down,
-          DataSet = DataSet,
-          Type = 'reanalysis',
-          DateStart = Down_start,
-          DateStop = Down_end,
-          TResolution = T_res,
-          TStep = 1,
-          FUN = AggrFUN,
-          Extent = Extent,
-          Dir = Dir,
-          FileName = paste0(Var_down, '_Temporary'),
-          API_User = API_User,
-          API_Key = API_Key,
-          verbose = TRUE,
-          PrecipFix = PrecipFix,
-          TryDown = TryDown,
-          TimeOut = TimeOut,
-          SingularDL = TRUE
-        )
-      }
-
-      ### PROCESSING
-      for(Iter_fun in Fun_vec){
-        Save_Ras <- stackApply(Temp_Ras, indices = month(seq(Down_start, Down_end, by = "day")), fun = Iter_fun)
-
-        if(Iter_fun == 'sum' & exists('Shape')){
-          range <- KrigR:::mask_Shape(base.map = Save_Ras[[1]], Shape = Shape)
-          Save_Ras <- mask(Save_Ras, range)
-        }
-        writeRaster(x = Save_Ras,
-                    filename = file.path(Dir, paste0(Var_down, '-', Iter_fun, 'MonthlyBC.nc')),
-                    format = 'CDF', overwrite = TRUE)
-      }
-      ### DELETING RAW
-      if(!isTRUE(Keep_Raw)){
-        unlink(file.path(Dir, paste0(paste0(Var_down, '_Temporary'), '.nc')))
-      }
-
-
+    if(Var_down == 'total_precipitation'){
+      AggrFUN <- sum
     }else{
+      AggrFUN <- mean
+    }
+    if(SingularDL){
+      n_down <- 1
+      Cores = 1
+    }else{
+      n_down <- length(T_seq)
+    }
+    if(verbose){
+      message(paste("The KrigR::BioClim() function is going to stage", n_down, "download(s) for", Var_down, "data now."))
+    }
 
-      if(isTRUE(verbose)){
-        if(Var_down == "total_precipitation"){
-          DowMul <- 2
-        }else{
-          DowMul <- 1
-        }
-        print(paste("The KrigR::BioClim() function is going to stage", length(T_seq)*DowMul, "downloads for", Var_down, "data now."))
-      }
+    if(Cores > 1){ # Cores check: if parallel processing has been specified
+      ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw", "Fun_vec", "TryDown", "TimeOut")
+      cl <- makeCluster(Cores) # Assuming Cores node cluster
+      registerDoParallel(cl) # registering cores
+      foreach(Down_Iter = 1:n_down,
+              .packages = c("KrigR"), # import packages necessary to each itteration
+              .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))) %dopar% {
+                eval(parse(text=looptext))
+              } # end of parallel kriging loop
+      stopCluster(cl) # close down cluster
+    }else{ # if non-parallel processing has been specified
+      for(Down_Iter in 1:n_down){eval(parse(text=looptext))}
+    } # end of non-parallel loop
+  } # end of variable loop
 
-      if(Cores > 1){ # Cores check: if parallel processing has been specified
-        ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw", "Fun_vec", "TryDown", "TimeOut")
-        cl <- makeCluster(Cores) # Assuming Cores node cluster
-        registerDoParallel(cl) # registering cores
-        foreach(Down_Iter = 1:length(M_seq),
-                .packages = c("KrigR"), # import packages necessary to each itteration
-                .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))) %dopar% {
-                  eval(parse(text=looptext))
-                } # end of parallel kriging loop
-        stopCluster(cl) # close down cluster
-      }else{ # if non-parallel processing has been specified
-        for(Down_Iter in 1:length(M_seq)){eval(parse(text=looptext))}
-      } # end of non-parallel loop
-    } # end of Cores check
-  }
-
-  # try(rm(Temp_Ras), silent = TRUE) # remove this, in case it is large
-  # try(rm(Save_Ras), silent = TRUE)
   ### DATA LOADING ----
   setwd(Dir)
   Tair_min <- raster::stack(list.files(path = Dir, pattern = paste0(Vars[1], "-min")))
