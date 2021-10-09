@@ -194,6 +194,7 @@ if(SingularDL){ # If user forced download to happen in one
                      if(length(Layer_seq)>1e5){stop('Your download is too big. Please specify a shorter time window, coarser temporal resolution, or set SingularDL = FALSE.')}
                      ## notify user of mismatch in time windows if there is one
                      if(SingularDL_Start != DateStart | SingularDL_Stop != DateStop){
+                     if(TypeOrigin != 'reanalysis'){stop('Currently, SIngularDL may only be toggled on for reanalysis type download queries or any query where full months within one year, or full years of data are queried irrespective of dataset type.')}
                        message(paste('Setting SingularDL to TRUE has forced your download to retrieve data in intervals of', TStep, TResolution, 'between', SingularDL_Start, '(YYYY-MM-DD) and', SingularDL_Stop, '(YYYY-MM-DD). KrigR will limit the data to your originally desired time range of', DateStart, '(YYYY-MM-DD) to', DateStop, '(YYYY-MM-DD).')
                        )
                      }
@@ -320,6 +321,9 @@ if(SingularDL){ # If user forced download to happen in one
   }else{
     Layer_seq <- seq.Date(from = DateStart, to = DateStop, by = "month")
   }
+  if(DateStart == "1950-01-01" & TResolution == "day" | TResolution == "hour"){
+    Layer_seq <- Layer_seq[-1]
+  }
   ## subsetting of downloaded data
   if(SingularDL){
     ## time-sequence of requested download by SingularDL
@@ -330,8 +334,7 @@ if(SingularDL){ # If user forced download to happen in one
     }else{
       LayerDL_seq <- seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = "month")
     }
-    if(PrecipFix & DateStart == "1950-01-01"){
-      Layer_seq <- Layer_seq[-1]
+    if(DateStart == "1950-01-01" & TResolution == "day" | TResolution == "hour"){
       LayerDL_seq <- LayerDL_seq[-1]
     }
     ## subsetting
@@ -412,11 +415,11 @@ if(SingularDL){ # If user forced download to happen in one
       factor <- 12 # number of months per year
     }
     if(Type != "ensemble_members"){
-      # if(TResolution == "hour" | TResolution == "day" & DateStart == "1981-01-01"){
-      #   Index <- rep(1:((nlayers(Era5_ras)+1)/factor), each = factor)[-1] # fix first-hour issue for 01-01-1981
-      # }else{
+      if(TResolution == "hour" | TResolution == "day" & DateStart == "1950-01-01"){
+        Index <- rep(1:((nlayers(Era5_ras)+1)/factor), each = factor)[-1] # fix first-hour issue for 01-01-1981
+      }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
-      # }
+      }
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
     }
