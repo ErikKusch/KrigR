@@ -196,7 +196,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
     }else{
       n_down <- length(T_seq)
     }
-    ndown_rep <- n_down
+    n_downrep <- n_down
     if(Down_start < '1981-01-01' & Var_down == 'total_precipitation'){
       n_downrep <- length(T_seq)*2}
     if(verbose){
