@@ -153,7 +153,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   Counter <- 1
       for(Iter_fun in Fun_vec){
         Save_Ras <- stackApply(Temp_Ras,
-                               indices = month(seq.Date(as.Date(month_start), as.Date(month_end), by = T_res)),
+                               indices = indices = month(seq(as.POSIXct(paste(month_start, '00:00:00')), as.POSIXct(paste(month_end, '23:00:00')), by=T_res)),
                                fun = Iter_fun)
 
         if(Iter_fun == 'sum' & exists('Shape')){
