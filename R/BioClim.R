@@ -200,7 +200,6 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
         n_down <- length(T_seq)
       }
     }
-    }
     if(verbose){
       message(paste("The KrigR::BioClim() function is going to stage", n_down, "download(s) for", Var_down, "data now."))
     }
