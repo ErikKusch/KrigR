@@ -199,7 +199,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
     }
 
     if(Cores > 1){ # Cores check: if parallel processing has been specified
-      ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw", "Fun_vec", "TryDown", "TimeOut", "SingularDL")
+      ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw", "Fun_vec", "TryDown", "TimeOut", "SingularDL", "Var_down", "Fun_vec", "AggrFUN", "verbose")
       cl <- makeCluster(Cores) # Assuming Cores node cluster
       registerDoParallel(cl) # registering cores
       foreach(Down_Iter = 1:n_down,
