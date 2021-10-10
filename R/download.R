@@ -187,11 +187,11 @@ if(SingularDL){ # If user forced download to happen in one
                        days_in_month(Dates_seq[length(Dates_seq)]),
                        sep = '-'))
                      if(TResolution == 'day' | TResolution == 'hour'){
-                       Layer_seq <- paste(rep(seq.Date(from = DateStart, to = DateStop, by = 'day'), each = 24), paste0(str_pad(1:24, 2, 'left', 0), ':00'), sep = '_')
-                     }else{
-                       Layer_seq <- seq.Date(from = DateStart, to = DateStop, by = 'month')
-                     }
-                     if(length(Layer_seq)>1e5){stop('Your download is too big. Please specify a shorter time window, coarser temporal resolution, or set SingularDL = FALSE.')}
+      LayerDL_seq <- paste(rep(seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = 'day'), each = 24), paste0(str_pad(1:24, 2, 'left', 0), ':00'), sep = '_')
+    }else{
+      LayerDL_seq <- seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = 'month')
+    }
+                     if(length(LayerDL_seq)>1e5){stop('Your download is too big. Please specify a shorter time window, coarser temporal resolution, or set SingularDL = FALSE.')}
                      ## notify user of mismatch in time windows if there is one
                      if(SingularDL_Start != DateStart | SingularDL_Stop != DateStop){
                      if(TypeOrigin != 'reanalysis'){stop('Currently, SIngularDL may only be toggled on for reanalysis type download queries or any query where full months within one year, or full years of data are queried irrespective of dataset type.')}
