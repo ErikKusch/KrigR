@@ -274,7 +274,8 @@ if(SingularDL){ # If user forced download to happen in one
   if(verbose){message("Checking for known data issues.")}
   Files_vec <- file.path(Dir, FileNames_vec) # all files belonging to this query with folder paths
   if(is.na(Type)){Type <- "reanalysis"} # na Type is used for Era5-land data which is essentially just reanalysis
-  if(Type == "ensemble_members"){ # ensemble_member check: if user downloaded ensemble_member data
+  # ensemble_member check: if user downloaded ensemble_member data
+  if(Type == "ensemble_members" | Type == "monthly_averaged_ensemble_members"){  # ensemble_member check: if user downloaded ensemble_member data
     Layers <- 1:10 # ensemble members come in 10 distinct layers
   }else{
     Layers <- 1 # non-ensemble members have 1 layer for each time step instead of 10
@@ -282,8 +283,8 @@ if(SingularDL){ # If user forced download to happen in one
     for(Layers_Check in 1:length(Files_vec)){
       LayersSame <- suppressWarnings(all.equal(brick(Files_vec[Layers_Check], level = 1), brick(Files_vec[Layers_Check], level = 2))) # Check if the layers are the same in brick loading
       if(LayersSame == FALSE){
-        Era5_ras <- brick(file.path(Dir, "/", Files_vec[Layers_Check]), level = 1) # load initial data again for just the first band
-        Era5_ras2 <- brick(file.path(Dir, "/", Files_vec[Layers_Check]), level = 2) # load second layer
+        Era5_ras <- brick(Files_vec[Layers_Check], level = 1) # load initial data again for just the first band
+        Era5_ras2 <- brick(Files_vec[Layers_Check], level = 2) # load second layer
         Sums_vec <- NA # recreate sum vector
         for(Iter_Check in 1:nlayers(Era5_ras2)){ # layer loop: go over all layers in Era5_ras2
           Sums_vec <- c(Sums_vec, sum(values(Era5_ras2[[Iter_Check]]), na.rm = TRUE)) # append sum of data values to sum vector, layers with issues will produce a 0
@@ -336,6 +337,16 @@ if(SingularDL){ # If user forced download to happen in one
     }
     if(DateStart == "1950-01-01" & TResolution == "day" | TResolution == "hour"){
       LayerDL_seq <- LayerDL_seq[-1]
+    }
+
+    if(Type == "ensemble_members"){
+      LayerDL_seq <- rep(LayerDL_seq[rep(c(TRUE, c(FALSE, FALSE)), length.out = length(LayerDL_seq))], each = 10)
+      Layer_seq <- rep(Layer_seq[rep(c(TRUE, c(FALSE, FALSE)), length.out = length(Layer_seq))], each = 10)
+    }
+
+    if(Type == "monthly_averaged_ensemble_members"){
+      LayerDL_seq <- rep(LayerDL_seq, each = 10)
+      Layer_seq <- rep(LayerDL_seq, each = 10)
     }
     ## subsetting
     Era5_ras <- Era5_ras[[which(LayerDL_seq %in% Layer_seq)]]
@@ -418,7 +429,7 @@ if(SingularDL){ # If user forced download to happen in one
       if(TResolution == "hour" | TResolution == "day" & DateStart == "1950-01-01"){
         Index <- rep(1:((nlayers(Era5_ras)+1)/factor), each = factor)[-1] # fix first-hour issue for 01-01-1981
       }else{
-      Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
+        Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
       }
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
