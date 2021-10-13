@@ -57,6 +57,12 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
   if(verbose){message("donwload_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
+  if(verbose){
+    ProgBar <- 'text'
+  }else{
+    ProgBar <- NULL
+  }
+
   ### PrecipFix Mispecification Check ----
   if(PrecipFix == TRUE & Variable != "total_precipitation"){
     stop("You cannot specify PrecipFix = TRUE without calling on Variable = total_precipitation")
@@ -187,11 +193,11 @@ if(SingularDL){ # If user forced download to happen in one
                        days_in_month(Dates_seq[length(Dates_seq)]),
                        sep = '-'))
                      if(TResolution == 'day' | TResolution == 'hour'){
-                       Layer_seq <- paste(rep(seq.Date(from = DateStart, to = DateStop, by = 'day'), each = 24), paste0(str_pad(1:24, 2, 'left', 0), ':00'), sep = '_')
-                     }else{
-                       Layer_seq <- seq.Date(from = DateStart, to = DateStop, by = 'month')
-                     }
-                     if(length(Layer_seq)>1e5){stop('Your download is too big. Please specify a shorter time window, coarser temporal resolution, or set SingularDL = FALSE.')}
+      LayerDL_seq <- paste(rep(seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = 'day'), each = 24), paste0(str_pad(1:24, 2, 'left', 0), ':00'), sep = '_')
+    }else{
+      LayerDL_seq <- seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = 'month')
+    }
+                     if(length(LayerDL_seq)>1e5){stop('Your download is too big. Please specify a shorter time window, coarser temporal resolution, or set SingularDL = FALSE.')}
                      ## notify user of mismatch in time windows if there is one
                      if(SingularDL_Start != DateStart | SingularDL_Stop != DateStop){
                      if(TypeOrigin != 'reanalysis'){stop('Currently, SIngularDL may only be toggled on for reanalysis type download queries or any query where full months within one year, or full years of data are queried irrespective of dataset type.')}
@@ -274,7 +280,8 @@ if(SingularDL){ # If user forced download to happen in one
   if(verbose){message("Checking for known data issues.")}
   Files_vec <- file.path(Dir, FileNames_vec) # all files belonging to this query with folder paths
   if(is.na(Type)){Type <- "reanalysis"} # na Type is used for Era5-land data which is essentially just reanalysis
-  if(Type == "ensemble_members"){ # ensemble_member check: if user downloaded ensemble_member data
+  # ensemble_member check: if user downloaded ensemble_member data
+  if(Type == "ensemble_members" | Type == "monthly_averaged_ensemble_members"){  # ensemble_member check: if user downloaded ensemble_member data
     Layers <- 1:10 # ensemble members come in 10 distinct layers
   }else{
     Layers <- 1 # non-ensemble members have 1 layer for each time step instead of 10
@@ -282,8 +289,8 @@ if(SingularDL){ # If user forced download to happen in one
     for(Layers_Check in 1:length(Files_vec)){
       LayersSame <- suppressWarnings(all.equal(brick(Files_vec[Layers_Check], level = 1), brick(Files_vec[Layers_Check], level = 2))) # Check if the layers are the same in brick loading
       if(LayersSame == FALSE){
-        Era5_ras <- brick(file.path(Dir, "/", Files_vec[Layers_Check]), level = 1) # load initial data again for just the first band
-        Era5_ras2 <- brick(file.path(Dir, "/", Files_vec[Layers_Check]), level = 2) # load second layer
+        Era5_ras <- brick(Files_vec[Layers_Check], level = 1) # load initial data again for just the first band
+        Era5_ras2 <- brick(Files_vec[Layers_Check], level = 2) # load second layer
         Sums_vec <- NA # recreate sum vector
         for(Iter_Check in 1:nlayers(Era5_ras2)){ # layer loop: go over all layers in Era5_ras2
           Sums_vec <- c(Sums_vec, sum(values(Era5_ras2[[Iter_Check]]), na.rm = TRUE)) # append sum of data values to sum vector, layers with issues will produce a 0
@@ -337,6 +344,16 @@ if(SingularDL){ # If user forced download to happen in one
     if(DateStart == "1950-01-01" & TResolution == "day" | TResolution == "hour"){
       LayerDL_seq <- LayerDL_seq[-1]
     }
+
+    if(Type == "ensemble_members"){
+      LayerDL_seq <- rep(LayerDL_seq[rep(c(TRUE, c(FALSE, FALSE)), length.out = length(LayerDL_seq))], each = 10)
+      Layer_seq <- rep(Layer_seq[rep(c(TRUE, c(FALSE, FALSE)), length.out = length(Layer_seq))], each = 10)
+    }
+
+    if(Type == "monthly_averaged_ensemble_members"){
+      LayerDL_seq <- rep(LayerDL_seq, each = 10)
+      Layer_seq <- rep(LayerDL_seq, each = 10)
+    }
     ## subsetting
     Era5_ras <- Era5_ras[[which(LayerDL_seq %in% Layer_seq)]]
   }
@@ -360,7 +377,7 @@ if(SingularDL){ # If user forced download to happen in one
   if(exists("Shape")){ # Shape check
     if(verbose){message("Masking according to shape/buffer polygon")}
     range_m <- mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
-    Era5_ras <- mask(Era5_ras, range_m)
+    Era5_ras <- mask(Era5_ras, range_m, progress=ProgBar)
     # Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
     # Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
     # Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
@@ -399,7 +416,12 @@ if(SingularDL){ # If user forced download to happen in one
     warning("You toggled on the PrecipFix option in the function call. Hourly records have been converted from cumulative aggregates to individual hourly records of precipitation. This is currently an experimental feature.")
   }
   if(PrecipFix == TRUE & TResolution == "month" | PrecipFix == TRUE & TResolution == "year"){
-    Era5_ras <- Era5_ras * days_in_month(seq(ymd(DateStart),ymd(DateStop), by = '1 month'))
+    if(Type != "ensemble_members" & Type != "monthly_averaged_ensemble_members"){
+      Days_in_Month_vec <- days_in_month(seq(ymd(DateStart),ymd(DateStop), by = '1 month'))
+    }else{
+      Days_in_Month_vec <- rep(days_in_month(seq(ymd(DateStart),ymd(DateStop), by = '1 month')), each = 10)
+    }
+    Era5_ras <- Era5_ras * Days_in_Month_vec
     warning("You toggled on the PrecipFix option in the function call. Monthly records have been multiplied by the amount of days per respective month. This is currently an experimental feature.")
   }
 
@@ -414,26 +436,31 @@ if(SingularDL){ # If user forced download to happen in one
     }else{ # annual means
       factor <- 12 # number of months per year
     }
-    if(Type != "ensemble_members"){
+    if(Type != "ensemble_members" & Type != "monthly_averaged_ensemble_members"){
       if(TResolution == "hour" | TResolution == "day" & DateStart == "1950-01-01"){
         Index <- rep(1:((nlayers(Era5_ras)+1)/factor), each = factor)[-1] # fix first-hour issue for 01-01-1981
       }else{
-      Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
+        Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor) # build an index
       }
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
     }
-    Era5_ras <- stackApply(Era5_ras, Index, fun=FUN) # do the calculation
+    if(sum(duplicated(Index)) != 0){
+      Era5_ras <- stackApply(Era5_ras, Index, fun=FUN, progress=ProgBar) # do the calculation
+      if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
+    }
   }# end of day/year check
-  if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
+
 
   ### TIME STEP MEANS ----
   if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
     warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
   }# end of sanity check for time step completeness
   Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
-  Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN) # do the calculation
-  if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
+  if(sum(duplicated(Index)) != 0){
+    Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN, progress=ProgBar) # do the calculation
+    if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
+  }
 
   ### SAVING DATA ----
   writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)

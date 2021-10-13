@@ -197,7 +197,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       n_down <- length(T_seq)
     }
     n_downrep <- n_down
-    if(Down_start < '1981-01-01' & Var_down == 'total_precipitation'){
+    if(Down_start < '1981-01-01' & Var_down == 'total_precipitation' & !SingularDL){
       n_downrep <- length(T_seq)*2}
     if(verbose){
       message(paste("The KrigR::BioClim() function is going to stage", n_downrep, "download(s) for", Var_down, "data now."))
