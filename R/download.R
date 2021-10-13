@@ -445,9 +445,12 @@ if(SingularDL){ # If user forced download to happen in one
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
     }
-    Era5_ras <- stackApply(Era5_ras, Index, fun=FUN, progress=ProgBar) # do the calculation
+    if(sum(duplicated(Index)) == 0){
+      Era5_ras <- stackApply(Era5_ras, Index, fun=FUN, progress=ProgBar) # do the calculation
+      if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
+    }
   }# end of day/year check
-  if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
+
 
   ### TIME STEP MEANS ----
   if(nlayers(Era5_ras)%%TStep != 0){ # sanity check for completeness of time steps and data
