@@ -377,7 +377,7 @@ if(SingularDL){ # If user forced download to happen in one
   if(exists("Shape")){ # Shape check
     if(verbose){message("Masking according to shape/buffer polygon")}
     range_m <- mask_Shape(base.map = Era5_ras[[1]], Shape = Shape)
-    Era5_ras <- mask(Era5_ras, range_m)
+    Era5_ras <- mask(Era5_ras, range_m, progress=ProgBar)
     # Shape_ras <- rasterize(Shape, Era5_ras, getCover=TRUE) # identify which cells are covered by the shape
     # Shape_ras[Shape_ras==0] <- NA # set all cells which the shape doesn't touch to NA
     # Era5_ras <- mask(x = Era5_ras, mask = Shape_ras) # mask if shapefile was provided
