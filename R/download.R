@@ -416,7 +416,12 @@ if(SingularDL){ # If user forced download to happen in one
     warning("You toggled on the PrecipFix option in the function call. Hourly records have been converted from cumulative aggregates to individual hourly records of precipitation. This is currently an experimental feature.")
   }
   if(PrecipFix == TRUE & TResolution == "month" | PrecipFix == TRUE & TResolution == "year"){
-    Era5_ras <- Era5_ras * days_in_month(seq(ymd(DateStart),ymd(DateStop), by = '1 month'))
+    if(Type != "ensemble_members" & Type != "monthly_averaged_ensemble_members"){
+      Days_in_Month_vec <- days_in_month(seq(ymd(DateStart),ymd(DateStop), by = '1 month'))
+    }else{
+      Days_in_Month_vec <- rep(days_in_month(seq(ymd(DateStart),ymd(DateStop), by = '1 month')), each = 10)
+    }
+    Era5_ras <- Era5_ras * Days_in_Month_vec
     warning("You toggled on the PrecipFix option in the function call. Monthly records have been multiplied by the amount of days per respective month. This is currently an experimental feature.")
   }
 
@@ -431,7 +436,7 @@ if(SingularDL){ # If user forced download to happen in one
     }else{ # annual means
       factor <- 12 # number of months per year
     }
-    if(Type != "ensemble_members"){
+    if(Type != "ensemble_members" & Type != "monthly_averaged_ensemble_members"){
       if(TResolution == "hour" | TResolution == "day" & DateStart == "1950-01-01"){
         Index <- rep(1:((nlayers(Era5_ras)+1)/factor), each = factor)[-1] # fix first-hour issue for 01-01-1981
       }else{
@@ -449,8 +454,10 @@ if(SingularDL){ # If user forced download to happen in one
     warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
   }# end of sanity check for time step completeness
   Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
-  Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN, progress=ProgBar) # do the calculation
-  if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
+  if(sum(duplicated(Index)) == 0){
+    Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN, progress=ProgBar) # do the calculation
+    if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
+  }
 
   ### SAVING DATA ----
   writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)
