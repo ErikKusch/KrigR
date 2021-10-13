@@ -57,6 +57,12 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
   if(verbose){message("donwload_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
+  if(verbose){
+    ProgBar <- 'text'
+  }else{
+    ProgBar <- NULL
+  }
+
   ### PrecipFix Mispecification Check ----
   if(PrecipFix == TRUE & Variable != "total_precipitation"){
     stop("You cannot specify PrecipFix = TRUE without calling on Variable = total_precipitation")
@@ -434,7 +440,7 @@ if(SingularDL){ # If user forced download to happen in one
     }else{
       Index <- rep(1:(nlayers(Era5_ras)/factor), each = factor*10) # build an index
     }
-    Era5_ras <- stackApply(Era5_ras, Index, fun=FUN) # do the calculation
+    Era5_ras <- stackApply(Era5_ras, Index, fun=FUN, progress=ProgBar) # do the calculation
   }# end of day/year check
   if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
 
@@ -443,7 +449,7 @@ if(SingularDL){ # If user forced download to happen in one
     warning(paste0("Your specified time range does not allow for a clean integration of your selected time steps. Only full time steps will be computed. You specified a time series with a length of ", nlayers(Era5_ras), "(", TResolution,") and time steps of ", TStep, ". This works out to ", nlayers(Era5_ras)/TStep, " intervals. You will receive ", floor(nlayers(Era5_ras)/TStep), " intervals."))
   }# end of sanity check for time step completeness
   Index <- rep(1:(nlayers(Era5_ras)/TStep), each = TStep) # build an index
-  Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN) # do the calculation
+  Era5_ras <- stackApply(Era5_ras[[1:length(Index)]], Index, fun=FUN, progress=ProgBar) # do the calculation
   if(exists("range_m")){Era5_ras <- mask(Era5_ras, range_m)} ## apply masking again for stackapply functions which don't track NAs properly
 
   ### SAVING DATA ----
