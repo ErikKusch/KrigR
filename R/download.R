@@ -64,9 +64,9 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   }
 
   ### PrecipFix Mispecification Check ----
-  if(PrecipFix == TRUE & !startsWith(x = Variable, prefix = "total_")){
-    stop("You cannot specify PrecipFix = TRUE without calling on a Variable that starts with total_ indicating a cummulative nature")
-  }
+  # if(PrecipFix == TRUE & !startsWith(x = Variable, prefix = "total_")){
+  #   stop("You cannot specify PrecipFix = TRUE without calling on a Variable that starts with total_ indicating a cummulative nature")
+  # }
 
   ### SETTING UP API ----
   # Setting the API key for later retrieval by wf_request()
