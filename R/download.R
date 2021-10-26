@@ -55,7 +55,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                          API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE,
                          Cores = 1, TimeOut = 36000, SingularDL = FALSE) {
 
-  if(verbose){message("donwload_ERA() is starting. Depending on your specifications, this can take a significant time.")}
+  if(verbose){message("download_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
   if(verbose){
     ProgBar <- 'text'
