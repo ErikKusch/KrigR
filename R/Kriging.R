@@ -16,7 +16,7 @@
 #' @param Keep_Temporary Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE.
 #' @param Cores Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Parallel processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.
 #' @param SingularTry Numeric. How often to try kriging of each layer of the input. This usually gets around issues of singular covariance matrices in the kriging process, but takes some time. Default is 10
-#' @param Variable Optional, calls download_ERA(). ERA5(Land)-contained climate variable. See output of Variable_List() for possible values.
+#' @param Variable Optional, calls download_ERA(). ERA5(Land)-contained climate variable.
 #' @param PrecipFix Optional. Era5(-land) total precipitation is recorded in cumulative steps per hour from the 00:00 time mark per day. Setting PrecipFix to TRUE converts these into records which represent the total precipitation per hour. Monthly records in Era5(-land) express the average daily total precipitation. Setting this argument to TRUE multiplies monthly records by the number of days per the respective month(s) to get to total precipitation records instead of average.  Default is FALSE.
 #' @param Type  Optional. Whether to download reanalysis ('reanalysis') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Passed on to download_ERA.
 #' @param DataSet Optional. Which ERA5 data set to download data from. 'era5' or 'era5-land'. Passed on to download_ERA.

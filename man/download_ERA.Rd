@@ -29,7 +29,7 @@ download_ERA(
 )
 }
 \arguments{
-\item{Variable}{ERA5(Land)-contained climate variable. See 'download' output of Variable_List() for possible values.}
+\item{Variable}{ERA5(Land)-contained climate variable.}
 
 \item{PrecipFix}{Logical. Era5(-land) total precipitation is recorded in cumulative steps per hour from the 00:00 time mark per day. Setting PrecipFix to TRUE converts these into records which represent the total precipitation per hour. Monthly records in Era5(-land) express the average daily total precipitation. Setting this argument to TRUE multiplies monthly records by the number of days per the respective month(s) to get to total precipitation records instead of average.  Default is FALSE. This also applies to other variables in the data sets. See the data descriptor webpages (e.g.: https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview) for an overview of which variables this applies to.}
 
