@@ -2,7 +2,7 @@
 #'
 #' This function queries download of required essential climate variables from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s) for retrieval of climate data and subsequent calculation of bioclimatic variables for user-defined regions and time-frames.
 #'
-#' @param Water_Var ERA5(Land)-contained climate variable targeting water availability information. See 'download' output of Variable_List() for possible values. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".
+#' @param Water_Var ERA5(Land)-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".
 #' @param DataSet Which ERA5 data set to download data from. 'era5' or 'era5-land'.
 #' @param Y_start Year ('YYYY') at which to start time series of downloaded data.
 #' @param Y_end Year ('YYYY') at which to stop time series of downloaded data.

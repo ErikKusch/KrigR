@@ -2,7 +2,6 @@
 
 export(BioClim)
 export(SummarizeRaster)
-export(Variable_List)
 export(buffer_Points)
 export(check_Krig)
 export(download_DEM)

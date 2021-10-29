@@ -27,7 +27,7 @@ BioClim(
 )
 }
 \arguments{
-\item{Water_Var}{ERA5(Land)-contained climate variable targeting water availability information. See 'download' output of Variable_List() for possible values. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".}
+\item{Water_Var}{ERA5(Land)-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".}
 
 \item{Y_start}{Year ('YYYY') at which to start time series of downloaded data.}
 

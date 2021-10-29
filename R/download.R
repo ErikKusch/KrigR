@@ -4,8 +4,8 @@
 #'
 #' Use optional arguments verbose, Cores, and SingularDL for updates on function progress, parallel download staging and execution, and forcing of downloads into one singular download, espectively.
 #'
-#' @param Variable ERA5(Land)-contained climate variable. See 'download' output of Variable_List() for possible values.
-#' @param PrecipFix Logical. Era5(-land) total precipitation is recorded in cumulative steps per hour from the 00:00 time mark per day. Setting PrecipFix to TRUE converts these into records which represent the total precipitation per hour. Monthly records in Era5(-land) express the average daily total precipitation. Setting this argument to TRUE multiplies monthly records by the number of days per the respective month(s) to get to total precipitation records instead of average.  Default is FALSE.
+#' @param Variable ERA5(Land)-contained climate variable.
+#' @param PrecipFix Logical. Era5(-land) total precipitation is recorded in cumulative steps per hour from the 00:00 time mark per day. Setting PrecipFix to TRUE converts these into records which represent the total precipitation per hour. Monthly records in Era5(-land) express the average daily total precipitation. Setting this argument to TRUE multiplies monthly records by the number of days per the respective month(s) to get to total precipitation records instead of average.  Default is FALSE. This also applies to other variables in the data sets. See the data descriptor webpages (e.g.: https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview) for an overview of which variables this applies to.
 #' @param Type Whether to download reanalysis ('reanalysis', 'monthly_averaged_reanalysis_by_hour_of_day') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.
 #' @param DataSet Which ERA5 data set to download data from. 'era5' or 'era5-land'.
 #' @param DateStart Date ('YYYY-MM-DD') at which to start time series of downloaded data.
@@ -55,7 +55,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                          API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE,
                          Cores = 1, TimeOut = 36000, SingularDL = FALSE) {
 
-  if(verbose){message("donwload_ERA() is starting. Depending on your specifications, this can take a significant time.")}
+  if(verbose){message("download_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
   if(verbose){
     ProgBar <- 'text'
@@ -64,9 +64,9 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   }
 
   ### PrecipFix Mispecification Check ----
-  if(PrecipFix == TRUE & Variable != "total_precipitation"){
-    stop("You cannot specify PrecipFix = TRUE without calling on Variable = total_precipitation")
-  }
+  # if(PrecipFix == TRUE & !startsWith(x = Variable, prefix = "total_")){
+  #   stop("You cannot specify PrecipFix = TRUE without calling on a Variable that starts with total_ indicating a cummulative nature")
+  # }
 
   ### SETTING UP API ----
   # Setting the API key for later retrieval by wf_request()
