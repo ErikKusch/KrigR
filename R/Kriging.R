@@ -241,8 +241,8 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     registerDoSNOW(cl) # registering cores
     foreach(Iter_Krige = Compute_Layers, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
             .packages = c("raster", "stringr", "automap", "ncdf4", "rgdal"), # import packages necessary to each itteration
-            .export = ForeachObjects) %:% when(!paste0(str_pad(Iter_Krige,4,"left","0"), '_data.nc',
-                                                       .options.snow = opts) %in% list.files(Dir.Temp)) %dopar% { # parallel kriging loop
+            .export = ForeachObjects,
+            .options.snow = opts) %:% when(!paste0(str_pad(Iter_Krige,4,"left","0"), '_data.nc') %in% list.files(Dir.Temp)) %dopar% { # parallel kriging loop
               Ras_Krig <- eval(parse(text=looptext)) # evaluate the kriging specification per cluster unit per layer
             } # end of parallel kriging loop
     close(pb)
