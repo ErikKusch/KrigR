@@ -205,7 +205,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
     if(Cores > 1){ # Cores check: if parallel processing has been specified
       ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw", "Fun_vec", "TryDown", "TimeOut", "SingularDL", "Var_down", "Fun_vec", "AggrFUN", "verbose", "Down_start")
-      pb <- txtProgressBar(max = n_calls, style = 3)
+      pb <- txtProgressBar(max = n_down, style = 3)
       progress <- function(n){setTxtProgressBar(pb, n)}
       opts <- list(progress = progress)
       cl <- makeCluster(Cores) # Assuming Cores node cluster

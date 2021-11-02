@@ -234,7 +234,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   if(Cores > 1){ # Cores check: if parallel processing has been specified
     ### PARALLEL KRIGING ---
     ForeachObjects <- c("Dir.Temp", "Cores", "Data", "KrigingEquation", "Origin", "Target", "Covariates_coarse", "Covariates_fine", "Terms", "SingularTry", "nmax") # objects which are needed for each kriging run and are thus handed to each cluster unit
-    pb <- txtProgressBar(max = n_calls, style = 3)
+    pb <- txtProgressBar(max = length(Compute_Layers), style = 3)
     progress <- function(n){setTxtProgressBar(pb, n)}
     opts <- list(progress = progress)
     cl <- makeCluster(Cores) # Assuming Cores node cluster
