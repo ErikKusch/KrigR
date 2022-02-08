@@ -260,14 +260,19 @@ if(SingularDL){ # If user forced download to happen in one
   if(verbose){message(paste("Staging", n_calls, "download(s)."))}
   if(Cores > 1){ # Cores check: if parallel processing has been specified
     ForeachObjects <- c("DataSet", "Type", "Variable", "Calls_ls", "Times", "Extent", "FileNames_vec", "Grid", "API_Key", "API_User", "Dir", "verbose", "TryDown", "TimeOut", "API_Service", "TResolution", "SingularDL")
+    pb <- txtProgressBar(max = n_calls, style = 3)
+    progress <- function(n){setTxtProgressBar(pb, n)}
+    opts <- list(progress = progress)
     cl <- makeCluster(Cores) # Assuming Cores node cluster
-    registerDoParallel(cl) # registering cores
+    registerDoSNOW(cl) # registering cores
     foreach::foreach(Downloads_Iter = 1:n_calls,
                      .packages = c("ecmwfr"), # import packages necessary to each itteration
-                     .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))) %dopar% {
+                     .export = ForeachObjects,
+                     .options.snow = opts) %:% when(!file.exists(file.path(Dir, FileNames_vec[Downloads_Iter]))) %dopar% {
                        eval(parse(text=looptext))
                      } # end of parallel kriging loop
-    stopCluster(cl) # close down cluster
+    close(pb)
+    stopCluster(cl)
   }else{ # if non-parallel processing has been specified
     for(Downloads_Iter in 1:n_calls){
       eval(parse(text=looptext))

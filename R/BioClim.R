@@ -205,13 +205,18 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
 
     if(Cores > 1){ # Cores check: if parallel processing has been specified
       ForeachObjects <- c("Var_down", "Var_Iter", "Dir", "Y_seq", "M_seq", "DataSet", "PrecipFix", "API_User", "API_Key", "T_res", "Extent", "Keep_Raw", "Fun_vec", "TryDown", "TimeOut", "SingularDL", "Var_down", "Fun_vec", "AggrFUN", "verbose", "Down_start")
+      pb <- txtProgressBar(max = n_down, style = 3)
+      progress <- function(n){setTxtProgressBar(pb, n)}
+      opts <- list(progress = progress)
       cl <- makeCluster(Cores) # Assuming Cores node cluster
-      registerDoParallel(cl) # registering cores
+      registerDoSNOW(cl) # registering cores
       foreach(Down_Iter = 1:n_down,
               .packages = c("KrigR"), # import packages necessary to each itteration
-              .export = ForeachObjects) %:% when(!file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))) %dopar% {
+              .export = ForeachObjects,
+              .options.snow = opts) %:% when(!file.exists(file.path(Dir, paste0(Var_down, '-', Fun_vec[length(Fun_vec)], '-', Y_seq[Down_Iter], '_', M_seq[Down_Iter], 'MonthlyBC.nc')))) %dopar% {
                 eval(parse(text=looptext))
               } # end of parallel kriging loop
+      close(pb)
       stopCluster(cl) # close down cluster
     }else{ # if non-parallel processing has been specified
       for(Down_Iter in 1:n_down){eval(parse(text=looptext))}

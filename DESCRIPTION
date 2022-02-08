@@ -25,6 +25,7 @@ Depends:
     rgdal,
     doParallel,
     foreach,
+    doSNOW, 
     automap,
     lubridate,
     sp,
