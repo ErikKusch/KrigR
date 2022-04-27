@@ -119,7 +119,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     }else{ # if Extent is not a shape, then extent specification is already baked into Data
       Shape <- NULL # set Shape to NULL so it is ignored in download_DEM function when masking is applied
     } # end of Extent check
-    Covs_ls <- download_DEM(Train_ras = Data, Target_res = Target_res, Shape = Shape, Buffer = Buffer, ID = ID, Keep_Temporary = Keep_Temporary, Dir = Dir)
+    Covs_ls <- download_DEM(Train_ras = Data, Target_res = Target_res, Shape = Shape, Buffer = Buffer, ID = ID, Keep_Temporary = Keep_Temporary, Dir = Dir, Source = Source)
     Covariates_coarse <- Covs_ls[[1]] # extract coarse covariates from download_DEM output
     Covariates_fine <- Covs_ls[[2]] # extract fine covariates from download_DEM output
   } # end of covariate check
