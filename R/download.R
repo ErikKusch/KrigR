@@ -326,6 +326,14 @@ if(SingularDL){ # If user forced download to happen in one
     Era5_ras <- stack(Era5_ls)
   }
 
+  ## Fix for extent of some variables like evaporation_from_vegetation_transpiration for which the x-extent values come out weirdly despite the correct data being downloaded
+  MaxOffset <- max(abs(round(as.vector(extent(Era5_ras))-c(Extent[2], Extent[4], Extent[3], Extent[1]), 2))) # identify whether there is an issue (currently, we only know of cases where western-hemisphere data is reported as x-extents that are 360-x-Extent values)
+  if(MaxOffset > 270){
+    DataOffset <- min(abs(round(as.vector(extent(Era5_ras))-c(Extent[2], Extent[4], Extent[3], Extent[1]), 2))) # identify by how much grid had to be expanded for download
+    extent(Era5_ras) <- extent(Extent[2]-DataOffset, Extent[4]+DataOffset,
+                               Extent[3]-DataOffset, Extent[1]+DataOffset) # the extent the object should have assigned to the object
+  }
+
   ### SingularDL limiting of data to original time-series requirements
   ## time-sequence of requested download by user
   if(TResolution == "day" | TResolution == "hour"){
