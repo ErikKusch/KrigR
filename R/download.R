@@ -478,7 +478,7 @@ if(SingularDL){ # If user forced download to happen in one
   ### SAVING DATA ----
   writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)
   unlink(Files_vec, recursive = TRUE)
-  return(Era5_ras)
+  return(stack(file.path(Dir, paste0(FileName, ".nc")))) # to circumvent issues with 1-hour downloads
 }
 
 #' Downloading DEM data from USGS servers
