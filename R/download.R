@@ -129,7 +129,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   } # end of calls loop
 
   # Extent vs. Shapefile vs. Points
-  if(class(Extent) == "data.frame"){ # if we have been given point data
+  if(is.data.frame(Extent)){ # if we have been given point data
     Extent <- buffer_Points(Points = Extent, Buffer = Buffer, ID = ID)
   }
 
