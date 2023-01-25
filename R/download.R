@@ -310,7 +310,7 @@ if(SingularDL){ # If user forced download to happen in one
 
   ### loop over files and layers here
   if(verbose){message("Loading downloaded data for masking and aggregation.")}
-  if(length(Layers) == 1 & Layers == 1){
+  if(length(Layers) == 1){
     Era5_ras <- stack(Files_vec)
   }else{
     Era5_ls <- as.list(rep(NA, length(Layers))) # list for layer aggregation
