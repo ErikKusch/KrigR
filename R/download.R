@@ -476,7 +476,7 @@ if(SingularDL){ # If user forced download to happen in one
   }
 
   ### SAVING DATA ----
-  writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)
+  terra::writeCDF(x = as(Era5_ras, "SpatRaster"), filename = paste0(file.path(Dir, FileName),".nc"), overwrite = TRUE, varname = Variable)
   unlink(Files_vec, recursive = TRUE)
   return(stack(file.path(Dir, paste0(FileName, ".nc")))) # to circumvent issues with 1-hour downloads
 }
