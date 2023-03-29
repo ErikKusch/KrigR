@@ -32,4 +32,5 @@ Depends:
     sf,
     fasterize,
     stars,
-    httr
+    httr,
+    terra
