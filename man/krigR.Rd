@@ -35,6 +35,7 @@ krigR(
   verbose = TRUE,
   TimeOut = 36000,
   SingularDL = FALSE,
+  SaveOutput = TRUE,
   ...
 )
 }
@@ -98,6 +99,8 @@ krigR(
 \item{TimeOut}{Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).}
 
 \item{SingularDL}{Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.}
+
+\item{SaveOutput}{Logical. Whether to save the output as a NetCDF file. Default is TRUE}
 }
 \value{
 A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.
