@@ -37,6 +37,7 @@
 #' @param verbose Optional, logical. Whether to report progress of data download (if queried) in the console or not.
 #' @param TimeOut Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).
 #' @param SingularDL Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.
+#' @param SaveOutput Logical. Whether to save the final output in a NetCDF file. Default to TRUE.
 #' @return A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.
 #' @examples
 #' \dontrun{
@@ -272,9 +273,12 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## SAVING FINAL PRODUCT ----
   if(is.null(DataSkips)){ # Skip check: if no layers needed to be skipped
     Ras_Krig <- brick(Ras_Krig) # convert list of kriged layers in actual rasterbrick of kriged layers
-    writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
     Ras_Var <- brick(Ras_Var) # convert list of kriged layers in actual rasterbrick of kriged layers
-    writeRaster(x = Ras_Var, filename = file.path(Dir, paste0("SE_",FileName)), overwrite = TRUE, format="CDF") # save final product as raster
+    if(SaveOutput){
+      writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
+      writeRaster(x = Ras_Var, filename = file.path(Dir, paste0("SE_",FileName)), overwrite = TRUE, format="CDF") # save final product as raster
+    }
+    
   }else{ # if some layers needed to be skipped
     warning(paste0("Some of the layers in your raster could not be kriged. You will find all the individual layers (kriged and not kriged) in ", Dir, "."))
     Keep_Temporary <- TRUE # keep temporary files so kriged products are not deleted
