@@ -159,9 +159,10 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
           range <- KrigR:::mask_Shape(base.map = Save_Ras[[1]], Shape = Shape)
           Save_Ras <- mask(Save_Ras, range)
         }
-        writeRaster(x = Save_Ras,
-                    filename = CheckName[Counter],
-                    format = 'CDF', overwrite = TRUE)
+        terra::writeCDF(x = as(Save_Ras, 'SpatRaster'), filename = CheckName[Counter], overwrite = TRUE)
+        # writeRaster(x = Save_Ras,
+        #             filename = CheckName[Counter],
+        #             format = 'CDF', overwrite = TRUE)
         Counter <- Counter + 1
       }
   }else{
@@ -320,7 +321,10 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   BIO_Ras <-raster::stack(BIO1, BIO2, BIO3, BIO4, BIO5, BIO6, BIO7, BIO8, BIO9,
                           BIO10, BIO11, BIO12, BIO13, BIO14, BIO15, BIO16, BIO17, BIO18, BIO19)
   names(BIO_Ras) <- paste0("BIO", 1:19)
-  writeRaster(BIO_Ras, file.path(Dir, FileName), format = "CDF", overwrite = TRUE)
+
+  terra::writeCDF(x = as(BIO_Ras, 'SpatRaster'), filename = file.path(Dir, FileName), overwrite = TRUE)
+
+  # writeRaster(BIO_Ras, file.path(Dir, FileName), format = "CDF", overwrite = TRUE)
   if(!isTRUE(Keep_Monthly)){
     RM_fs <- list.files(Dir, pattern = "MonthlyBC.nc")
     unlink(RM_fs)
