@@ -303,7 +303,7 @@ if(SingularDL){ # If user forced download to happen in one
         Sums_vec <- na.omit(Sums_vec) # omit initial NA
         StopFirst <- min(which(Sums_vec != 0)) # identify the last layer of the brick that is problematic on the second data layer loaded above
         Era5_ras <- stack(Era5_ras[[1:(StopFirst-1)]], Era5_ras2[[StopFirst:nlayers(Era5_ras2)]]) # rebuild the Era5_ras stack as a combination of the data-containing layers in the two bricks
-        writeRaster(Era5_ras, filename = Files_vec[Layers_Check])
+        terra::writeCDF(x = as(Era5_ras, "SpatRaster"), filename = Files_vec[Layers_Check])
       }
     }
   } # end of ensemble_member check
@@ -476,7 +476,7 @@ if(SingularDL){ # If user forced download to happen in one
   }
 
   ### SAVING DATA ----
-  writeRaster(x = Era5_ras, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF", varname = Variable)
+  terra::writeCDF(x = as(Era5_ras, "SpatRaster"), filename = paste0(file.path(Dir, FileName), ".nc"), overwrite = TRUE, varname = Variable)
   unlink(Files_vec, recursive = TRUE)
   return(stack(file.path(Dir, paste0(FileName, ".nc")))) # to circumvent issues with 1-hour downloads
 }
@@ -590,8 +590,10 @@ download_DEM <- function(Train_ras = NULL,
   ### SAVING DATA ----
   names(GMTED2010Train_ras) <- c("DEM") # setting layer name for later use in KrigingEquation
   names(GMTED2010Target_ras) <- c("DEM") # setting layer name for later use in KrigingEquation
-  writeRaster(x = GMTED2010Train_ras, filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE, format="CDF")
-  writeRaster(x = GMTED2010Target_ras, filename = file.path(Dir, "GMTED2010_Target.nc"), overwrite = TRUE, format="CDF")
+  terra::writeCDF(x = as(GMTED2010Train_ras, "SpatRaster"), filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE)
+  terra::writeCDF(x = as(GMTED2010Target_ras, "SpatRaster"), filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE)
+  # writeRaster(x = GMTED2010Train_ras, filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE, format="CDF")
+  # writeRaster(x = GMTED2010Target_ras, filename = file.path(Dir, "GMTED2010_Target.nc"), overwrite = TRUE, format="CDF")
 
   ### REMOVE FILES FROM HARD DRIVE -----
   if(Keep_Temporary == FALSE){ # cleanup check
