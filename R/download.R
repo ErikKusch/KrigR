@@ -303,7 +303,7 @@ if(SingularDL){ # If user forced download to happen in one
         Sums_vec <- na.omit(Sums_vec) # omit initial NA
         StopFirst <- min(which(Sums_vec != 0)) # identify the last layer of the brick that is problematic on the second data layer loaded above
         Era5_ras <- stack(Era5_ras[[1:(StopFirst-1)]], Era5_ras2[[StopFirst:nlayers(Era5_ras2)]]) # rebuild the Era5_ras stack as a combination of the data-containing layers in the two bricks
-        terra::writeCDF(x = as(Era5_ras, "SpatRaster"), filename = Files_vec[Layers_Check])
+        terra::writeCDF(x = as(brick(Era5_ras), "SpatRaster"), filename = Files_vec[Layers_Check])
       }
     }
   } # end of ensemble_member check
@@ -476,7 +476,7 @@ if(SingularDL){ # If user forced download to happen in one
   }
 
   ### SAVING DATA ----
-  terra::writeCDF(x = as(Era5_ras, "SpatRaster"), filename = paste0(file.path(Dir, FileName), ".nc"), overwrite = TRUE, varname = Variable)
+  terra::writeCDF(x = as(brick(Era5_ras), "SpatRaster"), filename = paste0(file.path(Dir, FileName), ".nc"), overwrite = TRUE, varname = Variable)
   unlink(Files_vec, recursive = TRUE)
   return(stack(file.path(Dir, paste0(FileName, ".nc")))) # to circumvent issues with 1-hour downloads
 }
