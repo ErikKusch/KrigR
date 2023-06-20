@@ -3,6 +3,6 @@
 .RData
 .Ruserdata
 
-packrat/lib*/
+packrat/
 **/Test/*
 

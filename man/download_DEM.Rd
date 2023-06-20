@@ -55,7 +55,7 @@ Extent = Extent,
 API_User = API_User,
 API_Key = API_Key
 )
-State_Raw # a raster brick with 6 layers at resolution of ~0.1Â°
+State_Raw # a raster brick with 6 layers at resolution of ~0.1°
 # Downloading GMTED2010-data at resolution and extent obtained by a call to download_ERA and a target resolution of .02.
 Covs_ls <- download_DEM(
 Train_ras = State_Raw,
