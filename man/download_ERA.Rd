@@ -97,7 +97,7 @@ Extent = Extent,
 API_User = API_User,
 API_Key = API_Key
 )
-State_Raw # a raster brick with 6 layers at resolution of ~0.1Â°
+State_Raw # a raster brick with 6 layers at resolution of ~0.1°
 }
 
 }

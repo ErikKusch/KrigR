@@ -198,9 +198,9 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   Ras_Var[[Iter_Krige]] <- Var_ras
   } # stack kriged raster into raster list if non-parallel computing
 
-  terra::writeCDF(x = as(Krig_ras, 'SpatRaster'), filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc')), overwrite = TRUE)
+  terra::writeCDF(x = as(brick(Krig_ras), 'SpatRaster'), filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc')), overwrite = TRUE)
   # writeRaster(x = Krig_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_data.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
-  terra::writeCDF(x = as(Var_ras, 'SpatRaster'), filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_SE.nc')), overwrite = TRUE)
+  terra::writeCDF(x = as(brick(Var_ras), 'SpatRaster'), filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_SE.nc')), overwrite = TRUE)
  # writeRaster(x = Var_ras, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,4,'left','0'), '_SE.nc')), overwrite = TRUE, format='CDF') # save kriged raster to temporary directory
 
   if(Cores == 1){ # core check: if processing non-parallel
@@ -224,7 +224,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   if(!is.null(DataSkips)){ # Skip check: if layers need to be skipped
     for(Iter_Skip in DataSkips){ # Skip loop: loop over all layers that need to be skipped
       Ras_Krig[[Iter_Skip]] <- Data[[Iter_Skip]] # add raw data (which should be empty) to list
-      terra::writeCDF(x = as(Ras_Krig[[Iter_Skip]], 'SpatRaster'), filename = file.path(Dir.Temp, str_pad(Iter_Skip,4,'left','0')), overwrite = TRUE)
+      terra::writeCDF(x = as(brick(Ras_Krig[[Iter_Skip]]), 'SpatRaster'), filename = file.path(Dir.Temp, str_pad(Iter_Skip,4,'left','0')), overwrite = TRUE)
       # writeRaster(x = Ras_Krig[[Iter_Skip]], filename = file.path(Dir.Temp, str_pad(Iter_Skip,4,'left','0')), overwrite = TRUE, format = 'CDF') # save raw layer to temporary directory, needed for loading back in when parallel processing
     } # end of Skip loop
     Layers_vec <- 1:nlayers(Data) # identify vector of all layers in data
@@ -276,10 +276,10 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## SAVING FINAL PRODUCT ----
   if(is.null(DataSkips)){ # Skip check: if no layers needed to be skipped
     Ras_Krig <- brick(Ras_Krig) # convert list of kriged layers in actual rasterbrick of kriged layers
-    terra::writeCDF(x = as(Ras_Krig, "SpatRaster"), filename = file.path(Dir, FileName), overwrite = TRUE)
+    terra::writeCDF(x = as(brick(Ras_Krig), "SpatRaster"), filename = file.path(Dir, FileName), overwrite = TRUE)
     # writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
     Ras_Var <- brick(Ras_Var) # convert list of kriged layers in actual rasterbrick of kriged layers
-    terra::writeCDF(x = as(Ras_Var, "SpatRaster"), filename = file.path(Dir, paste0("SE_", FileName)), overwrite = TRUE)
+    terra::writeCDF(x = as(brick(Ras_Var), "SpatRaster"), filename = file.path(Dir, paste0("SE_", FileName)), overwrite = TRUE)
     # writeRaster(x = Ras_Var, filename = file.path(Dir, paste0("SE_",FileName)), overwrite = TRUE, format="CDF") # save final product as raster
   }else{ # if some layers needed to be skipped
     warning(paste0("Some of the layers in your raster could not be kriged. You will find all the individual layers (kriged and not kriged) in ", Dir, "."))
