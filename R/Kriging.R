@@ -136,8 +136,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
                   FileName = FileName,
                   Keep_Temporary = Keep_Temporary,
                   nmax = nmax,
-                  Data_Retrieval = Data_Retrieval,
-                  misc = ...)
+                  Data_Retrieval = Data_Retrieval)
 
   ## SANITY CHECKS (step into check_Krig function to catch most common error messages) ----
   Check_Product <- check_Krig(Data = Data, CovariatesCoarse = Covariates_coarse, CovariatesFine = Covariates_fine, KrigingEquation = KrigingEquation)
@@ -275,11 +274,21 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
 
   ## SAVING FINAL PRODUCT ----
   if(is.null(DataSkips)){ # Skip check: if no layers needed to be skipped
-    Ras_Krig <- brick(Ras_Krig) # convert list of kriged layers in actual rasterbrick of kriged layers
-    terra::writeCDF(x = as(brick(Ras_Krig), "SpatRaster"), filename = file.path(Dir, FileName), overwrite = TRUE)
+    # convert list of kriged layers in actual rasterbrick of kriged layers
+    names(Ras_Krig) <- names(Data)
+    if(class(Ras_Krig) != "RasterBrick"){Ras_Krig <- brick(Ras_Krig)}
+    Krig_terra <- as(Ras_Krig, "SpatRaster")
+    names(Krig_terra) <- names(Data)
+
+    terra::writeCDF(x = Krig_terra, filename = file.path(Dir, FileName), overwrite = TRUE)
     # writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
-    Ras_Var <- brick(Ras_Var) # convert list of kriged layers in actual rasterbrick of kriged layers
-    terra::writeCDF(x = as(brick(Ras_Var), "SpatRaster"), filename = file.path(Dir, paste0("SE_", FileName)), overwrite = TRUE)
+    # convert list of kriged layers in actual rasterbrick of kriged layers
+    names(Ras_Var) <- names(Data)
+    if(class(Ras_Var) != "RasterBrick"){Ras_Var <- brick(Ras_Var)}
+    Var_terra <- as(Ras_Var, "SpatRaster")
+    names(Var_terra) <- names(Data)
+
+    terra::writeCDF(x = Var_terra, filename = file.path(Dir, paste0("SE_", FileName)), overwrite = TRUE)
     # writeRaster(x = Ras_Var, filename = file.path(Dir, paste0("SE_",FileName)), overwrite = TRUE, format="CDF") # save final product as raster
   }else{ # if some layers needed to be skipped
     warning(paste0("Some of the layers in your raster could not be kriged. You will find all the individual layers (kriged and not kriged) in ", Dir, "."))

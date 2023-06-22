@@ -10,7 +10,7 @@ KrigR contains functions for:
 **NOTE:** All kriging functionality can be parallelised for faster computing using the `Cores` argument.
 
 # How to Cite
-KrigR is currently under review and a preprint is available on [arXiv](https://arxiv.org/abs/2106.12046). 
+KrigR has been [published here](https://iopscience.iop.org/article/10.1088/1748-9326/ac48b3).
 
 # Installation
 KrigR is not yet on CRAN, so it needs to be installed as such:
