@@ -399,7 +399,7 @@ if(SingularDL){ # If user forced download to happen in one
   ### PRECIP FIX ----
   if(verbose){message("Aggregating to temporal resolution of choice")}
   if(PrecipFix == TRUE & TResolution == "day" | PrecipFix == TRUE & TResolution == "hour"){
-    if(DateStart == "1950-01-01"){ ## apply fix for first-hour of 1981 here, too
+    if(DateStart == "1950-01-01"){ ## do this by layer names as contained in downloaded data!!!
       Era5_ras <- Era5_ras[[-(nlayers(Era5_ras)-22):-nlayers(Era5_ras)]]
     }else{
       Era5_ras <- Era5_ras[[c(-1, -(nlayers(Era5_ras)-22):-nlayers(Era5_ras))]]
@@ -476,7 +476,19 @@ if(SingularDL){ # If user forced download to happen in one
   }
 
   ### SAVING DATA ----
-  terra::writeCDF(x = as(brick(Era5_ras), "SpatRaster"), filename = paste0(file.path(Dir, FileName), ".nc"), overwrite = TRUE, varname = Variable)
+  if(class(Era5_ras) == "RasterBrick"){
+    Era5_spatras <- as(Era5_ras, "SpatRaster")
+  }else{
+    Era5_spatras <- as(brick(Era5_ras), "SpatRaster")
+  }
+
+  ## z-values for date tracking
+  OneStepSeq <- seq(from = as.POSIXct(DateStart), to = as.POSIXct(DateStop), by = TResolution)
+  Time_z <- OneStepSeq[seq(1, length(OneStepSeq), TStep)]
+  terra::time(Era5_spatras) <- Time_z
+
+  terra::writeCDF(x = Era5_spatras, filename = paste0(file.path(Dir, FileName), ".nc"), overwrite = TRUE, varname = Variable)
+
   unlink(Files_vec, recursive = TRUE)
   return(stack(file.path(Dir, paste0(FileName, ".nc")))) # to circumvent issues with 1-hour downloads
 }
