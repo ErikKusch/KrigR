@@ -275,6 +275,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
   ## SAVING FINAL PRODUCT ----
   if(is.null(DataSkips)){ # Skip check: if no layers needed to be skipped
     # convert list of kriged layers in actual rasterbrick of kriged layers
+    names(Ras_Krig) <- names(Data)
     if(class(Ras_Krig) != "RasterBrick"){Ras_Krig <- brick(Ras_Krig)}
     Krig_terra <- as(Ras_Krig, "SpatRaster")
     names(Krig_terra) <- names(Data)
@@ -282,6 +283,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     terra::writeCDF(x = Krig_terra, filename = file.path(Dir, FileName), overwrite = TRUE)
     # writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
     # convert list of kriged layers in actual rasterbrick of kriged layers
+    names(Ras_Var) <- names(Data)
     if(class(Ras_Var) != "RasterBrick"){Ras_Var <- brick(Ras_Var)}
     Var_terra <- as(Ras_Var, "SpatRaster")
     names(Var_terra) <- names(Data)
