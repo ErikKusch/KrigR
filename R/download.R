@@ -485,6 +485,7 @@ if(SingularDL){ # If user forced download to happen in one
   ## z-values for date tracking
   OneStepSeq <- seq(from = as.POSIXct(DateStart), to = as.POSIXct(DateStop), by = TResolution)
   Time_z <- OneStepSeq[seq(1, length(OneStepSeq), TStep)]
+  if(PrecipFix){Time_z <- Time_z[-1]}
   terra::time(Era5_spatras) <- Time_z
 
   terra::writeCDF(x = Era5_spatras, filename = paste0(file.path(Dir, FileName), ".nc"), overwrite = TRUE, varname = Variable)
