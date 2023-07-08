@@ -484,7 +484,7 @@ if(SingularDL){ # If user forced download to happen in one
 
   ## z-values for date tracking
   if(TResolution == "hour"){
-    OneStepSeq <- seq(from = as.POSIXct(DateStart), to = (as.POSIXct(DateStop)+86400), by = TResolution)
+    OneStepSeq <- seq(from = as.POSIXct(DateStart), to = (as.POSIXct(DateStop)+3600), by = TResolution)
     OneStepSeq <- OneStepSeq[-length(OneStepSeq)]
   }else{
     OneStepSeq <- seq(from = as.POSIXct(DateStart), to = as.POSIXct(DateStop), by = TResolution)
