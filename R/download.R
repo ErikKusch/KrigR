@@ -483,7 +483,12 @@ if(SingularDL){ # If user forced download to happen in one
   }
 
   ## z-values for date tracking
-  OneStepSeq <- seq(from = as.POSIXct(DateStart), to = as.POSIXct(DateStop), by = TResolution)
+  if(TResolution == "hour"){
+    OneStepSeq <- seq(from = as.POSIXct(DateStart), to = (as.POSIXct(DateStop)+86400), by = TResolution)
+    OneStepSeq <- OneStepSeq[-length(OneStepSeq)]
+  }else{
+    OneStepSeq <- seq(from = as.POSIXct(DateStart), to = as.POSIXct(DateStop), by = TResolution)
+  }
   Time_z <- OneStepSeq[seq(1, length(OneStepSeq), TStep)]
   if(PrecipFix){Time_z <- Time_z[-1]}
   terra::time(Era5_spatras) <- Time_z
