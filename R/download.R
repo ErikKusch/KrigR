@@ -614,7 +614,7 @@ download_DEM <- function(Train_ras = NULL,
   names(GMTED2010Train_ras) <- c("DEM") # setting layer name for later use in KrigingEquation
   names(GMTED2010Target_ras) <- c("DEM") # setting layer name for later use in KrigingEquation
   terra::writeCDF(x = as(brick(GMTED2010Train_ras), "SpatRaster"), filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE)
-  terra::writeCDF(x = as(brick(GMTED2010Target_ras), "SpatRaster"), filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE)
+  terra::writeCDF(x = as(brick(GMTED2010Target_ras), "SpatRaster"), filename = file.path(Dir, "GMTED2010_Target.nc"), overwrite = TRUE)
   # writeRaster(x = GMTED2010Train_ras, filename = file.path(Dir, "GMTED2010_Train.nc"), overwrite = TRUE, format="CDF")
   # writeRaster(x = GMTED2010Target_ras, filename = file.path(Dir, "GMTED2010_Target.nc"), overwrite = TRUE, format="CDF")
 
