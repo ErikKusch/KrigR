@@ -113,7 +113,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
   }
 
   ## ensuring that water var is pulled at monthly resolution
-  if(Var_Iter == 2 & Down_start >= '1981-01-01'){ # 1981 is the earliest date for monthly aggregates for both era5 and era5-land
+  if(Var_Iter == 2 ){
     T_resDL <- 'month'
   }else{
     T_resDL <- T_res
@@ -148,7 +148,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       )
     }
   ## PROCESSING
-  if(Var_Iter == 1 | Down_start < '1981-01-01'){ # 1981 is the earliest date for monthly aggregates for both era5 and era5-land
+  if(Var_Iter == 1){
   Counter <- 1
       for(Iter_fun in Fun_vec){
         Save_Ras <- stackApply(Temp_Ras,
@@ -198,7 +198,7 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
       n_down <- length(T_seq)
     }
     n_downrep <- n_down
-    if(Down_start < '1981-01-01' & Var_down == 'total_precipitation' & !SingularDL){
+    if(Var_down == 'total_precipitation' & !SingularDL){
       n_downrep <- length(T_seq)*2}
     if(verbose){
       message(paste("The KrigR::BioClim() function is going to stage", n_downrep, "download(s) for", Var_down, "data now."))
