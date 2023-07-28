@@ -48,7 +48,7 @@
 #' }
 #'
 #' @export
-download_ERA2 <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis", DataSet = "era5-land",
+download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis", DataSet = "era5-land",
                           DateStart = "1981-01-01", DateStop = Sys.Date()-100,
                           TResolution = "month", TStep = 1, FUN = 'mean',
                           Extent = extent(-180,180,-90,90), Buffer = 0.5, ID = "ID",
