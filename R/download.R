@@ -25,6 +25,7 @@
 #' @param Cores Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.
 #' @param TimeOut Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).
 #' @param SingularDL Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.
+#' @param ... Additional arguments used for parsing more information to the ecmwfr download call such as pressure_level = 1 for download of pressure_level data for the ERA5 reanalysis
 #' @return A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
 #' @examples
 #' \dontrun{
@@ -47,13 +48,14 @@
 #' }
 #'
 #' @export
-download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis", DataSet = "era5-land",
-                         DateStart = "1981-01-01", DateStop = Sys.Date()-100,
-                         TResolution = "month", TStep = 1, FUN = 'mean',
-                         Extent = extent(-180,180,-90,90), Buffer = 0.5, ID = "ID",
-                         Dir = getwd(), FileName = NULL,
-                         API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE,
-                         Cores = 1, TimeOut = 36000, SingularDL = FALSE) {
+download_ERA2 <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis", DataSet = "era5-land",
+                          DateStart = "1981-01-01", DateStop = Sys.Date()-100,
+                          TResolution = "month", TStep = 1, FUN = 'mean',
+                          Extent = extent(-180,180,-90,90), Buffer = 0.5, ID = "ID",
+                          Dir = getwd(), FileName = NULL,
+                          API_User = NULL, API_Key = NULL, TryDown = 10, verbose = TRUE,
+                          Cores = 1, TimeOut = 36000, SingularDL = FALSE,
+                          ...) {
 
   if(verbose){message("download_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
@@ -219,7 +221,8 @@ if(SingularDL){ # If user forced download to happen in one
                    }
 
                    ### Requesting Download
-                   Request_ls <- list('dataset_short_name' = DataSet,
+                   Request_ls <- c(
+                   list('dataset_short_name' = DataSet,
                                       'product_type'   = Type,
                                       'variable'       = Variable,
                                       'year'           = Year_call,
@@ -230,7 +233,10 @@ if(SingularDL){ # If user forced download to happen in one
                                       'format'         = 'netcdf',
                                       'target'         = FName,
                                       'grid'           = Grid
-                   )
+                                      ),
+                                      list(...)
+                                      )
+                    # print(Request_ls)
 
                    if(file.exists(file.path(Dir, FName))){
                      if(verbose){message(paste(FName, 'already downloaded'))}
