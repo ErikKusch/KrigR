@@ -25,7 +25,8 @@ download_ERA(
   verbose = TRUE,
   Cores = 1,
   TimeOut = 36000,
-  SingularDL = FALSE
+  SingularDL = FALSE,
+  ...
 )
 }
 \arguments{
@@ -70,6 +71,8 @@ download_ERA(
 \item{TimeOut}{Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).}
 
 \item{SingularDL}{Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.}
+
+\item{...}{Additional arguments used for parsing more information to the ecmwfr download call such as pressure_level = 1 for download of pressure_level data for the ERA5 reanalysis}
 }
 \value{
 A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
