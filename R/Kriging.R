@@ -280,7 +280,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     Krig_terra <- as(Ras_Krig, "SpatRaster")
     names(Krig_terra) <- names(Data)
 
-    terra::writeCDF(x = Krig_terra, filename = file.path(Dir, FileName), overwrite = TRUE)
+    terra::writeCDF(x = Krig_terra, filename = file.path(Dir, paste0(FileName, ".nc")), overwrite = TRUE)
     # writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
     # convert list of kriged layers in actual rasterbrick of kriged layers
     names(Ras_Var) <- names(Data)
@@ -288,7 +288,7 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     Var_terra <- as(Ras_Var, "SpatRaster")
     names(Var_terra) <- names(Data)
 
-    terra::writeCDF(x = Var_terra, filename = file.path(Dir, paste0("SE_", FileName)), overwrite = TRUE)
+    terra::writeCDF(x = Var_terra, filename = file.path(Dir, paste0("SE_", paste0(FileName, ".nc"))), overwrite = TRUE)
     # writeRaster(x = Ras_Var, filename = file.path(Dir, paste0("SE_",FileName)), overwrite = TRUE, format="CDF") # save final product as raster
   }else{ # if some layers needed to be skipped
     warning(paste0("Some of the layers in your raster could not be kriged. You will find all the individual layers (kriged and not kriged) in ", Dir, "."))
