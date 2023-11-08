@@ -279,7 +279,6 @@ krigR <- function(Data = NULL, Covariates_coarse = NULL, Covariates_fine = NULL,
     if(class(Ras_Krig) != "RasterBrick"){Ras_Krig <- brick(Ras_Krig)}
     Krig_terra <- as(Ras_Krig, "SpatRaster")
     names(Krig_terra) <- names(Data)
-
     terra::writeCDF(x = Krig_terra, filename = file.path(Dir, paste0(FileName, ".nc")), overwrite = TRUE)
     # writeRaster(x = Ras_Krig, filename = file.path(Dir, FileName), overwrite = TRUE, format="CDF") # save final product as raster
     # convert list of kriged layers in actual rasterbrick of kriged layers

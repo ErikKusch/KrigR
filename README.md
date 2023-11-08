@@ -13,6 +13,13 @@ KrigR contains functions for:
 KrigR has been [published here](https://iopscience.iop.org/article/10.1088/1748-9326/ac48b3).
 
 # Installation
+A KrigR dependency, rgdal, is no longer available at CRAN. You need to download and install it separately as follows:
+```{r}
+remotes::install_github("https://github.com/cran/rgdal")
+```
+
+I will work to remove this dependency as soon as possible and hope to achieve this (alongside additional KrigR development) in 2024.
+
 KrigR is not yet on CRAN, so it needs to be installed as such:
 
 ```{r}
