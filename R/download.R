@@ -360,7 +360,7 @@ if(SingularDL){ # If user forced download to happen in one
     }else{
       LayerDL_seq <- seq.Date(from = SingularDL_Start, to = SingularDL_Stop, by = "month")
     }
-    if(DateStart == "1950-01-01" & TResolution == "day" | TResolution == "hour"){
+    if(DateStart == "1950-01-01" & TResolution == "day"| DateStart == "1950-01-01" & TResolution == "hour"){
       LayerDL_seq <- LayerDL_seq[-1]
     }
 
