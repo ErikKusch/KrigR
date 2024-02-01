@@ -347,7 +347,7 @@ if(SingularDL){ # If user forced download to happen in one
   }else{
     Layer_seq <- seq.Date(from = DateStart, to = DateStop, by = "month")
   }
-  if(DateStart == "1950-01-01" & TResolution == "day" | TResolution == "hour"){
+  if(DateStart == "1950-01-01" & TResolution == "day" | DateStart == "1950-01-01" & TResolution == "hour"){
     Layer_seq <- Layer_seq[-1]
   }
   ## subsetting of downloaded data
