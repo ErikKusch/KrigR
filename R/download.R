@@ -73,7 +73,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   ### SETTING UP API ----
   # Setting the API key for later retrieval by wf_request()
   API_Service = "cds"
-  wf_set_key(user = as.character(API_User),
+  ecmwfr::wf_set_key(user = as.character(API_User),
              key = as.character(API_Key),
              service = API_Service)
 
@@ -118,7 +118,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
     DateStop <- as.Date(DateStop) # reformatting date
   }
 
-  Dates_seq <- seq(ymd(DateStart),ymd(DateStop), by = '1 day') # identify all days for which we need data
+  Dates_seq <- seq(lubridate::ymd(DateStart),lubridate::ymd(DateStop), by = '1 day') # identify all days for which we need data
   Months_vec <- format(Dates_seq,'%Y-%m') # identify the YYYY-MM for each day
   Days_vec <- format(Dates_seq,'%d') # identify the day numbers in each month in each year
   n_calls <- length(unique(Months_vec)) # how many months we have in total
@@ -159,11 +159,11 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
 
   # Time (set time for download depending on temporal resolution)
   if(TResolution == "hour" | TResolution == "day"){ # time check: if we need sub-daily data
-    Times <- str_pad(str_c(0:23,"00",sep=":"), 5,"left","0")
+    Times <- stringr::str_pad(stringr::str_c(0:23,"00",sep=":"), 5,"left","0")
   }else{ # if data intervals are monthly or bigger
     Times <- "00:00" # monthly averages are addressed with time stamp 00:00
     if(TypeOrigin == "monthly_averaged_reanalysis_by_hour_of_day"){
-      Times <- str_pad(str_c(0:23,"00",sep=":"), 5,"left","0")
+      Times <- stringr::str_pad(stringr::str_c(0:23,"00",sep=":"), 5,"left","0")
     }
   } # end of time check
 
@@ -173,7 +173,7 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
   }
   FileName <- tools::file_path_sans_ext(FileName) # remove .nc ending, if specified by user so that next line doesn't end up with a file ending of ".nc.nc"
   FileName <- paste0(FileName, ".nc") # adding netcdf ending to file name
-  FileNames_vec <- paste0(str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
+  FileNames_vec <- paste0(stringr::str_pad(1:n_calls, 4, "left", "0"), "_", FileName) # names for individual downloads
   ### REQUEST DATA ----
   if(SingularDL){
     n_calls <- 1
@@ -247,14 +247,14 @@ if(SingularDL){ # If user forced download to happen in one
                      while(!file.exists(file.path(Dir, FName)) & Down_try < TryDown){
                        if(Down_try>1){message('Retrying Download')}
                        API_request <- 1
-                       try(API_request <- wf_request(user = as.character(API_User),
+                       try(API_request <- ecmwfr::wf_request(user = as.character(API_User),
                                                      request = Request_ls,
                                                      transfer = TRUE,
                                                      path = Dir,
                                                      verbose = verbose,
                                                      time_out = TimeOut))
                        if(length(API_request) != 1){
-                         wf_delete(user = as.character(API_User),
+                         ecmwfr::wf_delete(user = as.character(API_User),
                                    url = API_request$request_id,
                                    service = API_Service)
                        }
@@ -436,9 +436,9 @@ if(SingularDL){ # If user forced download to happen in one
   }
   if(PrecipFix == TRUE & TResolution == "month" | PrecipFix == TRUE & TResolution == "year"){
     if(Type != "ensemble_members" & Type != "monthly_averaged_ensemble_members"){
-      Days_in_Month_vec <- days_in_month(seq(ymd(DateStart),ymd(DateStop), by = '1 month'))
+      Days_in_Month_vec <- days_in_month(seq(lubridate::ymd(DateStart),lubridate::ymd(DateStop), by = '1 month'))
     }else{
-      Days_in_Month_vec <- rep(days_in_month(seq(ymd(DateStart),ymd(DateStop), by = '1 month')), each = 10)
+      Days_in_Month_vec <- rep(days_in_month(seq(lubridate::ymd(DateStart),lubridate::ymd(DateStop), by = '1 month')), each = 10)
     }
     Era5_ras <- Era5_ras * Days_in_Month_vec
     warning("You toggled on the PrecipFix option in the function call. Monthly records have been multiplied by the amount of days per respective month. This is currently an experimental feature.")

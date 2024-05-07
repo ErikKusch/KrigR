@@ -22,7 +22,6 @@ Depends:
     keyring,
     stringr, 
     raster,
-    rgdal,
     doParallel,
     foreach,
     doSNOW, 
