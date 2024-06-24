@@ -66,8 +66,8 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
   ## checking alignment of queried data with raw data
   if(BaseTResolution == "hour" & BaseTStep != 24){
     # when we are pulling from non-1-hourly records, check whether specified start-date aligns with date layers in raw data
-    StartCheck <- difftime(DateStart, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
-    EndCheck <- difftime(DateStop, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
+    StartCheck <- diffterra::time(DateStart, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
+    EndCheck <- diffterra::time(DateStop, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
     AlignCheck <- (as.numeric(StartCheck)%%1==0 | as.numeric(EndCheck)%%1==0)
   }
 
@@ -137,7 +137,7 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
     ## back-calculation
     counter <- 1
     Era5_ls <- as.list(rep(NA, nlyr(Era5_ras)))
-    names(Era5_ls) <- time(Era5_ras)
+    names(Era5_ls) <- terra::time(Era5_ras)
     for(i in 1:nlyr(Era5_ras)){
       if(counter > 24){counter <- 1}
       if(counter == 1){
@@ -154,13 +154,13 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
     }
     ## finishing off object
     Ret_ras <- rast(Era5_ls)
-    time(Ret_ras) <- as.POSIXct(time(Era5_ras), tz = TZone) - 60*60 # back-dating to be in-line with regular specifications
+    terra::time(Ret_ras) <- as.POSIXct(terra::time(Era5_ras), tz = TZone) - 60*60 # back-dating to be in-line with regular specifications
     Era5_ras <- Ret_ras
     warning("You toggled on the CumulVar option in the function call. Hourly records have been converted from cumulative aggregates to individual hourly records.")
   }
   ## multiply by number of days per month
   if(CumulVar & BaseResolution == "month"){
-    Days_in_Month_vec <- days_in_month(time(CDS_rast))
+    Days_in_Month_vec <- days_in_month(terra::time(CDS_rast))
     if(grepl("ensemble_members", Type)){
       Days_in_Month_vec <- rep(Days_in_Month_vec, each = 10)
     }
@@ -197,7 +197,7 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
   }else{
     Form <- substr(TResolution, 1, 1)
     Form <- ifelse(Form %in% c("h", "y"), toupper(Form), Form)
-    LayerFormat <- format(time(CDS_rast), paste0("%", Form))
+    LayerFormat <- format(terra::time(CDS_rast), paste0("%", Form))
     LayerMatches <- match(LayerFormat, QueryTargetSteps)
     AggrIndex <- ceiling(LayerMatches/TStep)
     Final_rast <- tapp(x = CDS_rast,
@@ -206,23 +206,23 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
                               fun = FUN)
 
     if(TResolution == "year"){
-      time(Final_rast) <- as.POSIXct(
+      terra::time(Final_rast) <- as.POSIXct(
         paste0(LayerFormat[!duplicated(AggrIndex)], "-01-01"),
         tz = TZone)
     }
     if(TResolution == "month"){
-      time(Final_rast) <- as.POSIXct(
-        paste0(format(time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m"), "-01"),
+      terra::time(Final_rast) <- as.POSIXct(
+        paste0(format(terra::time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m"), "-01"),
         tz = TZone)
     }
     if(TResolution == "day"){
-      time(Final_rast) <- as.POSIXct(
-        format(time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m-%d"),
+      terra::time(Final_rast) <- as.POSIXct(
+        format(terra::time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m-%d"),
         tz = TZone)
     }
     if(TResolution == "hour"){
-      time(Final_rast) <- as.POSIXct(
-        time(CDS_rast)[!duplicated(AggrIndex)],
+      terra::time(Final_rast) <- as.POSIXct(
+        terra::time(CDS_rast)[!duplicated(AggrIndex)],
         tz = TZone)
     }
   }
