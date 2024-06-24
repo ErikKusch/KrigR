@@ -20,7 +20,7 @@ Execute.Requests(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE)
 \item{verbose}{Logical. Whether to print/message function progress in console or not.}
 }
 \value{
-No R object. An addition to the keychain if necessary.
+No R object. Resulting files of CDS query/queries in signated directory.
 }
 \description{
 Loops over list of fully formed ecmwfr requests and executes these on CDS.

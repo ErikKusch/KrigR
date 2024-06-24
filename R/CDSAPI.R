@@ -138,7 +138,7 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
 #' @importFrom httr authenticate
 #' @importFrom httr add_headers
 #'
-#' @return No R object. An addition to the keychain if necessary.
+#' @return No R object. Resulting files of CDS query/queries in signated directory.
 #'
 #' @seealso \code{\link{Register.Credentials}}, \code{\link{Make.Request}}.
 #'
