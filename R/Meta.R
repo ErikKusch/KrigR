@@ -333,7 +333,7 @@ Meta.NC <- function(NC, FName, Attrs, Write = FALSE, Read = FALSE){
     nc_close(nc)
     Meta_vec <- unlist(Meta)
     names(Meta_vec) <- names(Attrs)
-    metags(NC) <- Meta_vec
+    terra::metags(NC) <- Meta_vec
   }
   ## return object
   return(NC)
