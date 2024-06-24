@@ -12,9 +12,7 @@
 #' @param TResolution Character. Temporal resolution of final product. 'hour', 'day', 'month', or 'year'.
 #' @param TStep Numeric. Which time steps to consider for temporal resolution. For example, specify bi-monthly data records by setting TResolution to 'month' and TStep to 2.
 #' @param FUN A raster calculation argument as passed to `terra::tapp()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.
-
-
-#' @param Extent Optional, download data according to desired spatial specification. Can be specified either as a raster object, an sf object, a terra object, or a data.frame. If Extent is a raster or terra object, data will be queried according to rectangular extent thereof. If Extent is an sf (MULTI-)POLYGON object, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns around which a buffered shapefile will be created using the Buffer argument.
+#' @param Extent Optional, download data according to desired spatial specification. If missing/unspecified, total area of queried data set is used. Can be specified either as a raster object, an sf object, a terra object, or a data.frame. If Extent is a raster or terra object, data will be queried according to rectangular extent thereof. If Extent is an sf (MULTI-)POLYGON object, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns around which a buffered shapefile will be created using the Buffer argument.
 #' @param Buffer Optional, Numeric. Identifies how big a circular buffer to draw around points if Extent is a data.frame of points. Buffer is expressed as centessimal degrees.
 #' @param Dir Character/Directory Pointer. Directory specifying where to download data to.
 #' @param FileName Character. A file name for the produced file.
@@ -28,15 +26,25 @@
 #' @param verbose Logical. Whether to print/message function progress in console or not.
 #' @param Keep_Raw Logical. Whether to retain raw downloaded data or not.
 #'
+#' @importFrom tools file_path_sans_ext
+#' @importFrom terra rast
+#' @importFrom terra ext
 #' @importFrom terra time
+#' @importFrom terra nlyr
+#' @importFrom terra varnames
+#' @importFrom terra units
+#' @importFrom terra metags
+#' @importFrom terra writeRaster
 #'
-#' @return A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a NETCDF (.nc) file in the specified directory.
+#' @return A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a file (either .nc or .tif) in the specified directory.
 #'
+#' The SpatRaster contains metadata/attributes as a named vector that can be retrieved with terra::metags(...):
+#' \itemize{
+#' \item{Citation}{A string which to use for in-line citation of the data product obtained with CDownloadS}.
+#' \item{KrigRCall.X}{Arguments passed to the CDownloadS function that produced the file (API credentials are omitted from these metadata)}.
+#' }
 #'
-#' terra::metags(check)[1]
-#'
-#'
-#' **ATTENTION:** If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone.
+#' **ATTENTION:** If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
 #'
 #' @examples
 #' \dontrun{
@@ -81,7 +89,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   #--- File Name and Extension
   ### check if file name has been specified
   if(!exists("FileName")){stop("Please provide a value for the FileName argument.")}
-  FileName <- paste0(tools::file_path_sans_ext(FileName), FileExtension)
+  FileName <- paste0(file_path_sans_ext(FileName), FileExtension)
   if(!(FileExtension %in% c(".nc", ".tif"))){stop("Please specify a FileExtension of either '.tif' or '.nc'")}
 
   ## The Request =================================
@@ -95,6 +103,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   QueryVariable <- Meta.Variables(dataset = DataSet)[VarPos,"CDSname"]
 
   #--- Extent resolving; formatting as SpatExtent object
+  if(missing(Extent)){Extent <- ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area)} ## assign maximum extent for dataset if not specified
   if(class(Extent)[1] == "data.frame"){
     Extent <- Buffer.pts(USER_pts = Make.SpatialPoints(USER_df = Extent),
                          USER_buffer = Buffer)
@@ -188,7 +197,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   if(verbose){print("Checking for known data issues")}
   #--- layers
   NLyrCheck <- unlist(lapply(TempFs, FUN = function(LayerCheckIter){
-    terra::nlyr(terra::rast(LayerCheckIter))
+    nlyr(rast(LayerCheckIter))
   }))
   NLyrIssue <- which(NLyrCheck != unlist(lapply(QueryTimeWindows, length)))
   if(length(NLyrIssue) > 0){
@@ -196,7 +205,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   }
 
   #--- Loading data
-  CDS_rast <- terra::rast(TempFs)
+  CDS_rast <- rast(TempFs)
   terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone
   ## subset to desired time
   CDS_rast <- CDS_rast[[which(!(terra::time(CDS_rast) < Dates_df$IN[1] | terra::time(CDS_rast) > Dates_df$IN[2]))]]
@@ -218,8 +227,8 @@ CDownloadS <- function(Variable = NULL, # which variable
   if(verbose){message("###### Data Export & Return")}
 
   ### Assign additional information
-  terra::varnames(CDS_rast) <- MetaCheck_ls$QueryVariable
-  terra::units(CDS_rast) <- MetaCheck_ls$QueryUnit
+  varnames(CDS_rast) <- MetaCheck_ls$QueryVariable
+  units(CDS_rast) <- MetaCheck_ls$QueryUnit
   terra::metags(CDS_rast) <- Meta_vec
 
   ### write file

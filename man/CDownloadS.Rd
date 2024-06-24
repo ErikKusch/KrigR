@@ -51,7 +51,7 @@ CDownloadS(
 
 \item{FUN}{A raster calculation argument as passed to `terra::tapp()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.}
 
-\item{Extent}{Optional, download data according to desired spatial specification. Can be specified either as a raster object, an sf object, a terra object, or a data.frame. If Extent is a raster or terra object, data will be queried according to rectangular extent thereof. If Extent is an sf (MULTI-)POLYGON object, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns around which a buffered shapefile will be created using the Buffer argument.}
+\item{Extent}{Optional, download data according to desired spatial specification. If missing/unspecified, total area of queried data set is used. Can be specified either as a raster object, an sf object, a terra object, or a data.frame. If Extent is a raster or terra object, data will be queried according to rectangular extent thereof. If Extent is an sf (MULTI-)POLYGON object, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns around which a buffered shapefile will be created using the Buffer argument.}
 
 \item{Buffer}{Optional, Numeric. Identifies how big a circular buffer to draw around points if Extent is a data.frame of points. Buffer is expressed as centessimal degrees.}
 
@@ -78,13 +78,15 @@ CDownloadS(
 \item{FileCheck}{Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).}
 }
 \value{
-A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a NETCDF (.nc) file in the specified directory.
+A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a file (either .nc or .tif) in the specified directory.
 
+The SpatRaster contains metadata/attributes as a named vector that can be retrieved with terra::metags(...):
+\itemize{
+\item{Citation}{A string which to use for in-line citation of the data product obtained with CDownloadS}.
+\item{KrigRCall.X}{Arguments passed to the CDownloadS function that produced the file (API credentials are omitted from these metadata)}.
+}
 
-terra::metags(check)[1]
-
-
-**ATTENTION:** If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone.
+**ATTENTION:** If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
 }
 \description{
 This function is used to obtain data from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s). By default, this function breaks down download calls into intervals so as to avoid submitting queries which fail, downloads queried data from [ECMWF](https://www.ecmwf.int/) servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an [API key](https://cds.climate.copernicus.eu/api-how-to) for download staging and accept terms and conditions for the specific queried dataset(s).
