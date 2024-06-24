@@ -35,11 +35,11 @@ Meta.Check(
 \value{
 List. Contains:
 
-1. QueryDataSet (queried dataset)
-2. QueryType (queried sub-type of dataset)
-3. QueryVariable (queried variable)
-4. QueryFormat (file format supported by queried dataset)
-5. QueryUnit (unit of measurement of queried variable from queried dataset)
+1. QueryDataSet (queried dataset).
+2. QueryType (queried sub-type of dataset).
+3. QueryVariable (queried variable).
+4. QueryFormat (file format supported by queried dataset).
+5. QueryUnit (unit of measurement of queried variable from queried dataset).
 }
 \description{
 Read and return short overview of data set characteristics, supported types, extent, time frames and required arguments.

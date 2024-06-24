@@ -118,17 +118,17 @@ Meta.DOI <- function(dataset = "reanalysis-era5-land"){
 #'
 #' @return List. Contains:
 #'
-#' 1. DataSet (data set string)
-#' 2. Type (character, supported types of the data set)
-#' 3. URL (character, url of CDS webpage corresponding to data set)
-#' 4. Description (character, plain text description of data set scraped from CDS)
-#' 5. TResolution (character, base temporal resolution of each layer in data set)
-#' 6. TStep (numeric, vector of time step between layers in data set corresponding to Type),
-#' 7. TStart (POSIXct, date and time at which first layer is available)
-#' 8. TEnd (POSIXct or character, date and time at which first layer is available)
-#' 9. Projection (crs of data set)
-#' 10. SpatialResolution (numeric, resolution of data set in space in degrees)
-#' 11. CDSArguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments)
+#' 1. DataSet (data set string).
+#' 2. Type (character, supported types of the data set).
+#' 3. URL (character, url of CDS webpage corresponding to data set).
+#' 4. Description (character, plain text description of data set scraped from CDS).
+#' 5. TResolution (character, base temporal resolution of each layer in data set).
+#' 6. TStep (numeric, vector of time step between layers in data set corresponding to Type).
+#' 7. TStart (POSIXct, date and time at which first layer is available).
+#' 8. TEnd (POSIXct or character, date and time at which first layer is available).
+#' 9. Projection (crs of data set).
+#' 10. SpatialResolution (numeric, resolution of data set in space in degrees).
+#' 11. CDSArguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments).
 #'
 #' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}.
 #'
@@ -162,11 +162,11 @@ Meta.QuickFacts <- function(dataset = "reanalysis-era5-land"){
 #'
 #' @return List. Contains:
 #'
-#' 1. QueryDataSet (queried dataset)
-#' 2. QueryType (queried sub-type of dataset)
-#' 3. QueryVariable (queried variable)
-#' 4. QueryFormat (file format supported by queried dataset)
-#' 5. QueryUnit (unit of measurement of queried variable from queried dataset)
+#' 1. QueryDataSet (queried dataset).
+#' 2. QueryType (queried sub-type of dataset).
+#' 3. QueryVariable (queried variable).
+#' 4. QueryFormat (file format supported by queried dataset).
+#' 5. QueryUnit (unit of measurement of queried variable from queried dataset).
 #'
 #' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
 #'
