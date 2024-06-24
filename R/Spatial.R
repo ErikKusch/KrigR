@@ -30,6 +30,7 @@ Make.SpatialPoints <- function(USER_df){
 #' @importFrom terra ext
 #' @importFrom raster extent
 #' @importFrom sf st_as_sf
+#' @importFrom sf st_bbox
 #'
 #' @return A SpatExtent object.
 #'
@@ -48,7 +49,7 @@ Make.SpatialPoints <- function(USER_df){
 #' Check.Ext(as(sf, "Spatial"))
 #'
 #' @export
-Check.Ext <- function(USER_ext){
+Ext.Check <- function(USER_ext){
   ## find package where USER_ext class originates
   class_name <- class(USER_ext)
   class_def <- getClass(class_name)
@@ -65,7 +66,11 @@ Check.Ext <- function(USER_ext){
     OUT_ext <- ext(extent(USER_ext))
   }
   if(package_name == "terra" | package_name == "sf"){
-    OUT_ext <- ext(USER_ext)
+    if(class(USER_ext)[[1]] == "sfc_MULTIPOLYGON"){
+      OUT_ext <- ext(st_bbox(USER_ext))
+    }else{
+      OUT_ext <- ext(USER_ext)
+    }
   }
   if(package_name == "sp"){
     USER_ext <- st_as_sf(USER_ext)
