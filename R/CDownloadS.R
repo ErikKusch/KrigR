@@ -113,7 +113,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   QueryTimeWindows <- QueryTimeWindows$QueryTimeWindows
 
   #--- Aggregation Check
-  QueryTargetSteps <- Check.TemporalAggregation(
+  QueryTargetSteps <- TemporalAggregation.Check(
     QuerySeries = unlist(lapply(QueryTimeWindows, as.character)),
     DateStart = Dates_df$UTC[1],
     DateStop = Dates_df$UTC[2],

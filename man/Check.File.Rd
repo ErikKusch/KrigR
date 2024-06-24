@@ -7,7 +7,7 @@
 Check.File(FName, Dir = getwd(), loadFun, load = TRUE, verbose = TRUE)
 }
 \arguments{
-\item{FName}{File name without file ending}
+\item{FName}{File name}
 
 \item{Dir}{Directory where to look for file}
 
@@ -15,7 +15,7 @@ Check.File(FName, Dir = getwd(), loadFun, load = TRUE, verbose = TRUE)
 
 \item{load}{Logical. Whether to load the data or not}
 
-\item{verbose}{whether to report what is happening}
+\item{verbose}{Logical. Whether to print/message function progress in console or not.}
 }
 \value{
 Either a data object or NULL
@@ -24,7 +24,9 @@ Either a data object or NULL
 If a file already exists in a given place, load that file
 }
 \examples{
-\dontrun{
-
-}
+KrigR::Check.File(
+          FName = basename(system.file("extdata", "CentralNorway.nc", package="KrigR")),
+          Dir = dirname(system.file("extdata", "CentralNorway.nc", package="KrigR")),
+          loadFun = terra::rast
+          )
 }
