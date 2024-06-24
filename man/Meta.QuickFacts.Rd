@@ -10,7 +10,10 @@ Meta.QuickFacts(dataset = "reanalysis-era5-land")
 \item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.}
 }
 \value{
-List. Contains:
+A list object reporting information on queried dataset in standardised way.
+
+Details:
+List contains:
 
 1. DataSet (data set string).
 2. Type (character, supported types of the data set).
