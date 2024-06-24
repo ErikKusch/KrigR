@@ -72,7 +72,13 @@ Meta.Read <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/D
 #'
 #' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
-#' @return Data frame. Contains five columns: (1) Variable (clear name), (2) CDSname (name required for CDS query), (3) Description (plain text description of variable, scraped from CDS webpage), (4) Unit (unit of measurement), and (5) Cumulative (logical, indexing whether a variable is recorded cummulatively or not).
+#' @return Data frame. Contains five columns:
+#'
+#' 1. Variable (clear name)
+#' 2. CDSname (name required for CDS query)
+#' 3. Description (plain text description of variable, scraped from CDS webpage)
+#' 4. Unit (unit of measurement)
+#' 5. Cumulative (logical, indexing whether a variable is recorded cumulatively or not)
 #'
 #' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
 #'
@@ -110,7 +116,19 @@ Meta.DOI <- function(dataset = "reanalysis-era5-land"){
 #'
 #' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
-#' @return List. Contains (1) DataSet (data set string), (2) Type (character, supported types of the data set), (3) URL (character, url of CDS webpage corresponding to data set), (3) Description (character, plain text description of data set scraped from CDS), (4) TResolution (character, base temporal resolution of each layer in data set), (5) TStep (numeric, vector of time step between layers in data set corresponding to Type), (6) TStart (POSIXct, date and time at which first layer is available), (7) TEnd (POSIXct or character, date and time at which first layer is available), (7) Projection (crs of data set), (8) SpatialResolution (numeric, resolution of data set in space in degrees), (9) CDS arguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments)
+#' @return List. Contains:
+#'
+#' 1. DataSet (data set string)
+#' 2. Type (character, supported types of the data set)
+#' 3. URL (character, url of CDS webpage corresponding to data set)
+#' 4. Description (character, plain text description of data set scraped from CDS)
+#' 5. TResolution (character, base temporal resolution of each layer in data set)
+#' 6. TStep (numeric, vector of time step between layers in data set corresponding to Type),
+#' 7. TStart (POSIXct, date and time at which first layer is available)
+#' 8. TEnd (POSIXct or character, date and time at which first layer is available)
+#' 9. Projection (crs of data set)
+#' 10. SpatialResolution (numeric, resolution of data set in space in degrees)
+#' 11. CDSArguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments)
 #'
 #' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}.
 #'
@@ -142,7 +160,13 @@ Meta.QuickFacts <- function(dataset = "reanalysis-era5-land"){
 #' @importFrom terra ext
 #' @importFrom lubridate days_in_month
 #'
-#' @return List. Contains (1) DataSet (data set string), (2) Type (character, supported types of the data set), (3) URL (character, url of CDS webpage corresponding to data set), (3) Description (character, plain text description of data set scraped from CDS), (4) TResolution (character, base temporal resolution of each layer in data set), (5) TStep (numeric, vector of time step between layers in data set corresponding to Type), (6) TStart (POSIXct, date and time at which first layer is available), (7) TEnd (POSIXct or character, date and time at which first layer is available), (7) Projection (crs of data set), (8) SpatialResolution (numeric, resolution of data set in space in degrees), (9) CDS arguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments)
+#' @return List. Contains:
+#'
+#' 1. QueryDataSet (queried dataset)
+#' 2. QueryType (queried sub-type of dataset)
+#' 3. QueryVariable (queried variable)
+#' 4. QueryFormat (file format supported by queried dataset)
+#' 5. QueryUnit (unit of measurement of queried variable from queried dataset)
 #'
 #' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
 #'
@@ -150,16 +174,16 @@ Meta.QuickFacts <- function(dataset = "reanalysis-era5-land"){
 #' Meta.Check(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck = "2m_temperature", CumulativeCheck = FALSE, ExtentCheck = c(53.06, 9.87, 49.89, 15.03), DateCheck = data.frame(IN = c(as.POSIXct("1995-01-01 CET"), as.POSIXct("2005-01-01 23:00:00 CET")), UTC = c(as.POSIXct("1994-12-31 23:00:00 UTC"), as.POSIXct("2005-01-01 22:00:00 UTC"))), AggrCheck = list(1, "hour"), QueryTimes = c('00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'))
 #'
 Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck, CumulativeCheck, ExtentCheck,  DateCheck, AggrCheck, QueryTimes){
-  #' Variable
+  #--- Variable
   ### if a variable not in the data set has been specified
   if(length(VariableCheck) == 0){stop("Please specify a variable provided by the data set. Your can be retrieved with the function call: ", "\n", "Meta.Variables(dataset = '", DataSet, "')")}
-  #' Cumulative
+  #--- Cumulative
   ### if the cumulative back-calculation is attempting to be applied to a non-cumulative variable
   CumVar <- Meta.Variables(dataset = DataSet)$Cumulative[which(Meta.Variables(dataset = DataSet)$CDSname == VariableCheck)]
   if(CumulativeCheck & !CumVar){
     stop("You have specified to back-calculation of cumulative data for a non-cumulatively recorded variable. This would produce nonsense data. Please specify CumulVar = FALSE instead. For an overview of which variables are recorded cumulatively for the data set you are querying, please consider the function call:", "\n", "Meta.Variables(dataset = '", DataSet, "')")
   }
-  #' Extent
+  #--- Extent
   ### if an extent outside the data product has been specified
   DataExt <- ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area)[c(4,1,3,2)] #N,W,S,E
   if(
@@ -177,12 +201,12 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
     stop("Please specify an area using the Extent argument that is contained within the data set. The data set covers the area defined by the following extent:",
          "\n", ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area), " in ", Meta.QuickFacts(dataset = DataSet)$Projection)
   }
-  #' Time
-  #' Time Zone
+  #--- Time
+  #--- Time Zone
   if(format(DateCheck$IN[1], "%Z") != format(DateCheck$IN[2], "%Z")){
     stop("Please provide the DateStart and DateStop Arguments using the same time zone.")
   }
-  #'  Window
+  #---  Window
   ### check if time window is exceeded
   CheckStart <- DateCheck$UTC[1] < Meta.QuickFacts(dataset = DataSet)$TStart
   if(class(Meta.QuickFacts(dataset = DataSet)$TEnd)[1] == "POSIXct"){
@@ -196,7 +220,7 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
     stop("The time window you have specified is not supported by the data set. The data set makes data available from ",
          Meta.QuickFacts(dataset = DataSet)$TStart, " until ", Meta.QuickFacts(dataset = DataSet)$TEnd)
   }
-  #'  Aggregation Match
+  #---  Aggregation Match
   ### check if desired aggregation is supported
   SuppRes <- c("hour", "day", "month", "year")
   BaseStep <- BaseStep <- Meta.QuickFacts(dataset = DataSet)$TStep[
@@ -252,10 +276,10 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
     }
   }
 
-  #' Format, assign default file type for download
+  #--- Format, assign default file type for download
   QueryFormat <- Meta.QuickFacts(dataset = DataSet)$CDSArguments$format[1]
 
-  #' Report back
+  #--- Report back
   list(
     QueryDataSet = DataSet,
     QueryType = Type,

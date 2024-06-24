@@ -33,7 +33,13 @@ Meta.Check(
 \item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.}
 }
 \value{
-List. Contains (1) DataSet (data set string), (2) Type (character, supported types of the data set), (3) URL (character, url of CDS webpage corresponding to data set), (3) Description (character, plain text description of data set scraped from CDS), (4) TResolution (character, base temporal resolution of each layer in data set), (5) TStep (numeric, vector of time step between layers in data set corresponding to Type), (6) TStart (POSIXct, date and time at which first layer is available), (7) TEnd (POSIXct or character, date and time at which first layer is available), (7) Projection (crs of data set), (8) SpatialResolution (numeric, resolution of data set in space in degrees), (9) CDS arguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments)
+List. Contains:
+
+1. QueryDataSet (queried dataset)
+2. QueryType (queried sub-type of dataset)
+3. QueryVariable (queried variable)
+4. QueryFormat (file format supported by queried dataset)
+5. QueryUnit (unit of measurement of queried variable from queried dataset)
 }
 \description{
 Read and return short overview of data set characteristics, supported types, extent, time frames and required arguments.
@@ -41,15 +47,6 @@ Read and return short overview of data set characteristics, supported types, ext
 \examples{
 Meta.Check(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck = "2m_temperature", CumulativeCheck = FALSE, ExtentCheck = c(53.06, 9.87, 49.89, 15.03), DateCheck = data.frame(IN = c(as.POSIXct("1995-01-01 CET"), as.POSIXct("2005-01-01 23:00:00 CET")), UTC = c(as.POSIXct("1994-12-31 23:00:00 UTC"), as.POSIXct("2005-01-01 22:00:00 UTC"))), AggrCheck = list(1, "hour"), QueryTimes = c('00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'))
 
-Variable
-Cumulative
-Extent
-Time
-Time Zone
- Window
- Aggregation Match
-Format, assign default file type for download
-Report back
 }
 \seealso{
 \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
