@@ -102,7 +102,7 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
     BaseTStep <- 1 # do not repeat each month, hence set this to 1
   }
   T_RequestRange <- seq(from = DateStart, to = DateStop, by = BaseTResolution)
-  T_RequestRange <- as.POSIXct(paste(rep(unique(T_RequestDates), each = length(QueryTimes)), QueryTimes), tz = "UTC")
+  # T_RequestRange <- as.POSIXct(paste(rep(unique(T_RequestDates), each = length(QueryTimes)), QueryTimes), tz = "UTC")
   T_RequestDates <- as.Date(rep(unique(format(T_RequestRange, "%Y-%m-%d")), each = BaseTStep))
   list(QueryTimeWindows = split(T_RequestDates, ceiling(seq_along(T_RequestDates)/TChunkSize)),
        QueryTimes = QueryTimes
