@@ -104,15 +104,11 @@ CDownloadS <- function(Variable = NULL, # which variable
 
   #--- Extent resolving; formatting as SpatExtent object
   if(missing(Extent)){Extent <- ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area)} ## assign maximum extent for dataset if not specified
-  print("here1")
   if(class(Extent)[1] == "data.frame"){
     Extent <- Buffer.pts(USER_pts = Make.SpatialPoints(USER_df = Extent),
                          USER_buffer = Buffer)
   }
-  print("here2")
   QueryExtent <- Ext.Check(Extent)[c(4,1,3,2)] #N,W,S,E
-
-  print("here3")
 
   #--- Base Dataset Information
   BaseResolution <- Meta.QuickFacts(dataset = DataSet)$TResolution
@@ -129,7 +125,7 @@ CDownloadS <- function(Variable = NULL, # which variable
     as.POSIXct(DateStart, tz = TZone),
     as.POSIXct(DateStop, tz = TZone))
   )
-  QueryTimeWindows <- Make.RequestWindows(Dates_df = Dates_df,
+  QueryTimeWindows <- KrigR:::Make.RequestWindows(Dates_df = Dates_df,
                                           BaseTResolution = BaseResolution,
                                           BaseTStep = 24/BaseStep,
                                           BaseTStart = BaseStart,

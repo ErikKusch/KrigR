@@ -66,8 +66,8 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
   ## checking alignment of queried data with raw data
   if(BaseTResolution == "hour" & BaseTStep != 24){
     # when we are pulling from non-1-hourly records, check whether specified start-date aligns with date layers in raw data
-    StartCheck <- diffterra::time(DateStart, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
-    EndCheck <- diffterra::time(DateStop, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
+    StartCheck <- difftime(DateStart, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
+    EndCheck <- difftime(DateStop, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
     AlignCheck <- (as.numeric(StartCheck)%%1==0 | as.numeric(EndCheck)%%1==0)
   }
 
