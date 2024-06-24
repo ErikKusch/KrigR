@@ -80,7 +80,7 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
       QueryTimes <- str_pad(str_c(
         seq(from = as.numeric(format(Meta.QuickFacts(dataset = DataSet)$TStart, "%H")),
             to = 23,
-            by = BaseTStep)
+            by = 24/BaseTStep)
         ,"00",sep=":"), 5,"left","0") ## this is used for telling CDS which layers we want per day, relevant for ensemble_mean and ensemble_spread for example, which are recorded at 3-hour intervals starting at 00:00 per day
     }
   }
@@ -102,6 +102,7 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
     BaseTStep <- 1 # do not repeat each month, hence set this to 1
   }
   T_RequestRange <- seq(from = DateStart, to = DateStop, by = BaseTResolution)
+  T_RequestRange <- as.POSIXct(paste(rep(unique(T_RequestDates), each = length(QueryTimes)), QueryTimes), tz = "UTC")
   T_RequestDates <- as.Date(rep(unique(format(T_RequestRange, "%Y-%m-%d")), each = BaseTStep))
   list(QueryTimeWindows = split(T_RequestDates, ceiling(seq_along(T_RequestDates)/TChunkSize)),
        QueryTimes = QueryTimes
@@ -199,7 +200,13 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
     Form <- ifelse(Form %in% c("h", "y"), toupper(Form), Form)
     LayerFormat <- format(terra::time(CDS_rast), paste0("%", Form))
     LayerMatches <- match(LayerFormat, QueryTargetSteps)
-    AggrIndex <- ceiling(LayerMatches/TStep)
+
+    if(grepl("Factor =", QueryTargetSteps)){ # happens for hourly ensemble data
+      Factor <- as.numeric(sub("Ensembling at base resolution, Factor = ", "", QueryTargetSteps))
+      AggrIndex <- rep(seq(from = 1, to = length(LayerFormat)/(Factor)), each = Factor)
+    }else{
+      AggrIndex <- ceiling(LayerMatches/TStep)
+    }
     Final_rast <- tapp(x = CDS_rast,
                               index = AggrIndex,
                               cores = Cores,
@@ -253,6 +260,16 @@ TemporalAggregation.Check <- function(
     TStep,
     BaseTStep
 ){
+
+  ## check clean division
+  if(BaseTResolution == TResolution){ ## this comes into play for hourly aggregates of ensemble data
+    if((TStep/BaseTStep) %%1!=0){
+      stop("Your specified time range does not allow for a clean integration of your selected time steps. You specified a time series of raw data with a length of ", length(QueryTargetFormat), " (", BaseTResolution, " intervals of length ", BaseTStep, "). Applying your desired temporal aggregation of ", TResolution, " intervals of length ", TStep, " works out to ", round(TStep/BaseTStep, 3), " intervals. Please fix this so the specified time range can be cleanly divided into aggregation intervals.")
+    }
+    QueryTargetSteps <- paste("Ensembling at base resolution, Factor =", TStep/BaseTStep)
+    return(QueryTargetSteps)
+  }
+
   # limit query series to what will be retained
   QuerySeries <- QuerySeries[as.POSIXct(QuerySeries, tz = "UTC") >= DateStart & as.POSIXct(QuerySeries, tz = "UTC") <= DateStop]
   ## extract format of interest
@@ -263,10 +280,8 @@ TemporalAggregation.Check <- function(
   QueryTargetFormat <- format(as.POSIXct(QuerySeries, tz = "UTC"), paste0("%", Form))
   QueryTargetSteps <- unique(QueryTargetFormat)
 
-  ## check clean division
   if((length(QueryTargetSteps) / TStep) %%1!=0){
-    stop("Your specified time range does not allow for a clean integration of your selected time steps. You specified a time series of raw data with a length of ", length(QueryTargetFormat), " (", BaseTResolution, " intervals of length", BaseTStep, ") and time steps of ", TStep, ". Applying your desired temporal aggregation of ", TResolution, " intervals of length ", TStep, " works out to ", round(length(QueryTargetSteps) / TStep, 3), " intervals. Please fix this so the specified time range can be cleanly divided into aggregation intervals.")
+    stop("Your specified time range does not allow for a clean integration of your selected time steps. You specified a time series of raw data with a length of ", length(QueryTargetFormat), " (", BaseTResolution, " intervals of length ", BaseTStep, "). Applying your desired temporal aggregation of ", TResolution, " intervals of length ", TStep, " works out to ", round(length(QueryTargetSteps) / TStep, 3), " intervals. Please fix this so the specified time range can be cleanly divided into aggregation intervals.")
   }
-
   return(QueryTargetSteps)
 }

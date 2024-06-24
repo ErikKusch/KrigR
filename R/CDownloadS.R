@@ -125,7 +125,7 @@ CDownloadS <- function(Variable = NULL, # which variable
     as.POSIXct(DateStart, tz = TZone),
     as.POSIXct(DateStop, tz = TZone))
   )
-  QueryTimeWindows <- KrigR:::Make.RequestWindows(Dates_df = Dates_df,
+  QueryTimeWindows <- Make.RequestWindows(Dates_df = Dates_df,
                                           BaseTResolution = BaseResolution,
                                           BaseTStep = 24/BaseStep,
                                           BaseTStart = BaseStart,
@@ -137,7 +137,7 @@ CDownloadS <- function(Variable = NULL, # which variable
 
   #--- Aggregation Check
   QueryTargetSteps <- TemporalAggregation.Check(
-    QuerySeries = unlist(lapply(QueryTimeWindows, as.character)),
+    QuerySeries = paste(unlist(lapply(QueryTimeWindows, as.character)), QueryTimes),
     DateStart = Dates_df$UTC[1],
     DateStop = Dates_df$UTC[2],
     TResolution = TResolution,
