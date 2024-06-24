@@ -23,9 +23,10 @@ Check.File <- function(FName, Dir = getwd(), loadFun, load = TRUE, verbose = TRU
   file <- NULL
   if(file.exists(FNAME)){
     if(verbose){print(paste0("A file with the name ", FName, " already exists in ", Dir,
-                             ". Loading this file for you from the disk."))}
+                             "."))}
     if(load){
-      file <- sapply(FNAME, loadFun)
+      if(verbose){print("Loading this file for you from the disk.")}
+      file <- sapply(FNAME, loadFun)[[1]]
     }else{
       file <- "Present. Not Loaded."
       }

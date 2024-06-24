@@ -2,16 +2,16 @@
 % Please edit documentation in R/CDownloadS.R
 \name{CDownloadS}
 \alias{CDownloadS}
-\title{Downloading ERA5(Land)-data from ECMWF servers}
+\title{Downloading Data from ECMWF Climate Data Store}
 \usage{
 CDownloadS(
   Variable = NULL,
   CumulVar = FALSE,
-  Type = NA,
   DataSet = "reanalysis-era5-land",
+  Type = NA,
   DateStart,
   DateStop,
-  TZone,
+  TZone = "UTC",
   TResolution = "month",
   TStep = 1,
   FUN = "mean",
@@ -23,60 +23,68 @@ CDownloadS(
   API_Key,
   TryDown = 10,
   TimeOut = 36000,
-  TChunkSize = 12000,
+  TChunkSize = 6000,
   Cores = 1,
-  verbose = TRUE
+  verbose = TRUE,
+  Kepp_Raw = FALSE
 )
 }
 \arguments{
-\item{Variable}{ERA5(Land)-contained climate variable.}
+\item{Variable}{Character. Desired variable from queried dataset. See \code{\link{Meta.Variables}} for options per dataset.}
 
-\item{Type}{Whether to download reanalysis ('reanalysis', 'monthly_averaged_reanalysis_by_hour_of_day') or ensemble ('ensemble_members', 'ensemble_mean', or 'ensemble_spread') data. Only available for era5 data.}
+\item{CumulVar}{Logical. Some ECMWF CDS data is recorded in cumulative steps per hour/month from the 00:00 time mark per day. Setting CumulVar to TRUE converts these into records which represent the total records per hour using the \code{\link{Temporal.Cumul}} function. Monthly cumulative records express the average daily total value. Setting this argument to TRUE multiplies monthly records by the number of days per the respective month(s) to get to total records instead of average. Default is FALSE. This argument can only be set to TRUE for cumulatively recorded variables. See \code{\link{Meta.Variables}} for an overview of which variables at recorded cumulatively per dataset.}
 
-\item{DataSet}{Which ERA5 data set to download data from. 'era5' or 'era5-land'.}
+\item{DataSet}{Character. Which dataset to query data from. See currently supported datasets by calling \code{\link{Meta.List}}.}
 
-\item{DateStart}{Date ('YYYY-MM-DD') at which to start time series of downloaded data.}
+\item{Type}{Either NA or Character. Which kind of sub-type to query per data set. See \code{\link{Meta.QucikFacts}} for options per dataset.}
 
-\item{DateStop}{Date ('YYYY-MM-DD') at which to stop time series of downloaded data.}
+\item{DateStart}{Character. Date ('YYYY-MM-DD HH:SS') at which to start time series of downloaded data.}
 
-\item{TResolution}{Temporal resolution of final product. 'hour', 'day', 'month', or 'year'.}
+\item{DateStop}{Character. Date ('YYYY-MM-DD HH:SS') at which to stop time series of downloaded data.}
 
-\item{TStep}{Which time steps (numeric) to consider for temporal resolution. For example, specify bi-monthly data records by setting TResolution to 'month' and TStep to 2.}
+\item{TZone}{Character. Time zone in which to represent and evaluate time dimension of data. See [this list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for possible settings ("Time zone abbreviation" column). Default is UTC.}
 
-\item{FUN}{A raster calculation argument as passed to `raster::stackApply()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.}
+\item{TResolution}{Character. Temporal resolution of final product. 'hour', 'day', 'month', or 'year'.}
 
-\item{Extent}{Optional, download data according to rectangular bounding box. specify as extent() object or as a raster, a SpatialPolygonsDataFrame object, or a data.frame object. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns as well as a non-repeating ID-column.}
+\item{TStep}{Numeric. Which time steps to consider for temporal resolution. For example, specify bi-monthly data records by setting TResolution to 'month' and TStep to 2.}
 
-\item{Buffer}{Optional. Identifies how big a rectangular buffer to draw around points if Extent is a data frame of points. Buffer is expressed as centessimal degrees.}
+\item{FUN}{A raster calculation argument as passed to `terra::tapp()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.}
 
-\item{Dir}{Directory specifying where to download data to.}
+\item{Extent}{Optional, download data according to desired spatial specification. Can be specified either as a raster object, an sf object, a terra object, or a data.frame. If Extent is a raster or terra object, data will be queried according to rectangular extent thereof. If Extent is an sf (MULTI-)POLYGON object, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns around which a buffered shapefile will be created using the Buffer argument.}
 
-\item{FileName}{A file name for the netcdf produced. Default is a combination parameters in the function call.}
+\item{Buffer}{Optional, Numeric. Identifies how big a circular buffer to draw around points if Extent is a data.frame of points. Buffer is expressed as centessimal degrees.}
+
+\item{Dir}{Character/Directory Pointer. Directory specifying where to download data to.}
+
+\item{FileName}{A file name for the netcdf produced.}
 
 \item{API_User}{Character; ECMWF cds user number.}
 
 \item{API_Key}{Character; ECMWF cds API key.}
 
-\item{TryDown}{Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.}
+\item{TryDown}{Optional, numeric. How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.}
 
 \item{TimeOut}{Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).}
 
-\item{Cores}{Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.}
+\item{TChunkSize}{Numeric. Number of layers to bundle in each individual download. Default is 6000 to adhere to most restrictive CDS limits: https://cds.climate.copernicus.eu/live/limits.}
 
-\item{verbose}{Optional, logical. Whether to report progress of the function in the console or not.}
+\item{Cores}{Numeric. How many cores to use when carrying out temporal aggregation. Default is 1.}
 
-\item{PrecipFix}{Logical. Era5(-land) total precipitation is recorded in cumulative steps per hour from the 00:00 time mark per day. Setting PrecipFix to TRUE converts these into records which represent the total precipitation per hour. Monthly records in Era5(-land) express the average daily total precipitation. Setting this argument to TRUE multiplies monthly records by the number of days per the respective month(s) to get to total precipitation records instead of average.  Default is FALSE. This also applies to other variables in the data sets. See the data descriptor webpages (e.g.: https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview) for an overview of which variables this applies to.}
+\item{verbose}{Logical. Whether to print/message function progress in console or not.}
 
-\item{...}{Additional arguments used for parsing more information to the ecmwfr download call such as pressure_level = 1 for download of pressure_level data for the ERA5 reanalysis}
+\item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not.}
 }
 \value{
-A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
+A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a NETCDF (.nc) file in the specified directory.
+
+
+terra::metags(check)[1]
+
+
+**ATTENTION:** If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone.
 }
 \description{
-This function is used to obtain Era5/Era5-Land data from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s). By default, this function breaks down download calls into monthly intervals, downloads Era5(-Land) data from [ECMWF](https://www.ecmwf.int/) servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an [API key](https://cds.climate.copernicus.eu/api-how-to) for download staging.
-}
-\details{
-Use optional arguments verbose, Cores, and SingularDL for updates on function progress, parallel download staging and execution, and forcing of downloads into one singular download, espectively.
+This function is used to obtain data from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s). By default, this function breaks down download calls into intervals so as to avoid submitting queries which fail, downloads queried data from [ECMWF](https://www.ecmwf.int/) servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an [API key](https://cds.climate.copernicus.eu/api-how-to) for download staging and accept terms and conditions for the specific queried dataset(s).
 }
 \examples{
 \dontrun{
