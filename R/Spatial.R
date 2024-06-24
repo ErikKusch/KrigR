@@ -66,7 +66,7 @@ Ext.Check <- function(USER_ext){
     OUT_ext <- ext(extent(USER_ext))
   }
   if(package_name == "terra" | package_name == "sf"){
-    if(class(USER_ext)[[1]] == "sfc_MULTIPOLYGON"){
+    if(class_name[1] == "sfc_MULTIPOLYGON"){
       OUT_ext <- ext(st_bbox(USER_ext))
     }else{
       OUT_ext <- ext(USER_ext)
