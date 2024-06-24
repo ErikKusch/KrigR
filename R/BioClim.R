@@ -60,6 +60,8 @@ BioClim <- function(Water_Var = "volumetric_soil_water_layer_1", # could also be
                     TimeOut = 36000,
                     SingularDL = FALSE){
 
+  stop("Function currently deprecated as KrigR undergoes major re-development. Please use the stable release to gain access to this functionality.")
+
   Vars <- c("2m_temperature", Water_Var)
 
   if(Y_end == year(Sys.Date())){
