@@ -16,8 +16,7 @@ An sf POINT object.
 Transform data frame with ID for querying functionality around point-loactions to SpatialPoints
 }
 \examples{
-\dontrun{
 data("Mountains_df")
 Make.SpatialPoints(Mountains_df)
-}
+
 }

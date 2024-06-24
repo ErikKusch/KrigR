@@ -2,25 +2,24 @@
 % Please edit documentation in R/Spatial.R
 \name{Handle.Spatial}
 \alias{Handle.Spatial}
-\title{Range Masking with Edge Support}
+\title{Cropping & Range Masking with Edge Support}
 \usage{
 Handle.Spatial(BASE, Shape)
 }
 \arguments{
 \item{BASE}{A SpatRaster within which coverage should be identified}
 
-\item{Shape}{A polygon(-collection) whose coverage of the raster object is to be found.}
+\item{Shape}{Either a SPatExtent or an sf polygon(-collection) whose coverage of the raster object is to be found.}
 }
 \value{
-A raster layer.
+A SpatRaster.
 }
 \description{
-Creating a mask identifying all cells in the original raster (`Base`) which are at least partially covered by the supplied shapefile (`Shape`).
+Cropped and masking the original SpatRaster (`BASE`) using supplied SpatExtent or shapefile (`Shape`) and retaining all pixels which are even just partially covered.
 }
 \examples{
-\dontrun{
 data("Jotunheimen_ras")
 data("Jotunheimen_poly")
 Mask.Shape(Jotunheimen_ras, Jotunheimen_poly)
-}
+
 }

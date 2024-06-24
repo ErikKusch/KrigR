@@ -18,9 +18,8 @@ An sf polygon made up of individual square buffers around point-location input.
 Allow for drawing of buffer zones around point-location data for downloading and kriging of spatial data around point-locations. Overlapping individual buffers are merged.
 }
 \examples{
-\dontrun{
 data("Mountains_df")
 User_pts <- Make.SpatialPoints(Mountains_df)
 Buffer.pts(User_pts, USER_buffer = 0.5)
-}
+
 }

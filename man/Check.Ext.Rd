@@ -16,8 +16,7 @@ A SpatExtent object.
 Try to convert user input into a SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
 }
 \examples{
-\dontrun{
-## raster
+ ## raster
 Check.Ext(raster::extent(c(9.87, 15.03, 49.89, 53.06)))
 ## terra
 Check.Ext(terra::ext(c(9.87, 15.03, 49.89, 53.06)))
@@ -29,5 +28,5 @@ sf <- sf::st_as_sf(dd, coords = c("x","y"))
 Check.Ext(sf)
 ## sp
 Check.Ext(as(sf, "Spatial"))
-}
+
 }
