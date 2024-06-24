@@ -7,7 +7,7 @@
 Execute.Requests(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE)
 }
 \arguments{
-\item{Requests_ls}{List. ecmwfr-ready CDS requests formed with `Make.Request()`.}
+\item{Requests_ls}{List. ecmwfr-ready CDS requests formed with [Make.Request()].}
 
 \item{Dir}{Character. Directory where to save raw data.}
 

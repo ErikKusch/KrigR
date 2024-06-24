@@ -19,7 +19,7 @@ Make.Request(
 )
 }
 \arguments{
-\item{QueryTimeWindows}{List. List of date ranges created by `Make.RequestWindows()`}
+\item{QueryTimeWindows}{List. List of date ranges created by [Make.RequestWindows()].}
 
 \item{QueryDataSet}{Character. Dataset specified by user.}
 
@@ -43,7 +43,6 @@ Make.Request(
 }
 \value{
 List. Each element holding either (1) a list object representing a CDS request or (2) the value NA indicating that a file of this name is already present.
-
 
 Make list of CDS Requests
 }
