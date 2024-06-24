@@ -15,3 +15,6 @@ Nothing. But does write a .txt file into the specified directory.
 \description{
 To be run only by the developer when adding support for new data sets and types.
 }
+\seealso{
+\code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
+}

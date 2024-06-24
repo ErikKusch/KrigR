@@ -51,3 +51,6 @@ Time Zone
 Format, assign default file type for download
 Report back
 }
+\seealso{
+\code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
+}

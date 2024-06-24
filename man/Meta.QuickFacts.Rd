@@ -19,3 +19,6 @@ Read and return short overview of data set characteristics, supported types, ext
 Meta.QuickFacts()
 
 }
+\seealso{
+\code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}.
+}

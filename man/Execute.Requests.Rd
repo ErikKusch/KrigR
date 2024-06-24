@@ -25,3 +25,6 @@ No R object. An addition to the keychain if necessary.
 \description{
 Loops over list of fully formed ecmwfr requests and executes these on CDS.
 }
+\seealso{
+\code{\link{Register.Credentials}}, \code{\link{Make.Request}}.
+}

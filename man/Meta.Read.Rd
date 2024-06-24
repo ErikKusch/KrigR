@@ -24,3 +24,6 @@ Read and return metadata for specific data set.
 Meta.Read()
 
 }
+\seealso{
+\code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
+}

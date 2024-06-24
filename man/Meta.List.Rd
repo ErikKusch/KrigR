@@ -21,3 +21,6 @@ Provide an overview of all data sets for which metadata files are present.
 Meta.List()
 
 }
+\seealso{
+\code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
+}

@@ -19,3 +19,6 @@ Read and return overview of variables available for specific data set.
 Meta.Variables()
 
 }
+\seealso{
+\code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
+}

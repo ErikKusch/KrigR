@@ -17,3 +17,6 @@ No R object. An addition to the keychain if necessary.
 \description{
 Just checks if provided API user and Key have already been added to keychain and adds them if necessary.
 }
+\seealso{
+\code{\link{Make.Request}}, \code{\link{Execute.Requests}}.
+}

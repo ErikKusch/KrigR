@@ -11,6 +11,8 @@
 #'
 #' @return No R object. An addition to the keychain if necessary.
 #'
+#' @seealso \code{\link{Make.Request}}, \code{\link{Execute.Requests}}.
+#'
 Register.Credentials <- function(API_User, API_Key){
   API_Service = "cds"
   KeyRegisterCheck <- tryCatch(ecmwfr::wf_get_key(user = API_User, service = API_Service),
@@ -41,6 +43,8 @@ Register.Credentials <- function(API_User, API_Key){
 #' @importFrom ecmwfr wf_request
 #'
 #' @return List. Each element holding either (1) a list object representing a CDS request or (2) the value NA indicating that a file of this name is already present.
+#'
+#' @seealso \code{\link{Make.RequestWindows}}, \code{\link{Register.Credentials}}, \code{\link{Execute.Requests}}.
 #'
 Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariable,
                          QueryTimes, QueryExtent, QueryFormat, Dir = getwd(), verbose = TRUE,
@@ -135,6 +139,8 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
 #' @importFrom httr add_headers
 #'
 #' @return No R object. An addition to the keychain if necessary.
+#'
+#' @seealso \code{\link{Register.Credentials}}, \code{\link{Make.Request}}.
 #'
 Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE){
   if(verbose){print("## Listening for CDS Requests")}

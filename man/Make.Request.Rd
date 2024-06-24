@@ -43,9 +43,12 @@ Make.Request(
 }
 \value{
 List. Each element holding either (1) a list object representing a CDS request or (2) the value NA indicating that a file of this name is already present.
-
-Make list of CDS Requests
 }
 \description{
 Loops over time windows of defined size and creates a list of CDS requests.
+}
+\seealso{
+\code{\link{Make.RequestWindows}}, \code{\link{Register.Credentials}}, \code{\link{Execute.Requests}}.
+
+Make list of CDS Requests
 }

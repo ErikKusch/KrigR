@@ -7,6 +7,8 @@
 #'
 #' @return Nothing. But does write a .txt file into the specified directory.
 #'
+#' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
+#'
 Meta.Register <- function(Dir = file.path(getwd(), "metadata")){
   sink(file = file.path(Dir, "metadata.txt"))
   cat(list.files(Dir, ".rds"), sep = "\n")
@@ -20,9 +22,11 @@ Meta.Register <- function(Dir = file.path(getwd(), "metadata")){
 #'
 #' @param URL Path to where metadata files reside. Should not be changed from default.
 #'
+#' @importFrom tools file_path_sans_ext
+#'
 #' @return A vector of supported datasets.
 #'
-#' @importFrom tools file_path_sans_ext
+#' @seealso \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
 #'
 #' @examples
 #' Meta.List()
@@ -42,6 +46,8 @@ Meta.List <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/D
 #' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
 #' @return List. Contains information of data set, type, variables, resolution, citation, etc.
+#'
+#' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
 #'
 #' @examples
 #' Meta.Read()
@@ -68,6 +74,8 @@ Meta.Read <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/D
 #'
 #' @return Data frame. Contains five columns: (1) Variable (clear name), (2) CDSname (name required for CDS query), (3) Description (plain text description of variable, scraped from CDS webpage), (4) Unit (unit of measurement), and (5) Cumulative (logical, indexing whether a variable is recorded cummulatively or not).
 #'
+#' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
+#'
 #' @examples
 #' Meta.Variables()
 #'
@@ -85,6 +93,8 @@ Meta.Variables <- function(dataset = "reanalysis-era5-land"){
 #'
 #' @return Character. DOI string for data set.
 #'
+#' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.QuickFacts}}.
+#'
 #' @examples
 #' Meta.DOI()
 #'
@@ -101,6 +111,8 @@ Meta.DOI <- function(dataset = "reanalysis-era5-land"){
 #' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
 #' @return List. Contains (1) DataSet (data set string), (2) Type (character, supported types of the data set), (3) URL (character, url of CDS webpage corresponding to data set), (3) Description (character, plain text description of data set scraped from CDS), (4) TResolution (character, base temporal resolution of each layer in data set), (5) TStep (numeric, vector of time step between layers in data set corresponding to Type), (6) TStart (POSIXct, date and time at which first layer is available), (7) TEnd (POSIXct or character, date and time at which first layer is available), (7) Projection (crs of data set), (8) SpatialResolution (numeric, resolution of data set in space in degrees), (9) CDS arguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments)
+#'
+#' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}.
 #'
 #' @examples
 #' Meta.QuickFacts()
@@ -131,6 +143,8 @@ Meta.QuickFacts <- function(dataset = "reanalysis-era5-land"){
 #' @importFrom lubridate days_in_month
 #'
 #' @return List. Contains (1) DataSet (data set string), (2) Type (character, supported types of the data set), (3) URL (character, url of CDS webpage corresponding to data set), (3) Description (character, plain text description of data set scraped from CDS), (4) TResolution (character, base temporal resolution of each layer in data set), (5) TStep (numeric, vector of time step between layers in data set corresponding to Type), (6) TStart (POSIXct, date and time at which first layer is available), (7) TEnd (POSIXct or character, date and time at which first layer is available), (7) Projection (crs of data set), (8) SpatialResolution (numeric, resolution of data set in space in degrees), (9) CDS arguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments)
+#'
+#' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
 #'
 #' @examples
 #' Meta.Check(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck = "2m_temperature", CumulativeCheck = FALSE, ExtentCheck = c(53.06, 9.87, 49.89, 15.03), DateCheck = data.frame(IN = c(as.POSIXct("1995-01-01 CET"), as.POSIXct("2005-01-01 23:00:00 CET")), UTC = c(as.POSIXct("1994-12-31 23:00:00 UTC"), as.POSIXct("2005-01-01 22:00:00 UTC"))), AggrCheck = list(1, "hour"), QueryTimes = c('00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'))
