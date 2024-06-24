@@ -17,7 +17,8 @@
 #' @param Extent Optional, download data according to desired spatial specification. Can be specified either as a raster object, an sf object, a terra object, or a data.frame. If Extent is a raster or terra object, data will be queried according to rectangular extent thereof. If Extent is an sf (MULTI-)POLYGON object, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns around which a buffered shapefile will be created using the Buffer argument.
 #' @param Buffer Optional, Numeric. Identifies how big a circular buffer to draw around points if Extent is a data.frame of points. Buffer is expressed as centessimal degrees.
 #' @param Dir Character/Directory Pointer. Directory specifying where to download data to.
-#' @param FileName A file name for the netcdf produced.
+#' @param FileName Character. A file name for the produced file.
+#' @param FileCheck Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).
 #' @param API_Key Character; ECMWF cds API key.
 #' @param API_User Character; ECMWF cds user number.
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.
@@ -50,7 +51,7 @@ CDownloadS <- function(Variable = NULL, # which variable
                        TResolution = "month", TStep = 1, FUN = 'mean', # temporal aggregation
                        Extent, # spatial limitation, default set to range of dataset-type
                        Buffer = 0.5, # point buffering if desired
-                       Dir = getwd(), FileName, # file storing
+                       Dir = getwd(), FileName, FileExtension = ".nc", # file storing
                        API_User, API_Key, # API credentials
                        TryDown = 10, TimeOut = 36000, # Calls to CDS
                        TChunkSize = 6000,
@@ -80,7 +81,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   #--- File Name
   ### check if file name has been specified
   if(!exists("FileName")){stop("Please provide a value for the FileName argument.")}
-  FileName <- paste0(tools::file_path_sans_ext(FileName), ".nc")
+  FileName <- paste0(tools::file_path_sans_ext(FileName), FileExtension)
 
   ## The Request =================================
   if(verbose){message("###### CDS Request & Data Download")}
@@ -209,13 +210,12 @@ CDownloadS <- function(Variable = NULL, # which variable
   KrigRCall <- KrigRCall[!(names(KrigRCall) %in% c("API_Key", "API_User"))]
   Meta_vec <- as.character(KrigRCall)
   names(Meta_vec) <- names(KrigRCall)
-  attr(CDS_rast, "Citation") <- paste0(MetaCheck_ls$QueryDataSet, " data (DOI:", Meta.DOI("reanalysis-era5-land-monthly-means"), ") obtained with KrigR (DOI:10.1088/1748-9326/ac48b3) on ", Sys.time())
-    #
-    # "KrigRCall" = Meta_vec)
-
+  terra::metags(CDS_rast) <- c(
+    "Citation" = paste0(MetaCheck_ls$QueryDataSet, " data (DOI:", Meta.DOI("reanalysis-era5-land-monthly-means"), ") obtained with KrigR (DOI:10.1088/1748-9326/ac48b3) on ", Sys.time()),
+    "KrigRCall" = Meta_vec
+    )
   ### write file
-  terra::writeCDF(x = CDS_rast, filename = file.path(Dir, FileName),
-           varname = MetaCheck_ls$QueryVariable, unit = MetaCheck_ls$QueryUnit)
+  terra::writeRaster(CDS_rast, filename = file.path(Dir, FileName))
 
   ### unlink temporary files
   if(!Keep_Raw){
