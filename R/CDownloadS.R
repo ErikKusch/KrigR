@@ -209,9 +209,9 @@ CDownloadS <- function(Variable = NULL, # which variable
   KrigRCall <- KrigRCall[!(names(KrigRCall) %in% c("API_Key", "API_User"))]
   Meta_vec <- as.character(KrigRCall)
   names(Meta_vec) <- names(KrigRCall)
-  terra::metags(CDS_rast) <- c(
-    Citation = paste0(MetaCheck_ls$QueryDataSet, " data (DOI:", Meta.DOI("reanalysis-era5-land-monthly-means"), ") obtained with KrigR (DOI:10.1088/1748-9326/ac48b3) on ", Sys.time()),
-    "KrigRCall" = Meta_vec)
+  attr(CDS_rast, "Citation") <- paste0(MetaCheck_ls$QueryDataSet, " data (DOI:", Meta.DOI("reanalysis-era5-land-monthly-means"), ") obtained with KrigR (DOI:10.1088/1748-9326/ac48b3) on ", Sys.time())
+    #
+    # "KrigRCall" = Meta_vec)
 
   ### write file
   terra::writeCDF(x = CDS_rast, filename = file.path(Dir, FileName),
