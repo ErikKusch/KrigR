@@ -116,7 +116,7 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
     if(BaseStep != 1){stop("Back-calculation of hourly cumulative variables only supported for 1-hour interval data. The data you have specified reports hourly data in intervals of ", BaseStep, ".")}
     ## removing non-needed layers
     RemovalLyr <- c(1, (terra::nlyr(Era5_ras)-22):terra::nlyr(Era5_ras)) # need to remove first layer and last 23 for backcalculation
-    Era5_ras <- subset(Era5_ras, RemovalLyr, negate=TRUE)
+    Era5_ras <- terra::subset(Era5_ras, RemovalLyr, negate=TRUE)
     ## back-calculation
     counter <- 1
     Era5_ls <- as.list(rep(NA, terra::nlyr(Era5_ras)))
