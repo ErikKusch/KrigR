@@ -23,14 +23,17 @@ Register.Credentials <- function(API_User, API_Key){
 #'
 #' Loops over time windows of defined size and creates a list of CDS requests.
 #'
-#' @param QueryTimeWindows List of date ranges created by Make.RequestWindows()
+#' @param QueryTimeWindows List. List of date ranges created by `Make.RequestWindows()`
 #' @param QueryDataSet Character. Dataset specified by user.
 #' @param QueryType Character. Dataset type specified by user.
 #' @param QueryVariable Character. CDS internal variable name.
 #' @param QueryTimes Character. Layers of data in the raw data set
 #' @param QueryExtent Character. Extent object created by Check.Ext(Extent)[c(4,1,3,2)]
 #' @param QueryFormat Character. File format queried by user
-#' @param ... Additional arguments not yet supported needed for non-ERA5-Land data sets
+#' @param Dir Directory pointer. Where to store CDS request outcomes.
+#' @param verbose Logical. Whether to print/message function progress in console or not.
+#' @param API_User Character. CDS API User
+#' @param API_Key Character. CDS API Key
 #' @importFrom ecmwfr wf_request
 #' @return List. Each element holding either (1) a list object representing a CDS request or (2) the value NA indicating that a file of this name is already present.
 #'
@@ -115,13 +118,12 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
 #'
 #' Loops over list of fully formed ecmwfr requests and executes these on CDS.
 #'
-#' @param Requests_ls List. ecmwfr-ready CDS requests
+#' @param Requests_ls List. ecmwfr-ready CDS requests formed with `Make.Request()`.
 #' @param Dir Character. Directory where to save raw data.
 #' @param API_User Character. CDS API User
 #' @param API_Key Character. CDS API Key
 #' @param TryDown Numeric. How often to retry a failing request/download
-#' @param verbose Logical. Whether to report on progress
-
+#' @param verbose Logical. Whether to print/message function progress in console or not.
 #' @importFrom ecmwfr wf_transfer
 #' @importFrom httr DELETE
 #' @importFrom httr authenticate

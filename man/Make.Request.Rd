@@ -19,7 +19,7 @@ Make.Request(
 )
 }
 \arguments{
-\item{QueryTimeWindows}{List of date ranges created by Make.RequestWindows()}
+\item{QueryTimeWindows}{List. List of date ranges created by `Make.RequestWindows()`}
 
 \item{QueryDataSet}{Character. Dataset specified by user.}
 
@@ -33,7 +33,13 @@ Make.Request(
 
 \item{QueryFormat}{Character. File format queried by user}
 
-\item{...}{Additional arguments not yet supported needed for non-ERA5-Land data sets}
+\item{Dir}{Directory pointer. Where to store CDS request outcomes.}
+
+\item{verbose}{Logical. Whether to print/message function progress in console or not.}
+
+\item{API_User}{Character. CDS API User}
+
+\item{API_Key}{Character. CDS API Key}
 }
 \value{
 List. Each element holding either (1) a list object representing a CDS request or (2) the value NA indicating that a file of this name is already present.

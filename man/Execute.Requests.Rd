@@ -7,7 +7,7 @@
 Execute.Requests(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE)
 }
 \arguments{
-\item{Requests_ls}{List. ecmwfr-ready CDS requests}
+\item{Requests_ls}{List. ecmwfr-ready CDS requests formed with `Make.Request()`.}
 
 \item{Dir}{Character. Directory where to save raw data.}
 
@@ -17,7 +17,7 @@ Execute.Requests(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE)
 
 \item{TryDown}{Numeric. How often to retry a failing request/download}
 
-\item{verbose}{Logical. Whether to report on progress}
+\item{verbose}{Logical. Whether to print/message function progress in console or not.}
 }
 \value{
 No R object. An addition to the keychain if necessary.
