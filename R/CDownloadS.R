@@ -227,8 +227,8 @@ CDownloadS <- function(Variable = NULL, # which variable
   if(verbose){message("###### Data Export & Return")}
 
   ### Assign additional information
-  varnames(CDS_rast) <- MetaCheck_ls$QueryVariable
-  units(CDS_rast) <- MetaCheck_ls$QueryUnit
+  terra::varnames(CDS_rast) <- MetaCheck_ls$QueryVariable
+  terra::units(CDS_rast) <- MetaCheck_ls$QueryUnit
   terra::metags(CDS_rast) <- Meta_vec
 
   ### write file
