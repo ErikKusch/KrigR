@@ -267,6 +267,7 @@ TemporalAggregation.Check <- function(
       stop("Your specified time range does not allow for a clean integration of your selected time steps. You specified a time series of raw data with a length of ", length(QueryTargetFormat), " (", BaseTResolution, " intervals of length ", BaseTStep, "). Applying your desired temporal aggregation of ", TResolution, " intervals of length ", TStep, " works out to ", round(TStep/BaseTStep, 3), " intervals. Please fix this so the specified time range can be cleanly divided into aggregation intervals.")
     }
     QueryTargetSteps <- paste("Ensembling at base resolution, Factor =", TStep/BaseTStep)
+    print("ensemble detected")
     return(QueryTargetSteps)
   }
 
