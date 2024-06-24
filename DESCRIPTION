@@ -24,5 +24,6 @@ Imports:
     sp,
     raster,
     sf,
-    terra
+    terra,
+    ncdf4
 Depends: R (>= 4.0.0) 

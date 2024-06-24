@@ -78,10 +78,11 @@ CDownloadS <- function(Variable = NULL, # which variable
          "\n", paste(Meta.QuickFacts(dataset = DataSet)$Type, collapse = (" \n")),
          "\n !! If you are seeing an NA ont he above line, note that this is not an error. Please specify NA as the Type.")
   }
-  #--- File Name
+  #--- File Name and Extension
   ### check if file name has been specified
   if(!exists("FileName")){stop("Please provide a value for the FileName argument.")}
   FileName <- paste0(tools::file_path_sans_ext(FileName), FileExtension)
+  if(!(FileExtension %in% c(".nc", ".tif"))){stop("Please specify a FileExtension of either '.tif' or '.nc'")}
 
   ## The Request =================================
   if(verbose){message("###### CDS Request & Data Download")}
@@ -138,12 +139,7 @@ CDownloadS <- function(Variable = NULL, # which variable
 
   ### Checking =====
   if(verbose){print("Checking request validity")}
-  #--- File check, if already a file with this name present then load from disk
-  FCheck <- Check.File(FName = FileName, Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = TRUE)
-  if(!is.null(FCheck)){
-    terra::time(FCheck) <- as.POSIXct(terra::time(check), tz = TZone) # assign the correct time zone, when loading from disk, time zone is set to UTC
-    return(FCheck)
-  }
+
   #--- Metadata check - can the queried dataset-type deliver the queried data?
   MetaCheck_ls <- Meta.Check(DataSet = DataSet,
                              Type = Type,
@@ -153,6 +149,24 @@ CDownloadS <- function(Variable = NULL, # which variable
                              DateCheck = Dates_df,
                              AggrCheck = list(TStep, TResolution),
                              QueryTimes = QueryTimes)
+
+  ## File/Call metadata
+  KrigRCall <- match.call()
+  KrigRCall <- KrigRCall[!(names(KrigRCall) %in% c("API_Key", "API_User"))]
+  Meta_vec <- as.character(KrigRCall)
+  names(Meta_vec) <- names(KrigRCall)
+  Meta_vec <- c(
+    "Citation" = paste0(MetaCheck_ls$QueryDataSet, " data (DOI:", Meta.DOI("reanalysis-era5-land-monthly-means"), ") obtained with KrigR (DOI:10.1088/1748-9326/ac48b3) on ", Sys.time()),
+    "KrigRCall" = Meta_vec
+  )
+
+  #--- File check, if already a file with this name present then load from disk
+  FCheck <- Check.File(FName = FileName, Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = TRUE)
+  if(!is.null(FCheck)){
+    FCheck <- Meta.NC(NC = FCheck, FName = file.path(Dir, FileName), Attrs = Meta_vec, Read = TRUE)
+    terra::time(FCheck) <- as.POSIXct(terra::time(FCheck), tz = TZone) # assign the correct time zone, when loading from disk, time zone is set to UTC
+    return(FCheck)
+  }
 
   ### Executing =====
   if(verbose){print("Executing request - Notice that time windows may vary slightly at this step due to timezone conversions. This will be resolved automatically.")}
@@ -206,16 +220,16 @@ CDownloadS <- function(Variable = NULL, # which variable
   ### Assign additional information
   terra::varnames(CDS_rast) <- MetaCheck_ls$QueryVariable
   terra::units(CDS_rast) <- MetaCheck_ls$QueryUnit
-  KrigRCall <- match.call()
-  KrigRCall <- KrigRCall[!(names(KrigRCall) %in% c("API_Key", "API_User"))]
-  Meta_vec <- as.character(KrigRCall)
-  names(Meta_vec) <- names(KrigRCall)
-  terra::metags(CDS_rast) <- c(
-    "Citation" = paste0(MetaCheck_ls$QueryDataSet, " data (DOI:", Meta.DOI("reanalysis-era5-land-monthly-means"), ") obtained with KrigR (DOI:10.1088/1748-9326/ac48b3) on ", Sys.time()),
-    "KrigRCall" = Meta_vec
-    )
+  terra::metags(CDS_rast) <- Meta_vec
+
   ### write file
-  terra::writeRaster(CDS_rast, filename = file.path(Dir, FileName))
+  if(FileExtension == ".tif"){
+    terra::writeRaster(CDS_rast, filename = file.path(Dir, FileName))
+  }
+  if(FileExtension == ".nc"){
+    CDS_rast <- Meta.NC(NC = CDS_rast, FName = file.path(Dir, FileName),
+            Attrs = terra::metags(CDS_rast), Write = TRUE)
+  }
 
   ### unlink temporary files
   if(!Keep_Raw){

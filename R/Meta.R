@@ -291,4 +291,50 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
     QueryUnit = Meta.Variables(dataset = DataSet)$Unit[which(Meta.Variables(dataset = DataSet)$CDSname == VariableCheck)])
 }
 
-
+### NETCDF METADATA WRITING AND READING ========================================
+#' Read or write metadata into NetCDF files
+#'
+#' Read or write metadata attributes from/to netcdf file.
+#'
+#' @param NC SpatRaster
+#' @param FName Filename including directory
+#' @param Attrs Named vector of metadata attributes
+#' @param Write Logical. Whether to write metadata
+#' @param Read Logical Whether to read metadata
+#'
+#' @importFrom terra writeCDF
+#' @importFrom ncdf4 nc_open
+#' @importFrom ncdf4 ncatt_put
+#' @importFrom ncdf4 nc_close
+#' @importFrom ncdf4 ncatt_get
+#' @importFrom terra metags
+#' @importFrom lubridate days_in_month
+#'
+#' @return A SpatRaster with metadata
+#'
+Meta.NC <- function(NC, FName, Attrs, Write = FALSE, Read = FALSE){
+  ## Writing metadata
+  if(Write){
+    writeCDF(x = NC, filename = FName)
+    nc <- nc_open(FName, write = TRUE)
+    for(name in names(Attrs)) {
+      ncatt_put(nc, 0, name, Attrs[[name]])
+    }
+    nc_close(nc)
+  }
+  ## Reading metadata
+  if(Read){
+    nc <- nc_open(FName)
+    # Retrieve custom metadata
+    Meta <- lapply(names(Attrs), FUN = function(name){
+      ncatt_get(nc, 0, name)$value
+    })
+    # Close the NetCDF file
+    nc_close(nc)
+    Meta_vec <- unlist(Meta)
+    names(Meta_vec) <- names(Attrs)
+    metags(NC) <- Meta_vec
+  }
+  ## return object
+  return(NC)
+}

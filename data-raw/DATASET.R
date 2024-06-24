@@ -8,10 +8,6 @@ Mountains_df <- data.frame(
 )
 usethis::use_data(Mountains_df)
 
-## Jotunheimen_poly
-Jotunheimen_poly <- sf::st_read("data/Shape/Shape-polygon.shp")
-usethis::use_data(Jotunheimen_poly)
-
 ## CDS_ras
 API_Key <- "Nope"
 API_User <- "Nope"
@@ -30,3 +26,8 @@ CDS_rast <- CDownloadS(
   API_User = API_User,
   API_Key = API_Key)
 usethis::use_data(CDS_rast)
+
+## Jotunheimen_poly
+Jotunheimen_poly <- sf::st_read("data-raw/Shape/Shape-polygon.shp")
+sf::st_transform(Jotunheimen_poly, crs =sf::st_crs(CDS_rast))
+usethis::use_data(Jotunheimen_poly)

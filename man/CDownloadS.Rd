@@ -19,6 +19,7 @@ CDownloadS(
   Buffer = 0.5,
   Dir = getwd(),
   FileName,
+  FileExtension = ".nc",
   API_User,
   API_Key,
   TryDown = 10,
@@ -26,7 +27,7 @@ CDownloadS(
   TChunkSize = 6000,
   Cores = 1,
   verbose = TRUE,
-  Kepp_Raw = FALSE
+  Keep_Raw = FALSE
 )
 }
 \arguments{
@@ -56,7 +57,7 @@ CDownloadS(
 
 \item{Dir}{Character/Directory Pointer. Directory specifying where to download data to.}
 
-\item{FileName}{A file name for the netcdf produced.}
+\item{FileName}{Character. A file name for the produced file.}
 
 \item{API_User}{Character; ECMWF cds user number.}
 
@@ -73,6 +74,8 @@ CDownloadS(
 \item{verbose}{Logical. Whether to print/message function progress in console or not.}
 
 \item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not.}
+
+\item{FileCheck}{Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).}
 }
 \value{
 A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a NETCDF (.nc) file in the specified directory.
