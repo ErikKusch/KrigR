@@ -12,7 +12,7 @@ Meta.Read(
 \arguments{
 \item{URL}{Path to where metadata files reside. Should not be changed from default.}
 
-\item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling `Meta.List()`.}
+\item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{`Meta.List()`}}.}
 }
 \value{
 List. Contains information of data set, type, variables, resolution, citation, etc.

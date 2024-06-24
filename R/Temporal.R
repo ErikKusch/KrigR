@@ -28,7 +28,9 @@ Make.UTC <- function(DatesVec = NULL){
 #' @param BaseTStep Base time steps of queried data on CDS
 #' @param BaseTStart Base starting date and time of queried data on CDS
 #' @param TChunkSize Maximum amount of layers to include in each query
+#'
 #' @return A data frame on input dates respective to user-queried timezone and their UTC counterparts
+#'
 #' @examples
 #' \dontrun{
 #' IN_DateStart <- as.POSIXct("1995-01-01 00:00", tz = "CET")

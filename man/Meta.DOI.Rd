@@ -7,7 +7,7 @@
 Meta.DOI(dataset = "reanalysis-era5-land")
 }
 \arguments{
-\item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling `Meta.List()`.}
+\item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{`Meta.List()`}}.}
 }
 \value{
 Character. DOI string for data set.
