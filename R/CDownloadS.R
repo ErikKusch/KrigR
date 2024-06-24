@@ -8,7 +8,7 @@
 #' @param Type Either NA or Character. Which kind of sub-type to query per data set. See \code{\link{Meta.QucikFacts}} for options per dataset.
 #' @param DateStart Character. Date ('YYYY-MM-DD HH:SS') at which to start time series of downloaded data.
 #' @param DateStop Character. Date ('YYYY-MM-DD HH:SS') at which to stop time series of downloaded data.
-#' @param TZone Character. Time zone in which to represent and evaluate time dimension of data. See [this list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for possible settings ("Time zone abbreviation" column). Default is UTC.
+#' @param TZone Character. Time zone in which to represent and evaluate time dimension of data. See the output of OlsonNames() for a full overview of supported specifications. Default is UTC.
 #' @param TResolution Character. Temporal resolution of final product. 'hour', 'day', 'month', or 'year'.
 #' @param TStep Numeric. Which time steps to consider for temporal resolution. For example, specify bi-monthly data records by setting TResolution to 'month' and TStep to 2.
 #' @param FUN A raster calculation argument as passed to `terra::tapp()`. This controls what kind of data to obtain for temporal aggregates of reanalysis data. Specify 'mean' (default) for mean values, 'min' for minimum values, and 'max' for maximum values, among others.
@@ -48,8 +48,96 @@
 #'
 #' @examples
 #' \dontrun{
+#' ## Raw data for one month of full globe
+#' RawGlobe_rast <- CDownloadS(
+#' 	Variable = "2m_temperature",
+#' 	DataSet = "reanalysis-era5-land-monthly-means",
+#' 	Type = "monthly_averaged_reanalysis",
+#' 	# time-window, default set to range of dataset-type
+#' 	DateStart = "1995-01-01 00:00",
+#' 	DateStop = "1995-01-01 23:00",
+#' 	TZone = "CET",
+#' 	# temporal aggregation
+#' 	TResolution = "month",
+#' 	TStep = 1,
+#' 	# file storing
+#' 	FileName = "RawGlobe",
+#' 	# API credentials
+#' 	API_User = API_User,
+#' 	API_Key = API_Key,
+#' )
+#' terra::plot(RawGlobe_rast)
 #'
-#' }
+#' ## Monthly air temperature aggregated to bi-annual maximum by SpatRaster
+#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
+#' BiAnnAirTemp_rast <- CDownloadS(
+#' 	Variable = "2m_temperature",
+#' 	DataSet = "reanalysis-era5-land-monthly-means",
+#' 	Type = "monthly_averaged_reanalysis",
+#' 	# time-window, default set to range of dataset-type
+#' 	DateStart = "1995-01-01 00:00",
+#' 	DateStop = "1996-12-31 23:00",
+#' 	TZone = "EET",
+#' 	# temporal aggregation
+#' 	TResolution = "year",
+#' 	TStep = 2,
+#' 	# spatial
+#' 	Extent = CDS_rast,
+#' 	# file storing
+#' 	FileName = "BiAnnAirTemp",
+#' 	# API credentials
+#' 	API_User = API_User,
+#' 	API_Key = API_Key,
+#' )
+#' terra::plot(BiAnnAirTemp_rast)
+#'
+#' ## Hourly back-calculated precipitation aggregated to daily averages by shapefiles
+#' data("Jotunheimen_poly")
+#' Jotunheimen_poly
+#' DailyBackCPrecip_rast <- CDownloadS(
+#'   Variable = "total_precipitation",
+#'   CumulVar = TRUE,
+#'   # time-window, default set to range of dataset-type
+#'   DateStart = "1995-01-01 00:00",
+#'   DateStop = "1995-01-03 23:00",
+#'   TZone = "CET",
+#'   # temporal aggregation
+#'   TResolution = "day",
+#'   # spatial
+#'   Extent = Jotunheimen_poly,
+#'   # file storing
+#'   FileName = "DailyBackCPrecip",
+#'   # API credentials
+#'   API_User = API_User,
+#'   API_Key = API_Key,
+#' )
+#' terra::plot(DailyBackCPrecip_rast)
+#'
+#' ## 6-hourly ensemble member spread sum for air temperature by buffered points
+#' data("Mountains_df")
+#' EnsembleSpreadSum6hour_rast <- CDownloadS(
+#' 	Variable = "2m_temperature",
+#' 	DataSet = "reanalysis-era5-single-levels",
+#' 	Type = "ensemble_spread",
+#' 	# time-window, default set to range of dataset-type
+#' 	DateStart = "1995-01-01 00:00:00",
+#' 	DateStop = "1995-01-01 21:00:00",
+#' 	TZone = "UTC",
+#' 	# temporal aggregation
+#' 	TResolution = "hour",
+#' 	TStep = 6,
+#' 	FUN = sum,
+#' 	# spatial
+#' 	Extent = Mountains_df,
+#' 	Buffer = 0.2,
+#' 	# file storing
+#' 	FileName = "EnsembleSpreadSum6hour",
+#' 	FileExtension = ".tif",
+#' 	# API credentials
+#' 	API_User = API_User,
+#' 	API_Key = API_Key
+#' )
+#' terra::plot(EnsembleSpreadSum6hour_rast)
 #' @export
 CDownloadS <- function(Variable = NULL, # which variable
                        CumulVar = FALSE, # cumulative variable?
@@ -91,6 +179,9 @@ CDownloadS <- function(Variable = NULL, # which variable
   if(!exists("FileName")){stop("Please provide a value for the FileName argument.")}
   FileName <- paste0(file_path_sans_ext(FileName), FileExtension)
   if(!(FileExtension %in% c(".nc", ".tif"))){stop("Please specify a FileExtension of either '.tif' or '.nc'")}
+
+  #--- Time Zone
+  if(!(TZone %in% OlsonNames())){stop("The TZone argument you have specified is not supported. Please refer to OlsonNames() for an overview of all supported specifications.")}
 
   ## The Request =================================
   if(verbose){message("###### CDS Request & Data Download")}

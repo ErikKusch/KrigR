@@ -43,7 +43,7 @@ CDownloadS(
 
 \item{DateStop}{Character. Date ('YYYY-MM-DD HH:SS') at which to stop time series of downloaded data.}
 
-\item{TZone}{Character. Time zone in which to represent and evaluate time dimension of data. See [this list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for possible settings ("Time zone abbreviation" column). Default is UTC.}
+\item{TZone}{Character. Time zone in which to represent and evaluate time dimension of data. See the output of OlsonNames() for a full overview of supported specifications. Default is UTC.}
 
 \item{TResolution}{Character. Temporal resolution of final product. 'hour', 'day', 'month', or 'year'.}
 
@@ -90,9 +90,4 @@ The SpatRaster contains metadata/attributes as a named vector that can be retrie
 }
 \description{
 This function is used to obtain data from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s). By default, this function breaks down download calls into intervals so as to avoid submitting queries which fail, downloads queried data from [ECMWF](https://www.ecmwf.int/) servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an [API key](https://cds.climate.copernicus.eu/api-how-to) for download staging and accept terms and conditions for the specific queried dataset(s).
-}
-\examples{
-\dontrun{
-
-}
 }
