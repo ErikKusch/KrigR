@@ -19,7 +19,7 @@ Make.Request(
 )
 }
 \arguments{
-\item{QueryTimeWindows}{List. List of date ranges created by [Make.RequestWindows()].}
+\item{QueryTimeWindows}{List. List of date ranges created by \code{\link{Make.RequestWindows()}}.}
 
 \item{QueryDataSet}{Character. Dataset specified by user.}
 

@@ -26,7 +26,7 @@ Register.Credentials <- function(API_User, API_Key){
 #'
 #' Loops over time windows of defined size and creates a list of CDS requests.
 #'
-#' @param QueryTimeWindows List. List of date ranges created by [Make.RequestWindows()].
+#' @param QueryTimeWindows List. List of date ranges created by \code{\link{Make.RequestWindows()}}.
 #' @param QueryDataSet Character. Dataset specified by user.
 #' @param QueryType Character. Dataset type specified by user.
 #' @param QueryVariable Character. CDS internal variable name.
