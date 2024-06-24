@@ -56,7 +56,7 @@ CDownloadS <- function(Variable = NULL, # which variable
                        TChunkSize = 6000,
                        Cores = 1, # parallelisation
                        verbose = TRUE, # verbosity
-                       Kepp_Raw = FALSE
+                       Keep_Raw = FALSE
                        ){
   ## Catching Most Frequent Issues ===============
   #--- API Credentials
@@ -140,7 +140,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   #--- File check, if already a file with this name present then load from disk
   FCheck <- Check.File(FName = FileName, Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = TRUE)
   if(!is.null(FCheck)){
-    time(FCheck) <- as.POSIXct(time(check), tz = TZone) # assign the correct time zone, when loading from disk, time zone is set to UTC
+    terra::time(FCheck) <- as.POSIXct(terra::time(check), tz = TZone) # assign the correct time zone, when loading from disk, time zone is set to UTC
     return(FCheck)
   }
   #--- Metadata check - can the queried dataset-type deliver the queried data?
