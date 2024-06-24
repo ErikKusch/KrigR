@@ -7,7 +7,7 @@
 Meta.QuickFacts(dataset = "reanalysis-era5-land")
 }
 \arguments{
-\item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{`Meta.List()`}}.}
+\item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.}
 }
 \value{
 List. Contains (1) DataSet (data set string), (2) Type (character, supported types of the data set), (3) URL (character, url of CDS webpage corresponding to data set), (3) Description (character, plain text description of data set scraped from CDS), (4) TResolution (character, base temporal resolution of each layer in data set), (5) TStep (numeric, vector of time step between layers in data set corresponding to Type), (6) TStart (POSIXct, date and time at which first layer is available), (7) TEnd (POSIXct or character, date and time at which first layer is available), (7) Projection (crs of data set), (8) SpatialResolution (numeric, resolution of data set in space in degrees), (9) CDS arguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments)

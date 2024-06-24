@@ -39,7 +39,7 @@ Meta.List <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/D
 #' Read and return metadata for specific data set.
 #'
 #' @param URL Path to where metadata files reside. Should not be changed from default.
-#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{`Meta.List()`}}.
+#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
 #' @return List. Contains information of data set, type, variables, resolution, citation, etc.
 #'
@@ -64,7 +64,7 @@ Meta.Read <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/D
 #'
 #' Read and return overview of variables available for specific data set.
 #'
-#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{`Meta.List()`}}.
+#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
 #' @return Data frame. Contains five columns: (1) Variable (clear name), (2) CDSname (name required for CDS query), (3) Description (plain text description of variable, scraped from CDS webpage), (4) Unit (unit of measurement), and (5) Cumulative (logical, indexing whether a variable is recorded cummulatively or not).
 #'
@@ -81,7 +81,7 @@ Meta.Variables <- function(dataset = "reanalysis-era5-land"){
 #'
 #' Read and return DOI of data set for easy citation.
 #'
-#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{`Meta.List()`}}.
+#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
 #' @return Character. DOI string for data set.
 #'
@@ -98,7 +98,7 @@ Meta.DOI <- function(dataset = "reanalysis-era5-land"){
 #'
 #' Read and return short overview of data set characteristics, supported types, extent, time frames and required arguments.
 #'
-#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{`Meta.List()`}}.
+#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
 #' @return List. Contains (1) DataSet (data set string), (2) Type (character, supported types of the data set), (3) URL (character, url of CDS webpage corresponding to data set), (3) Description (character, plain text description of data set scraped from CDS), (4) TResolution (character, base temporal resolution of each layer in data set), (5) TStep (numeric, vector of time step between layers in data set corresponding to Type), (6) TStart (POSIXct, date and time at which first layer is available), (7) TEnd (POSIXct or character, date and time at which first layer is available), (7) Projection (crs of data set), (8) SpatialResolution (numeric, resolution of data set in space in degrees), (9) CDS arguments (list, required arguments for CDS call beyond standard arguments and also reporting default/options for common CDS query arguments)
 #'
@@ -118,7 +118,7 @@ Meta.QuickFacts <- function(dataset = "reanalysis-era5-land"){
 #'
 #' Read and return short overview of data set characteristics, supported types, extent, time frames and required arguments.
 #'
-#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{`Meta.List()`}}.
+#' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #' @param Type NA or Character. Indicating which sub-type of the specified dataset is queried.
 #' @param VariableCheck Character. CDS-compliant variable name.
 #' @param CumulativeCheck Logical. Whether queried data will be attempted to be back-calculated from cumulative records.

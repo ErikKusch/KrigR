@@ -26,7 +26,7 @@ Register.Credentials <- function(API_User, API_Key){
 #'
 #' Loops over time windows of defined size and creates a list of CDS requests.
 #'
-#' @param QueryTimeWindows List. List of date ranges created by \code{\link{Make.RequestWindows()}}.
+#' @param QueryTimeWindows List. List of date ranges created by \code{\link{Make.RequestWindows}}.
 #' @param QueryDataSet Character. Dataset specified by user.
 #' @param QueryType Character. Dataset type specified by user.
 #' @param QueryVariable Character. CDS internal variable name.
@@ -122,7 +122,7 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
 #'
 #' Loops over list of fully formed ecmwfr requests and executes these on CDS.
 #'
-#' @param Requests_ls List. ecmwfr-ready CDS requests formed with \code{\link{Make.Request()}}.
+#' @param Requests_ls List. ecmwfr-ready CDS requests formed with \code{\link{Make.Request}}.
 #' @param Dir Character. Directory where to save raw data.
 #' @param API_User Character. CDS API User
 #' @param API_Key Character. CDS API Key

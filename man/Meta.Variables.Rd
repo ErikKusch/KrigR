@@ -7,7 +7,7 @@
 Meta.Variables(dataset = "reanalysis-era5-land")
 }
 \arguments{
-\item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{`Meta.List()`}}.}
+\item{dataset}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.}
 }
 \value{
 Data frame. Contains five columns: (1) Variable (clear name), (2) CDSname (name required for CDS query), (3) Description (plain text description of variable, scraped from CDS webpage), (4) Unit (unit of measurement), and (5) Cumulative (logical, indexing whether a variable is recorded cummulatively or not).
