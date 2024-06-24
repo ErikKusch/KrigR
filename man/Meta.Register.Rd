@@ -4,7 +4,7 @@
 \alias{Meta.Register}
 \title{Create a .txt tile holding the names of all supported data sets and their types}
 \usage{
-Meta.Register(Dir = file.path(getwd(), "data/metadata"))
+Meta.Register(Dir = file.path(getwd(), "metadata"))
 }
 \arguments{
 \item{Dir}{directory in which metadata files (.RData objects) are stored locally}

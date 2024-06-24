@@ -4,7 +4,9 @@
 \alias{Meta.List}
 \title{List out all supported data sets}
 \usage{
-Meta.List(URL = file.path(getwd(), "data/metadata"))
+Meta.List(
+  URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/Development/metadata"
+)
 }
 \arguments{
 \item{URL}{Path to where metadata files reside. Should not be changed from default.}

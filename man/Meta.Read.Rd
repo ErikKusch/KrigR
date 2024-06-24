@@ -5,7 +5,7 @@
 \title{Data set overview}
 \usage{
 Meta.Read(
-  URL = file.path(getwd(), "data/metadata"),
+  URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/Development/metadata",
   dataset = "reanalysis-era5-land"
 )
 }

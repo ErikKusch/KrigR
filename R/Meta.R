@@ -5,7 +5,7 @@
 #'
 #' @param Dir directory in which metadata files (.RData objects) are stored locally
 #' @return Nothing. But does write a .txt file into the specified directory.
-Meta.Register <- function(Dir = file.path(getwd(), "data/metadata")){
+Meta.Register <- function(Dir = file.path(getwd(), "metadata")){
   sink(file = file.path(Dir, "metadata.txt"))
   cat(list.files(Dir, ".rds"), sep = "\n")
   sink()
@@ -22,7 +22,7 @@ Meta.Register <- function(Dir = file.path(getwd(), "data/metadata")){
 #' Meta.List()
 #'
 #' @export
-Meta.List <- function(URL = file.path(getwd(), "data/metadata") ## change this to github repo for these data once ready
+Meta.List <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/Development/metadata" ## change this to github repo for these data once ready
                       ){
   tools::file_path_sans_ext(read.table(file.path(URL, "metadata.txt"))[,1])
 }
@@ -39,9 +39,15 @@ Meta.List <- function(URL = file.path(getwd(), "data/metadata") ## change this t
 #' Meta.Read()
 #'
 #' @export
-Meta.Read <- function(URL = file.path(getwd(), "data/metadata"), ## change this to github repo for these data once ready
+Meta.Read <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/Development/metadata", ## change this to github repo for these data once ready
                       dataset = "reanalysis-era5-land"){
-  load(file = file.path(URL, paste0(dataset, ".RData")))
+  load(url(
+    paste0(
+    "https://github.com/ErikKusch/KrigR/blob/Development/metadata/",
+    dataset,
+    ".RData?raw=true"
+    )
+  ))
   get(ls()[ls() == gsub(dataset, pattern = "-", replacement = "_")])
 }
 
