@@ -122,7 +122,7 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
 #'
 #' Loops over list of fully formed ecmwfr requests and executes these on CDS.
 #'
-#' @param Requests_ls List. ecmwfr-ready CDS requests formed with [Make.Request()].
+#' @param Requests_ls List. ecmwfr-ready CDS requests formed with \code{\link{Make.Request()}}.
 #' @param Dir Character. Directory where to save raw data.
 #' @param API_User Character. CDS API User
 #' @param API_Key Character. CDS API Key
