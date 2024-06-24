@@ -32,6 +32,8 @@ Temporal.Aggr(
 \item{Cores}{Numeric. Number of cores for parallel processing}
 
 \item{QueryTargetSteps}{Character. Target resolution steps}
+
+\item{TZone}{Character. Time zone for queried data.}
 }
 \value{
 A SpatRaster

@@ -10,16 +10,15 @@ Make.UTC(DatesVec = NULL)
 \item{DatesVec}{A vector of POSIXct objects}
 }
 \value{
-A data frame on input dates respective to user-queried timezone and their UTC counterparts
+A data frame on input dates respective to user-queried timezone and their UTC counterparts.
 }
 \description{
 Create UTC counterparts of user-input dates for CDS queries
 }
 \examples{
-\dontrun{
 IN_DateStart <- as.POSIXct("1995-01-01 00:00", tz = "CET")
 IN_DateStop <- as.POSIXct("2005-01-01 23:00", tz = "CET")
 Dates_df <- Make.UTC(DatesVec = c(IN_DateStart, IN_DateStop))
 Dates_df
-}
+
 }

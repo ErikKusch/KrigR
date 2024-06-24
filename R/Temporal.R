@@ -4,14 +4,15 @@
 #' Create UTC counterparts of user-input dates for CDS queries
 #'
 #' @param DatesVec A vector of POSIXct objects
-#' @return A data frame on input dates respective to user-queried timezone and their UTC counterparts
+#'
+#' @return A data frame on input dates respective to user-queried timezone and their UTC counterparts.
+#'
 #' @examples
-#' \dontrun{
 #' IN_DateStart <- as.POSIXct("1995-01-01 00:00", tz = "CET")
 #' IN_DateStop <- as.POSIXct("2005-01-01 23:00", tz = "CET")
 #' Dates_df <- Make.UTC(DatesVec = c(IN_DateStart, IN_DateStop))
 #' Dates_df
-#' }
+#'
 #' @export
 Make.UTC <- function(DatesVec = NULL){
   data.frame(IN = DatesVec,
@@ -23,25 +24,31 @@ Make.UTC <- function(DatesVec = NULL){
 #'
 #' Make a list holding date ranges for which to make individual CDS queries
 #'
-#' @param Dates_df A two-column data frame (column names: "IN" and "UTC") holding POSIXct elements
-#' @param BaseTResolution Base temporal resolution of queried data on CDS
-#' @param BaseTStep Base time steps of queried data on CDS
-#' @param BaseTStart Base starting date and time of queried data on CDS
-#' @param TChunkSize Maximum amount of layers to include in each query
+#' @param Dates_df A two-column data frame (column names: "IN" and "UTC") holding POSIXct elements. Created with \code{\link{Make.UTC}}.
+#' @param BaseTResolution Character. Base temporal resolution of queried data on CDS
+#' @param BaseTStep Numeric. Base time steps of queried data on CDS
+#' @param BaseTStart POSIXct. Base starting date and time of queried data on CDS
+#' @param TChunkSize Numeric. Maximum amount of layers to include in each query
+#' @param DataSet Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
-#' @return A data frame on input dates respective to user-queried timezone and their UTC counterparts
+#' @importFrom stringr str_pad
+#' @importFrom stringr str_c
+#'
+#' @return List. Contains:
+#' \itemize{
+#' \item{QueryTimeWindows}{List of dates for individual CDS queries as used by \code{\link{Make.Request}}.}.
+#' \item{QueryTimes}{Character. Layers of data in the raw data set}.
+#' }
 #'
 #' @examples
-#' \dontrun{
 #' IN_DateStart <- as.POSIXct("1995-01-01 00:00", tz = "CET")
 #' IN_DateStop <- as.POSIXct("2005-01-01 23:00", tz = "CET")
 #' Dates_df <- Make.UTC(DatesVec = c(IN_DateStart, IN_DateStop))
 #' Make.RequestWindows(Dates_df = Dates_df,
-#' BaseTResolution = "hour",
-#' BaseTStep = 24
-#' BaseTStart = as.POSIXct("1950-01-01 00:01", tz = "UTC")
-#' TChunkSize = 12000)
-#' }
+#'                     BaseTResolution = "hour",
+#'                     BaseTStep = 24
+#'                     BaseTStart = as.POSIXct("1950-01-01 00:01", tz = "UTC")
+#'                     TChunkSize = 12000)
 #'
 Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart, TChunkSize, DataSet){
   ## reformat input
@@ -68,9 +75,9 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
   if(!(BaseTResolution %in% c("hour", "month"))){stop("Non-hour or -month base resolutions not supported yet")}
   if(BaseTResolution == "hour"){
     if(BaseTStep == 24){
-      QueryTimes <- stringr::str_pad(stringr::str_c(0:23,"00",sep=":"), 5,"left","0") ## this is used for telling CDS which layers we want per day
+      QueryTimes <- str_pad(str_c(0:23,"00",sep=":"), 5,"left","0") ## this is used for telling CDS which layers we want per day
     }else{
-      QueryTimes <- stringr::str_pad(stringr::str_c(
+      QueryTimes <- str_pad(str_c(
         seq(from = as.numeric(format(Meta.QuickFacts(dataset = DataSet)$TStart, "%H")),
             to = 23,
             by = BaseTStep)
@@ -110,6 +117,14 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
 #' @param CumulVar Logical. Whether to apply cumulative back-calculation
 #' @param BaseResolution Character. Base temporal resolution of data set
 #' @param BaseStep Numeric. Base time step of data set
+#' @param TZone Character. Time zone for queried data.
+#'
+#' @importFrom terra rast
+#' @importFrom terra nlyr
+#' @importFrom terra subset
+#' @importFrom terra time
+#' @importFrom lubridate days_in_month
+#'
 #' @return A SpatRaster
 #'
 Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
@@ -117,20 +132,20 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
   if(CumulVar & BaseResolution == "hour"){
     if(BaseStep != 1){stop("Back-calculation of hourly cumulative variables only supported for 1-hour interval data. The data you have specified reports hourly data in intervals of ", BaseStep, ".")}
     ## removing non-needed layers
-    RemovalLyr <- c(1, (terra::nlyr(Era5_ras)-22):terra::nlyr(Era5_ras)) # need to remove first layer and last 23 for backcalculation
-    Era5_ras <- terra::subset(Era5_ras, RemovalLyr, negate=TRUE)
+    RemovalLyr <- c(1, (nlyr(Era5_ras)-22):nlyr(Era5_ras)) # need to remove first layer and last 23 for backcalculation
+    Era5_ras <- subset(Era5_ras, RemovalLyr, negate=TRUE)
     ## back-calculation
     counter <- 1
-    Era5_ls <- as.list(rep(NA, terra::nlyr(Era5_ras)))
-    names(Era5_ls) <- terra::time(Era5_ras)
-    for(i in 1:terra::nlyr(Era5_ras)){
+    Era5_ls <- as.list(rep(NA, nlyr(Era5_ras)))
+    names(Era5_ls) <- time(Era5_ras)
+    for(i in 1:nlyr(Era5_ras)){
       if(counter > 24){counter <- 1}
       if(counter == 1){
         Era5_ls[[i]] <- Era5_ras[[i]]
         StartI <- i
       }
       if(counter == 24){
-        Era5_ls[[i]] <- Era5_ras[[i]]-sum(terra::rast(Era5_ls[StartI:(StartI+counter-2)]))
+        Era5_ls[[i]] <- Era5_ras[[i]]-sum(rast(Era5_ls[StartI:(StartI+counter-2)]))
       }
       if(counter != 24 & counter != 1){
         Era5_ls[[i]] <- Era5_ras[[i+1]] - Era5_ras[[i]]
@@ -138,14 +153,14 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
       counter <- counter + 1
     }
     ## finishing off object
-    Ret_ras <- terra::rast(Era5_ls)
-    terra::time(Ret_ras) <- as.POSIXct(terra::time(Era5_ras), tz = TZone) - 60*60 # back-dating to be in-line with regular specifications
+    Ret_ras <- rast(Era5_ls)
+    time(Ret_ras) <- as.POSIXct(time(Era5_ras), tz = TZone) - 60*60 # back-dating to be in-line with regular specifications
     Era5_ras <- Ret_ras
     warning("You toggled on the CumulVar option in the function call. Hourly records have been converted from cumulative aggregates to individual hourly records.")
   }
   ## multiply by number of days per month
   if(CumulVar & BaseResolution == "month"){
-    Days_in_Month_vec <- lubridate::days_in_month(terra::time(CDS_rast))
+    Days_in_Month_vec <- days_in_month(time(CDS_rast))
     if(grepl("ensemble_members", Type)){
       Days_in_Month_vec <- rep(Days_in_Month_vec, each = 10)
     }
@@ -168,6 +183,11 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
 #' @param FUN User-defined aggregation function
 #' @param Cores Numeric. Number of cores for parallel processing
 #' @param QueryTargetSteps Character. Target resolution steps
+#' @param TZone Character. Time zone for queried data.
+#'
+#' @importFrom terra time
+#' @importFrom terra tapp
+#'
 #' @return A SpatRaster
 #'
 Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
@@ -177,32 +197,32 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
   }else{
     Form <- substr(TResolution, 1, 1)
     Form <- ifelse(Form %in% c("h", "y"), toupper(Form), Form)
-    LayerFormat <- format(terra::time(CDS_rast), paste0("%", Form))
+    LayerFormat <- format(time(CDS_rast), paste0("%", Form))
     LayerMatches <- match(LayerFormat, QueryTargetSteps)
     AggrIndex <- ceiling(LayerMatches/TStep)
-    Final_rast <- terra::tapp(x = CDS_rast,
+    Final_rast <- tapp(x = CDS_rast,
                               index = AggrIndex,
                               cores = Cores,
                               fun = FUN)
 
     if(TResolution == "year"){
-      terra::time(Final_rast) <- as.POSIXct(
+      time(Final_rast) <- as.POSIXct(
         paste0(LayerFormat[!duplicated(AggrIndex)], "-01-01"),
         tz = TZone)
     }
     if(TResolution == "month"){
-      terra::time(Final_rast) <- as.POSIXct(
-        paste0(format(terra::time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m"), "-01"),
+      time(Final_rast) <- as.POSIXct(
+        paste0(format(time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m"), "-01"),
         tz = TZone)
     }
     if(TResolution == "day"){
-      terra::time(Final_rast) <- as.POSIXct(
-        format(terra::time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m-%d"),
+      time(Final_rast) <- as.POSIXct(
+        format(time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m-%d"),
         tz = TZone)
     }
     if(TResolution == "hour"){
-      terra::time(Final_rast) <- as.POSIXct(
-        terra::time(CDS_rast)[!duplicated(AggrIndex)],
+      time(Final_rast) <- as.POSIXct(
+        time(CDS_rast)[!duplicated(AggrIndex)],
         tz = TZone)
     }
   }

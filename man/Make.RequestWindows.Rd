@@ -14,32 +14,36 @@ Make.RequestWindows(
 )
 }
 \arguments{
-\item{Dates_df}{A two-column data frame (column names: "IN" and "UTC") holding POSIXct elements}
+\item{Dates_df}{A two-column data frame (column names: "IN" and "UTC") holding POSIXct elements. Created with \code{\link{Make.UTC}}.}
 
-\item{BaseTResolution}{Base temporal resolution of queried data on CDS}
+\item{BaseTResolution}{Character. Base temporal resolution of queried data on CDS}
 
-\item{BaseTStep}{Base time steps of queried data on CDS}
+\item{BaseTStep}{Numeric. Base time steps of queried data on CDS}
 
-\item{BaseTStart}{Base starting date and time of queried data on CDS}
+\item{BaseTStart}{POSIXct. Base starting date and time of queried data on CDS}
 
-\item{TChunkSize}{Maximum amount of layers to include in each query}
+\item{TChunkSize}{Numeric. Maximum amount of layers to include in each query}
+
+\item{DataSet}{Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.}
 }
 \value{
-A data frame on input dates respective to user-queried timezone and their UTC counterparts
+List. Contains:
+\itemize{
+\item{QueryTimeWindows}{List of dates for individual CDS queries as used by \code{\link{Make.Request}}.}.
+\item{QueryTimes}{Character. Layers of data in the raw data set}.
+}
 }
 \description{
 Make a list holding date ranges for which to make individual CDS queries
 }
 \examples{
-\dontrun{
 IN_DateStart <- as.POSIXct("1995-01-01 00:00", tz = "CET")
 IN_DateStop <- as.POSIXct("2005-01-01 23:00", tz = "CET")
 Dates_df <- Make.UTC(DatesVec = c(IN_DateStart, IN_DateStop))
 Make.RequestWindows(Dates_df = Dates_df,
-BaseTResolution = "hour",
-BaseTStep = 24
-BaseTStart = as.POSIXct("1950-01-01 00:01", tz = "UTC")
-TChunkSize = 12000)
-}
+                    BaseTResolution = "hour",
+                    BaseTStep = 24
+                    BaseTStart = as.POSIXct("1950-01-01 00:01", tz = "UTC")
+                    TChunkSize = 12000)
 
 }

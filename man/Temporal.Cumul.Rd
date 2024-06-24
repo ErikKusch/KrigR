@@ -14,6 +14,8 @@ Temporal.Cumul(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone)
 \item{BaseResolution}{Character. Base temporal resolution of data set}
 
 \item{BaseStep}{Numeric. Base time step of data set}
+
+\item{TZone}{Character. Time zone for queried data.}
 }
 \value{
 A SpatRaster
