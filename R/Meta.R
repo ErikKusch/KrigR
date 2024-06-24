@@ -204,12 +204,7 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
     stop("Please specify an area using the Extent argument that is contained within the data set. The data set covers the area defined by the following extent:",
          "\n", ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area), " in ", Meta.QuickFacts(dataset = DataSet)$Projection)
   }
-  #--- Time
-  #--- Time Zone
-  if(format(DateCheck$IN[1], "%Z") != format(DateCheck$IN[2], "%Z")){
-    stop("Please provide the DateStart and DateStop Arguments using the same time zone.")
-  }
-  #---  Window
+  #---  Time Window
   ### check if time window is exceeded
   CheckStart <- DateCheck$UTC[1] < Meta.QuickFacts(dataset = DataSet)$TStart
   if(class(Meta.QuickFacts(dataset = DataSet)$TEnd)[1] == "POSIXct"){
@@ -253,12 +248,11 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
     ## these may fail when querying  monthly raw data
     MustStartMonth <- as.POSIXct(paste(
       paste(format(DateCheck$IN[1], "%Y"), format(DateCheck$IN[1], "%m"), "01", sep = "-"),
-      "00:00:00", tz = format(DateCheck$IN[2], "%Z")
-    ))
+      "00:00:00"), tz = format(DateCheck$IN[2], "%Z"))
     MustEndMonth <- as.POSIXct(paste(
       paste(format(DateCheck$IN[2], "%Y"), format(DateCheck$IN[2], "%m"),
             days_in_month(DateCheck$IN[2]), sep = "-"),
-      "24:00:00", tz = format(DateCheck$IN[2], "%Z")))
+      "24:00:00"), tz = format(DateCheck$IN[2], "%Z"))
     if(AggrCheck[[2]] == "month" &
        (DateCheck$IN[1] != MustStartMonth |
         DateCheck$IN[2] != MustEndMonth)){
@@ -267,11 +261,12 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
 
     MustStartYear <- as.POSIXct(paste(
       paste(format(DateCheck$IN[1], "%Y"), "01-01", sep = "-"),
-      "00:00:00", tz = format(DateCheck$IN[2], "%Z")
-    ))
+      "00:00:00"), tz = format(DateCheck$IN[2], "%Z")
+    )
     MustEndYear <- as.POSIXct(paste(
       paste(format(DateCheck$IN[2], "%Y"), "12-31", sep = "-"),
-      "23:00:00", tz = format(DateCheck$IN[2], "%Z")))
+      "23:00:00"), tz = format(DateCheck$IN[2], "%Z")
+    )
     if(AggrCheck[[2]] == "year" &
        (DateCheck$IN[1] != MustStartYear |
         DateCheck$IN[2] != MustEndYear)){
