@@ -73,12 +73,13 @@ Meta.Read <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/D
 #' @param dataset Character. Name of data set. Usually a set of words separated by dashes. See possible datasets by calling \code{\link{Meta.List}}.
 #'
 #' @return Data frame. Contains five columns:
-#'
-#' 1. Variable (clear name)
-#' 2. CDSname (name required for CDS query)
-#' 3. Description (plain text description of variable, scraped from CDS webpage)
-#' 4. Unit (unit of measurement)
-#' 5. Cumulative (logical, indexing whether a variable is recorded cumulatively or not)
+#' \itemize{
+#' \item{Variable}{clear name}
+#' \item{CDSname}{name required for CDS query}
+#' \item{Description}{plain text description of variable, scraped from CDS webpage}
+#' \item{Unit}{unit of measurement}
+#' \item{Cumulative}{logical, indexing whether a variable is recorded cumulatively or not}
+#' }
 #'
 #' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
 #'
@@ -162,12 +163,13 @@ Meta.QuickFacts <- function(dataset = "reanalysis-era5-land"){
 #' @importFrom lubridate days_in_month
 #'
 #' @return List. Contains:
-#'
-#' 1. QueryDataSet (queried dataset).
-#' 2. QueryType (queried sub-type of dataset).
-#' 3. QueryVariable (queried variable).
-#' 4. QueryFormat (file format supported by queried dataset).
-#' 5. QueryUnit (unit of measurement of queried variable from queried dataset).
+#' \itemize{
+#' \item{QueryDataSet}{queried dataset}.
+#' \item{QueryType}{queried sub-type of dataset}.
+#' \item{QueryVariable}{queried variable}.
+#' \item{QueryFormat}{file format supported by queried dataset}.
+#' \item{QueryUnit}{unit of measurement of queried variable from queried dataset}.
+#' }
 #'
 #' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Read}}, \code{\link{Meta.Variables}}, \code{\link{Meta.DOI}}, \code{\link{Meta.QuickFacts}}.
 #'

@@ -11,12 +11,13 @@ Meta.Variables(dataset = "reanalysis-era5-land")
 }
 \value{
 Data frame. Contains five columns:
-
-1. Variable (clear name)
-2. CDSname (name required for CDS query)
-3. Description (plain text description of variable, scraped from CDS webpage)
-4. Unit (unit of measurement)
-5. Cumulative (logical, indexing whether a variable is recorded cumulatively or not)
+\itemize{
+\item{Variable}{clear name}
+\item{CDSname}{name required for CDS query}
+\item{Description}{plain text description of variable, scraped from CDS webpage}
+\item{Unit}{unit of measurement}
+\item{Cumulative}{logical, indexing whether a variable is recorded cumulatively or not}
+}
 }
 \description{
 Read and return overview of variables available for specific data set.
