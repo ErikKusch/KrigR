@@ -16,7 +16,7 @@
 #' @param Buffer Optional, Numeric. Identifies how big a circular buffer to draw around points if Extent is a data.frame of points. Buffer is expressed as centessimal degrees.
 #' @param Dir Character/Directory Pointer. Directory specifying where to download data to.
 #' @param FileName Character. A file name for the produced file.
-#' @param FileCheck Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).
+#' @param FileExtension Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).
 #' @param API_Key Character; ECMWF cds API key.
 #' @param API_User Character; ECMWF cds user number.
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.
@@ -176,7 +176,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   if(!(Type %in% Meta.QuickFacts(dataset = DataSet)$Type)){
     stop("Please specify a Type argument that is supported by your chosen data set. Your options are:",
          "\n", paste(Meta.QuickFacts(dataset = DataSet)$Type, collapse = (" \n")),
-         "\n !! If you are seeing an NA ont he above line, note that this is not an error. Please specify NA as the Type.")
+         "\n !! If you are seeing an NA on the above line, note that this is not an error. Please specify NA as the Type.")
   }
   #--- File Name and Extension
   ### check if file name has been specified
@@ -267,7 +267,9 @@ CDownloadS <- function(Variable = NULL, # which variable
   #--- File check, if already a file with this name present then load from disk
   FCheck <- Check.File(FName = FileName, Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = TRUE)
   if(!is.null(FCheck)){
-    FCheck <- Meta.NC(NC = FCheck, FName = file.path(Dir, FileName), Attrs = Meta_vec, Read = TRUE)
+    if(FileExtension == ".nc"){
+      FCheck <- Meta.NC(NC = FCheck, FName = file.path(Dir, FileName), Attrs = Meta_vec, Read = TRUE)
+    }
     terra::time(FCheck) <- as.POSIXct(terra::time(FCheck), tz = TZone) # assign the correct time zone, when loading from disk, time zone is set to UTC
     return(FCheck)
   }
@@ -296,7 +298,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   }))
   NLyrIssue <- which(NLyrCheck != unlist(lapply(QueryTimeWindows, length)))
   if(length(NLyrIssue) > 0){
-    stop("Download of ", paste(basename(TempFs[NLyrIssue]), collapse = ", "), "produced file(s) of incorrect amount of layers. You may want to delete these files and try again. If the error persists. Please consult your queue on CDS: https://cds.climate.copernicus.eu/cdsapp#!/yourrequests. Alternatively, you may want to consult the corresponding download query/queries used behind the scenes:", paste(capture.output(str(Requests_ls[NLyrIssue])), collapse = "\n"))
+    stop("Download of ", paste(basename(TempFs[NLyrIssue]), collapse = ", "), " produced file(s) of incorrect amount of layers. You may want to delete these files and try again. If the error persists. Please consult your queue on CDS: https://cds.climate.copernicus.eu/cdsapp#!/yourrequests. Alternatively, you may want to consult the corresponding download query/queries used behind the scenes:", paste(capture.output(str(Requests_ls[NLyrIssue])), collapse = "\n"))
   }
 
   #--- Loading data

@@ -60,6 +60,8 @@ CDownloadS(
 
 \item{FileName}{Character. A file name for the produced file.}
 
+\item{FileExtension}{Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).}
+
 \item{API_User}{Character; ECMWF cds user number.}
 
 \item{API_Key}{Character; ECMWF cds API key.}
@@ -77,8 +79,6 @@ CDownloadS(
 \item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not. Default is FALSE.}
 
 \item{Save_Final}{Logical. Whether to write the final SpatRaster to the hard drive. Default is TRUE.}
-
-\item{FileCheck}{Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).}
 }
 \value{
 A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a file (either .nc or .tif) in the specified directory.
