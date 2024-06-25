@@ -181,7 +181,7 @@ EnsembleSpreadSum6hour_rast <- CDownloadS(
 	# API credentials
 	API_User = API_User,
 	API_Key = API_Key,
-	Kepp_Raw = TRUE
+	Keep_Raw = TRUE
 )
 terra::plot(EnsembleSpreadSum6hour_rast)
 }
