@@ -86,7 +86,7 @@ The SpatRaster contains metadata/attributes as a named vector that can be retrie
 \item{KrigRCall.X}{ - Arguments passed to the CDownloadS function that produced the file (API credentials are omitted from these metadata)}.
 }
 
-\textbf{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
+\strong{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
 }
 \description{
 This function is used to obtain data from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s). By default, this function breaks down download calls into intervals so as to avoid submitting queries which fail, downloads queried data from [ECMWF](https://www.ecmwf.int/) servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an [API key](https://cds.climate.copernicus.eu/api-how-to) for download staging and accept terms and conditions for the specific queried dataset(s).
@@ -109,7 +109,7 @@ RawGlobe_rast <- CDownloadS(
 	FileName = "RawGlobe",
 	# API credentials
 	API_User = API_User,
-	API_Key = API_Key,
+	API_Key = API_Key
 )
 terra::plot(RawGlobe_rast)
 
@@ -132,7 +132,7 @@ BiAnnAirTemp_rast <- CDownloadS(
 	FileName = "BiAnnAirTemp",
 	# API credentials
 	API_User = API_User,
-	API_Key = API_Key,
+	API_Key = API_Key
 )
 terra::plot(BiAnnAirTemp_rast)
 
@@ -154,7 +154,7 @@ DailyBackCPrecip_rast <- CDownloadS(
   FileName = "DailyBackCPrecip",
   # API credentials
   API_User = API_User,
-  API_Key = API_Key,
+  API_Key = API_Key
 )
 terra::plot(DailyBackCPrecip_rast)
 
@@ -180,7 +180,8 @@ EnsembleSpreadSum6hour_rast <- CDownloadS(
 	FileExtension = ".tif",
 	# API credentials
 	API_User = API_User,
-	API_Key = API_Key
+	API_Key = API_Key,
+	Kepp_Raw = TRUE
 )
 terra::plot(EnsembleSpreadSum6hour_rast)
 }

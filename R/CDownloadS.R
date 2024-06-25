@@ -44,7 +44,7 @@
 #' \item{KrigRCall.X}{ - Arguments passed to the CDownloadS function that produced the file (API credentials are omitted from these metadata)}.
 #' }
 #'
-#' \textbf{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
+#' \strong{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
 #'
 #' @examples
 #' \dontrun{
@@ -64,7 +64,7 @@
 #' 	FileName = "RawGlobe",
 #' 	# API credentials
 #' 	API_User = API_User,
-#' 	API_Key = API_Key,
+#' 	API_Key = API_Key
 #' )
 #' terra::plot(RawGlobe_rast)
 #'
@@ -87,7 +87,7 @@
 #' 	FileName = "BiAnnAirTemp",
 #' 	# API credentials
 #' 	API_User = API_User,
-#' 	API_Key = API_Key,
+#' 	API_Key = API_Key
 #' )
 #' terra::plot(BiAnnAirTemp_rast)
 #'
@@ -109,7 +109,7 @@
 #'   FileName = "DailyBackCPrecip",
 #'   # API credentials
 #'   API_User = API_User,
-#'   API_Key = API_Key,
+#'   API_Key = API_Key
 #' )
 #' terra::plot(DailyBackCPrecip_rast)
 #'
@@ -135,7 +135,8 @@
 #' 	FileExtension = ".tif",
 #' 	# API credentials
 #' 	API_User = API_User,
-#' 	API_Key = API_Key
+#' 	API_Key = API_Key,
+#' 	Kepp_Raw = TRUE
 #' )
 #' terra::plot(EnsembleSpreadSum6hour_rast)
 #' }
