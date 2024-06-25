@@ -196,17 +196,27 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
   if(BaseResolution == TResolution & BaseStep == TStep){
     Final_rast <- CDS_rast # no temporal aggregation needed
   }else{
-    Form <- substr(TResolution, 1, 1)
-    Form <- ifelse(Form %in% c("h", "y"), toupper(Form), Form)
-    LayerFormat <- format(terra::time(CDS_rast), paste0("%", Form))
-    LayerMatches <- match(LayerFormat, QueryTargetSteps)
 
-    if(grepl("Factor =", QueryTargetSteps)){ # happens for hourly ensemble data
-      Factor <- as.numeric(sub("Ensembling at base resolution, Factor = ", "", QueryTargetSteps))
-      AggrIndex <- rep(seq(from = 1, to = length(LayerFormat)/(Factor)), each = Factor)
-    }else{
-      AggrIndex <- ceiling(LayerMatches/TStep)
-    }
+
+    TimeDiff <- sapply(terra::time(CDS_rast), FUN = function(xDate){
+      length(seq(from = terra::time(CDS_rast)[1],
+                 to = xDate,
+                 by = TResolution))-1
+    })
+    AggrIndex <- floor(TimeDiff/TStep)+1
+
+    # Form <- substr(TResolution, 1, 1)
+    # Form <- ifelse(Form %in% c("h", "y"), toupper(Form), Form)
+    # LayerFormat <- format(terra::time(CDS_rast), paste0("%", Form))
+    # LayerMatches <- match(LayerFormat, QueryTargetSteps)
+    #
+    # if(grepl("Factor =", QueryTargetSteps)){ # happens for hourly ensemble data
+    #   Factor <- as.numeric(sub("Ensembling at base resolution, Factor = ", "", QueryTargetSteps))
+    #   AggrIndex <- rep(seq(from = 1, to = length(LayerFormat)/(Factor)), each = Factor)
+    # }else{
+    #   AggrIndex <- ceiling(LayerMatches/TStep)
+    # }
+
     Final_rast <- tapp(x = CDS_rast,
                               index = AggrIndex,
                               cores = Cores,

@@ -40,11 +40,11 @@
 #'
 #' The SpatRaster contains metadata/attributes as a named vector that can be retrieved with terra::metags(...):
 #' \itemize{
-#' \item{Citation}{A string which to use for in-line citation of the data product obtained with CDownloadS}.
-#' \item{KrigRCall.X}{Arguments passed to the CDownloadS function that produced the file (API credentials are omitted from these metadata)}.
+#' \item{Citation}{ - A string which to use for in-line citation of the data product obtained with CDownloadS}.
+#' \item{KrigRCall.X}{ - Arguments passed to the CDownloadS function that produced the file (API credentials are omitted from these metadata)}.
 #' }
 #'
-#' **ATTENTION:** If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
+#' \textbf{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
 #'
 #' @examples
 #' \dontrun{
@@ -138,6 +138,7 @@
 #' 	API_Key = API_Key
 #' )
 #' terra::plot(EnsembleSpreadSum6hour_rast)
+#' }
 #' @export
 CDownloadS <- function(Variable = NULL, # which variable
                        CumulVar = FALSE, # cumulative variable?

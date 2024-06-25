@@ -82,12 +82,106 @@ A SpatRaster object containing the downloaded, cropped/masked, and subsequently 
 
 The SpatRaster contains metadata/attributes as a named vector that can be retrieved with terra::metags(...):
 \itemize{
-\item{Citation}{A string which to use for in-line citation of the data product obtained with CDownloadS}.
-\item{KrigRCall.X}{Arguments passed to the CDownloadS function that produced the file (API credentials are omitted from these metadata)}.
+\item{Citation}{ - A string which to use for in-line citation of the data product obtained with CDownloadS}.
+\item{KrigRCall.X}{ - Arguments passed to the CDownloadS function that produced the file (API credentials are omitted from these metadata)}.
 }
 
-**ATTENTION:** If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
+\textbf{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
 }
 \description{
 This function is used to obtain data from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s). By default, this function breaks down download calls into intervals so as to avoid submitting queries which fail, downloads queried data from [ECMWF](https://www.ecmwf.int/) servers according to user-specification, and fuses the downloaded files together according to user-demands. The actual time to download is dependent on ECMWF download queues. Users need an [API key](https://cds.climate.copernicus.eu/api-how-to) for download staging and accept terms and conditions for the specific queried dataset(s).
+}
+\examples{
+\dontrun{
+## Raw data for one month of full globe
+RawGlobe_rast <- CDownloadS(
+	Variable = "2m_temperature",
+	DataSet = "reanalysis-era5-land-monthly-means",
+	Type = "monthly_averaged_reanalysis",
+	# time-window, default set to range of dataset-type
+	DateStart = "1995-01-01 00:00",
+	DateStop = "1995-01-01 23:00",
+	TZone = "CET",
+	# temporal aggregation
+	TResolution = "month",
+	TStep = 1,
+	# file storing
+	FileName = "RawGlobe",
+	# API credentials
+	API_User = API_User,
+	API_Key = API_Key,
+)
+terra::plot(RawGlobe_rast)
+
+## Monthly air temperature aggregated to bi-annual maximum by SpatRaster
+CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
+BiAnnAirTemp_rast <- CDownloadS(
+	Variable = "2m_temperature",
+	DataSet = "reanalysis-era5-land-monthly-means",
+	Type = "monthly_averaged_reanalysis",
+	# time-window, default set to range of dataset-type
+	DateStart = "1995-01-01 00:00",
+	DateStop = "1996-12-31 23:00",
+	TZone = "EET",
+	# temporal aggregation
+	TResolution = "year",
+	TStep = 2,
+	# spatial
+	Extent = CDS_rast,
+	# file storing
+	FileName = "BiAnnAirTemp",
+	# API credentials
+	API_User = API_User,
+	API_Key = API_Key,
+)
+terra::plot(BiAnnAirTemp_rast)
+
+## Hourly back-calculated precipitation aggregated to daily averages by shapefiles
+data("Jotunheimen_poly")
+Jotunheimen_poly
+DailyBackCPrecip_rast <- CDownloadS(
+  Variable = "total_precipitation",
+  CumulVar = TRUE,
+  # time-window, default set to range of dataset-type
+  DateStart = "1995-01-01 00:00",
+  DateStop = "1995-01-03 23:00",
+  TZone = "CET",
+  # temporal aggregation
+  TResolution = "day",
+  # spatial
+  Extent = Jotunheimen_poly,
+  # file storing
+  FileName = "DailyBackCPrecip",
+  # API credentials
+  API_User = API_User,
+  API_Key = API_Key,
+)
+terra::plot(DailyBackCPrecip_rast)
+
+## 6-hourly ensemble member spread sum for air temperature by buffered points
+data("Mountains_df")
+EnsembleSpreadSum6hour_rast <- CDownloadS(
+	Variable = "2m_temperature",
+	DataSet = "reanalysis-era5-single-levels",
+	Type = "ensemble_spread",
+	# time-window, default set to range of dataset-type
+	DateStart = "1995-01-01 00:00:00",
+	DateStop = "1995-01-01 21:00:00",
+	TZone = "UTC",
+	# temporal aggregation
+	TResolution = "hour",
+	TStep = 6,
+	FUN = sum,
+	# spatial
+	Extent = Mountains_df,
+	Buffer = 0.2,
+	# file storing
+	FileName = "EnsembleSpreadSum6hour",
+	FileExtension = ".tif",
+	# API credentials
+	API_User = API_User,
+	API_Key = API_Key
+)
+terra::plot(EnsembleSpreadSum6hour_rast)
+}
 }
