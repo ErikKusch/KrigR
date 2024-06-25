@@ -218,7 +218,7 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
     #   AggrIndex <- ceiling(LayerMatches/TStep)
     # }
 
-    if(length(unique(AggrIndex)) == 0){ ## this is to avoid a warning message thrown by terra
+    if(length(unique(AggrIndex)) == 1){ ## this is to avoid a warning message thrown by terra
       Final_rast <- tapp(x = CDS_rast,
                          cores = Cores,
                          fun = FUN)
