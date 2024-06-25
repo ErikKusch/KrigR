@@ -188,6 +188,7 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
 #'
 #' @importFrom terra time
 #' @importFrom terra tapp
+#' @importFrom terra app
 #'
 #' @return A SpatRaster
 #'
@@ -217,10 +218,18 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
     #   AggrIndex <- ceiling(LayerMatches/TStep)
     # }
 
-    Final_rast <- tapp(x = CDS_rast,
-                              index = AggrIndex,
-                              cores = Cores,
-                              fun = FUN)
+    if(length(unique(AggrIndex)) == 0){ ## this is to avoid a warning message thrown by terra
+      Final_rast <- tapp(x = CDS_rast,
+                         cores = Cores,
+                         fun = FUN)
+    }else{
+      Final_rast <- tapp(x = CDS_rast,
+                         index = AggrIndex,
+                         cores = Cores,
+                         fun = FUN)
+    }
+
+
 
     if(TResolution == "year"){
       terra::time(Final_rast) <- as.POSIXct(
