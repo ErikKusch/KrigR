@@ -205,9 +205,9 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
     })
     AggrIndex <- floor(TimeDiff/TStep)+1
 
-    # Form <- substr(TResolution, 1, 1)
-    # Form <- ifelse(Form %in% c("h", "y"), toupper(Form), Form)
-    # LayerFormat <- format(terra::time(CDS_rast), paste0("%", Form))
+    Form <- substr(TResolution, 1, 1)
+    Form <- ifelse(Form %in% c("h", "y"), toupper(Form), Form)
+    LayerFormat <- format(terra::time(CDS_rast), paste0("%", Form))
     # LayerMatches <- match(LayerFormat, QueryTargetSteps)
     #
     # if(grepl("Factor =", QueryTargetSteps)){ # happens for hourly ensemble data
