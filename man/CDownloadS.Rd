@@ -27,7 +27,8 @@ CDownloadS(
   TChunkSize = 6000,
   Cores = 1,
   verbose = TRUE,
-  Keep_Raw = FALSE
+  Keep_Raw = FALSE,
+  Save_Final = TRUE
 )
 }
 \arguments{
@@ -73,7 +74,9 @@ CDownloadS(
 
 \item{verbose}{Logical. Whether to print/message function progress in console or not.}
 
-\item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not.}
+\item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not. Default is FALSE.}
+
+\item{Save_Final}{Logical. Whether to write the final SpatRaster to the hard drive. Default is TRUE.}
 
 \item{FileCheck}{Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).}
 }

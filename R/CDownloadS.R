@@ -24,7 +24,8 @@
 #' @param TChunkSize Numeric. Number of layers to bundle in each individual download. Default is 6000 to adhere to most restrictive CDS limits: https://cds.climate.copernicus.eu/live/limits.
 #' @param Cores Numeric. How many cores to use when carrying out temporal aggregation. Default is 1.
 #' @param verbose Logical. Whether to print/message function progress in console or not.
-#' @param Keep_Raw Logical. Whether to retain raw downloaded data or not.
+#' @param Keep_Raw Logical. Whether to retain raw downloaded data or not. Default is FALSE.
+#' @param Save_Final Logical. Whether to write the final SpatRaster to the hard drive. Default is TRUE.
 #'
 #' @importFrom tools file_path_sans_ext
 #' @importFrom terra rast
@@ -155,7 +156,8 @@ CDownloadS <- function(Variable = NULL, # which variable
                        TChunkSize = 6000,
                        Cores = 1, # parallelisation
                        verbose = TRUE, # verbosity
-                       Keep_Raw = FALSE
+                       Keep_Raw = FALSE,
+                       Save_Final = TRUE
                        ){
   ## Catching Most Frequent Issues ===============
   #--- API Credentials
@@ -325,12 +327,14 @@ CDownloadS <- function(Variable = NULL, # which variable
   terra::metags(CDS_rast) <- Meta_vec
 
   ### write file
-  if(FileExtension == ".tif"){
-    terra::writeRaster(CDS_rast, filename = file.path(Dir, FileName))
-  }
-  if(FileExtension == ".nc"){
-    CDS_rast <- Meta.NC(NC = CDS_rast, FName = file.path(Dir, FileName),
-            Attrs = terra::metags(CDS_rast), Write = TRUE)
+  if(Save_Final){
+    if(FileExtension == ".tif"){
+      terra::writeRaster(CDS_rast, filename = file.path(Dir, FileName))
+    }
+    if(FileExtension == ".nc"){
+      CDS_rast <- Meta.NC(NC = CDS_rast, FName = file.path(Dir, FileName),
+                          Attrs = terra::metags(CDS_rast), Write = TRUE)
+    }
   }
 
   ### unlink temporary files
