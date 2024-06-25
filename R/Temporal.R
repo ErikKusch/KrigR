@@ -219,7 +219,7 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
     # }
 
     if(length(unique(AggrIndex)) == 1){ ## this is to avoid a warning message thrown by terra
-      Final_rast <- tapp(x = CDS_rast,
+      Final_rast <- app(x = CDS_rast,
                          cores = Cores,
                          fun = FUN)
     }else{
