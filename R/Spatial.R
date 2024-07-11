@@ -134,7 +134,7 @@ Handle.Spatial <- function(BASE, Shape){
   ## splitting by rasterlayers if necessary to avoid error reported in https://github.com/rspatial/terra/issues/1556
   if(terra::nlyr(BASE) > 65535){
     Indices <- ceiling((1:terra::nlyr(BASE))/2e4)
-    r_ls <- terra::split(x = r, f = Indices)
+    r_ls <- terra::split(x = BASE, f = Indices)
     ret_ls <- pblapply(r_ls, FUN = function(BASE_iter){
       ret_rast <- crop(BASE_iter, ext(Shape))
       if(class(Shape)[1] == "sf"){
