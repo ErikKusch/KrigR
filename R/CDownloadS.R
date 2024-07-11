@@ -203,7 +203,9 @@ CDownloadS <- function(Variable = NULL, # which variable
     Extent <- Buffer.pts(USER_pts = Make.SpatialPoints(USER_df = Extent),
                          USER_buffer = Buffer)
   }
-  QueryExtent <- Ext.Check(Extent)[c(4,1,3,2)] #N,W,S,E
+  QuerySpace <- Ext.Check(Extent)
+  QueryExtent <- QuerySpace$Ext[c(4,1,3,2)] #N,W,S,E
+  Extent <- QuerySpace$SpatialObj # terra/sf version of input extent to be used for easy cropping and masking
 
   #--- Base Dataset Information
   BaseResolution <- Meta.QuickFacts(dataset = DataSet)$TResolution

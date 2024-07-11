@@ -22,13 +22,13 @@ Make.SpatialPoints <- function(USER_df){
 ### EXTENT CHECKING ============================================================
 #' Check extent specification
 #'
-#' Try to convert user input into a SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
+#' Try to convert user input into (1) a terra or sf object and also read out the coirresponding (2) SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
 #'
 #' @param USER_ext User-supplied Extent argument in download_ERA function call
 #'
 #' @importFrom methods getClass
+#' @importFrom terra rast
 #' @importFrom terra ext
-#' @importFrom raster extent
 #' @importFrom sf st_as_sf
 #' @importFrom sf st_bbox
 #'
@@ -63,9 +63,11 @@ Ext.Check <- function(USER_ext){
 
   ## Transform into SpatExtent class
   if(package_name == "raster"){
-    OUT_ext <- ext(extent(USER_ext))
+    OUT_spatialobj <- rast(USER_ext)
+    OUT_ext <- ext(USER_ext)
   }
   if(package_name == "terra" | package_name == "sf"){
+    OUT_spatialobj <- USER_ext
     if(class_name[1] == "sfc_MULTIPOLYGON"){
       OUT_ext <- ext(st_bbox(USER_ext))
     }else{
@@ -73,13 +75,14 @@ Ext.Check <- function(USER_ext){
     }
   }
   if(package_name == "sp"){
-    USER_ext <- st_as_sf(USER_ext)
-    OUT_ext <- ext(USER_ext)
+    OUT_spatialobj <- st_as_sf(USER_ext)
+    OUT_ext <- ext(OUT_spatialobj)
   }
 
   ## Round digits and return
-  OUT_ext <- round(OUT_ext, 3)
-  return(OUT_ext)
+  OUT_list = list(SpatialObj = OUT_spatialobj,
+                  Ext = round(OUT_ext, 3))
+  return(OUT_list)
 }
 
 ### POINT BUFFERING ============================================================
@@ -125,9 +128,10 @@ Buffer.pts <- function(USER_pts, USER_buffer = .5){
 #'
 #' @export
 Handle.Spatial <- function(BASE, Shape){
-  ret_rast <- crop(BASE, Shape)
-  if(class(Shape)[1] == "sf"){
-    ret_rast <- mask(ret_rast, Shape, touches = TRUE)
-  }
+  ret_rast <- crop(BASE, Shape, mask = TRUE, touches = TRUE)
+  ## remove the below and added "mask = TRUE, touches = TRUE" to the above to avoid error: TIFF file, but bands must be lesser or equal to 65535. (GDAL error 1)
+  # if(class(Shape)[1] == "sf"){
+  #   ret_rast <- mask(ret_rast, Shape, touches = TRUE)
+  # }
   return(ret_rast)
 }

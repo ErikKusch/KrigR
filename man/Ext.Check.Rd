@@ -13,7 +13,7 @@ Ext.Check(USER_ext)
 A SpatExtent object.
 }
 \description{
-Try to convert user input into a SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
+Try to convert user input into (1) a terra or sf object and also read out the coirresponding (2) SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
 }
 \examples{
  ## raster
