@@ -128,10 +128,12 @@ Buffer.pts <- function(USER_pts, USER_buffer = .5){
 #'
 #' @export
 Handle.Spatial <- function(BASE, Shape){
-  ret_rast <- crop(BASE, Shape, mask = TRUE, touches = TRUE)
+  ret_rast <- crop(BASE, ext(Shape)
+                   #, mask = TRUE, touches = TRUE
+                   )
   ## remove the below and added "mask = TRUE, touches = TRUE" to the above to avoid error: TIFF file, but bands must be lesser or equal to 65535. (GDAL error 1)
-  # if(class(Shape)[1] == "sf"){
-  #   ret_rast <- mask(ret_rast, Shape, touches = TRUE)
-  # }
+  if(class(Shape)[1] == "sf"){
+    ret_rast <- mask(ret_rast, Shape, touches = TRUE)
+  }
   return(ret_rast)
 }
