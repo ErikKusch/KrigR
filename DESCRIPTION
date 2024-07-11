@@ -1,7 +1,7 @@
 Package: KrigR
 Type: Package
 Title: Downloading, Aggregating, and Kriging of ECMWF CDS-Data
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: as.person(c(
     "Erik Kusch <erik@i-solution.de> [aut, cre]", 
     "Richard Davy <Richard.Davy@nersc.no> [aut]"
@@ -25,5 +25,6 @@ Imports:
     raster,
     sf,
     terra,
-    ncdf4
+    ncdf4,
+    pbapply
 Depends: R (>= 4.0.0) 

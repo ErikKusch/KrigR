@@ -118,6 +118,8 @@ Buffer.pts <- function(USER_pts, USER_buffer = .5){
 #'
 #' @importFrom terra crop
 #' @importFrom terra mask
+#' @importFrom terra nlyr
+#' @importFrom pbapply pblapply
 #'
 #' @return A SpatRaster.
 #'
@@ -128,10 +130,23 @@ Buffer.pts <- function(USER_pts, USER_buffer = .5){
 #'
 #' @export
 Handle.Spatial <- function(BASE, Shape){
-  ret_rast <- crop(BASE, ext(Shape)
-                   #, mask = TRUE, touches = TRUE
-                   )
-  ## remove the below and added "mask = TRUE, touches = TRUE" to the above to avoid error: TIFF file, but bands must be lesser or equal to 65535. (GDAL error 1)
+
+  ## splitting by rasterlayers if necessary to avoid error reported in https://github.com/rspatial/terra/issues/1556
+  if(terra::nlyr(BASE) > 65535){
+    Indices <- ceiling((1:terra::nlyr(BASE))/2e4)
+    r_ls <- terra::split(x = r, f = Indices)
+    ret_ls <- pblapply(r_ls, FUN = function(BASE_iter){
+      ret_rast <- crop(BASE_iter, ext(Shape))
+      if(class(Shape)[1] == "sf"){
+        ret_rast <- mask(ret_rast, Shape, touches = TRUE)
+      }
+    })
+    ret_rast <- do.call(c, ret_ls)
+    return(ret_rast)
+  }
+
+  ## regular cropping and masking for SPatRasters not exceeding layer limit
+  ret_rast <- crop(BASE, ext(Shape))
   if(class(Shape)[1] == "sf"){
     ret_rast <- mask(ret_rast, Shape, touches = TRUE)
   }
