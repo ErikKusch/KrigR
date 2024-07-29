@@ -1,22 +1,36 @@
-#' Downloading DEM data from USGS servers
+#' Preparing Covariate Data for Use in Kriging
 #'
-#' This function downloads and rescales the median statistic of the Global Multi-resolution Terrain Elevation Data (GMTED2010) data from the servers of the U.S. Geological Survey (USGS) available at \url{https://topotools.cr.usgs.gov/gmted_viewer/gmted2010_global_grids.php}. The data is downloaded at 30 arc-sec latitude/longitude grid cells and subsequently resampled to match Train_ras and Target_res. This data is the default for kriging within this package.
+#' This function is used to setup products of covariate data ready for use in Kriging. This functiuonality can either be applied to user-supplied covariate data or ready-made data products such as the Harmised World Soil Data Base and the median statistic of the Global Multi-resolution Terrain Elevation Data (GMTED2010; available at \url{https://topotools.cr.usgs.gov/gmted_viewer/gmted2010_global_grids.php}). In case of the latter, the data is downloaded at 30 arc-sec latitude/longitude grid cells and subsequently resampled to match training and target resolutions specified by the user.
 #'
-#' @param Train_ras A raster file containing the data which is to be downscaled. GMTED2010 data is then resampled to match this.
-#' @param Target_res The target resolution for the kriging step (i.e. wich resolution to downscale to). An object as specified/produced by raster::res() or a single number (GMTED2010 data will be aggregated) or a raster which the data should be comparable to after kriging (GMTED2010 data will be resampled).
-#' @param Shape Optional, a SpatialPolygonsDataFrame or data.frame object. If Shape is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Shape is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns as well as a non-repeating ID-column.
-#' @param Buffer Optional. Identifies how big a rectangular buffer to draw around points if Shape is a data frame of points. Buffer is expressed as centessimal degrees.
-#' @param ID Optional. Identifies which column in Shape to use for creation of individual buffers if Shape is a data.frame.
-#' @param Dir Directory specifying where to download data to.
-#' @param Keep_Temporary Logical, whether to delete individual, global, 30 arc-sec files or keep them to be reused in later analyses.
-#' @param Source Character. Whether to attempt download from the official USGS data viewer (Source = "USGS") or a static copy of the data set on a private drive (Source = "Drive"). Default is "USGS". Use this if the USGS viewer is unavailable.
+#' @param Training A SpatRaster file containing the data which is to be downscaled. Covariate data will be resampled to match this.
+#' @param Target Either numeric or a SpatRaster. If numeric, a single number representing the target resolution for the kriging step (i.e. wich resolution to downscale to). If a SpatRaster, data that the covariates and kriged products should align with. In case of a numeric input, covariate data is aggregated as closely as possible to desired resolution. If a SpatRaster, covariate data is resampled to match desired output directly.
+#' @param Covariates Either character or a SpatRaster. If character, obtain frequently used and provably useful covariate data (i.e., GMTED2010 and HWSD) and prepare for use in Kriging. Supported character values are "GMTED2010" and "HWSD". Note that currently, HWSD data download is not functional. If a SpatRaster, a user-supplied set of covariate data to be prepared for use in Kriging.
+#' @param Source Character. Only comes into effect when Covariates argument is specified as a character. Whether to attempt download of covariate data from the official sources (Source = "Origin") or a static copy of the data set on a private drive (Source = "Drive"). Default is "Origin".
+#' @param Extent Optional, prepare covariate data according to desired spatial specification. If missing/unspecified, maximal area of supplied data and covariat sets is used. Can be specified either as a raster object, an sf object, a terra object, or a data.frame. If Extent is a raster or terra object, covariates will be prepared according to rectangular extent thereof. If Extent is an sf (MULTI-)POLYGON object, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns around which a buffered shapefile will be created using the Buffer argument.
+#' @param Buffer Optional, Numeric. Identifies how big a circular buffer to draw around points if Extent is a data.frame of points. Buffer is expressed as centessimal degrees.
+#' @param Dir Character/Directory Pointer. Directory specifying where to download data to.
+#' @param Keep_Global Logical. Only comes into effect when Covariates argument is specified as a character. Whether to retain raw downloaded covariate data or not. Default is FALSE.
+#' @param FileExtension Character. A file extension for the produced files. Supported values are ".nc" (default) and ".tif" (better support for metadata).
 #'
 #' @importFrom httr GET
 #' @importFrom httr write_disk
 #' @importFrom httr progress
 #' @importFrom terra rast
+#' @importFrom terra res
+#' @importFrom terra ext
+#' @importFrom terra values
+#' @importFrom terra metags
+#' @importFrom terra resample
+#' @importFrom terra aggregate
+#' @importFrom terra writeRaster
+#' @importFrom terra writeCDF
 #'
-#' @return A list containing two raster object ready to be used as covariates for kriging, and two NETCDF (.nc) files in the specified directory.
+#' @return A list containing two SpatRaster objects (Training and Target) ready to be used as covariates for kriging, and two files called Covariates_Target and Covariates_Train in the specified directory.
+#'
+#' The SpatRasters produced and stored when specifying the Covariates argument as a character string and setting the Keep_Global argument to TRUE contain metadata/attributes as a named vector that can be retrieved with terra::metags(...):
+#' \itemize{
+#' \item{Citation}{ - A string which to use for in-line citation of the data product.}
+#' }
 #'
 #' @examples
 #' \dontrun{
@@ -24,8 +38,8 @@
 #' }
 #' @export
 KrigingCovariateSetup <- function(Training = NULL,Target = NULL,
-                                  Covariates = c("GMTED2010", "HWSD"),
-                                  Source = c("Origin", "Drive"),
+                                  Covariates = "GMTED2010",
+                                  Source = "Origin",
                                   Extent,
                                   Buffer = 0.5,
                                   Dir = getwd(),
@@ -174,13 +188,15 @@ KrigingCovariateSetup <- function(Training = NULL,Target = NULL,
   Cov_target <- Handle.Spatial(Cov_target, Extent)
 
   ## Data Saving & Export ===============
+  TrainName <- file.path(Dir, paste0("Covariates_Train", FileExtension))
+  TargetName <- file.path(Dir, paste0("Covariates_Target", FileExtension))
   if(FileExtension == ".tif"){
-    terra::writeRaster(x = Cov_train, filename = file.path(Dir, "Covariates_Train.tif"), overwrite = TRUE)
-    terra::writeRaster(x = Cov_target, filename = file.path(Dir, "Covariates_Target.tif"), overwrite = TRUE)
+    terra::writeRaster(x = Cov_train, filename = TrainName, overwrite = TRUE)
+    terra::writeRaster(x = Cov_target, filename = TargetName, overwrite = TRUE)
   }
   if(FileExtension == ".nc"){
-    terra::writeCDF(x = Cov_train, filename = file.path(Dir, "Covariates_Train.nc"), overwrite = TRUE)
-    terra::writeCDF(x = Cov_target, filename = file.path(Dir, "Covariates_Target.nc"), overwrite = TRUE)
+    terra::writeCDF(x = Cov_train, filename = TrainName, overwrite = TRUE)
+    terra::writeCDF(x = Cov_target, filename = TargetName, overwrite = TRUE)
   }
 
   ## Cleaning up files ===============
@@ -189,5 +205,8 @@ KrigingCovariateSetup <- function(Training = NULL,Target = NULL,
   }
 
   ## Return data ===============
-  return(list(Cov_train, Cov_target))
+  return(list(Training = terra::rast(TrainName),
+              Target = terra::rast(TargetName)
+              )
+         )
 }
