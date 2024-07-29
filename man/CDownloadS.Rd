@@ -60,7 +60,7 @@ CDownloadS(
 
 \item{FileName}{Character. A file name for the produced file.}
 
-\item{FileExtension}{Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).}
+\item{FileExtension}{Character. A file extension for the produced file. Supported values are ".nc" (default) and ".tif" (better support for metadata).}
 
 \item{API_User}{Character; ECMWF cds user number.}
 

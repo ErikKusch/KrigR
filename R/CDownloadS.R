@@ -16,7 +16,7 @@
 #' @param Buffer Optional, Numeric. Identifies how big a circular buffer to draw around points if Extent is a data.frame of points. Buffer is expressed as centessimal degrees.
 #' @param Dir Character/Directory Pointer. Directory specifying where to download data to.
 #' @param FileName Character. A file name for the produced file.
-#' @param FileExtension Character. A file extension for the produced file. Suggested values are ".nc" (default) and ".tif" (better support for metadata).
+#' @param FileExtension Character. A file extension for the produced file. Supported values are ".nc" (default) and ".tif" (better support for metadata).
 #' @param API_Key Character; ECMWF cds API key.
 #' @param API_User Character; ECMWF cds user number.
 #' @param TryDown Optional, numeric. How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.
