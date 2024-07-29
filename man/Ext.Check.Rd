@@ -10,10 +10,10 @@ Ext.Check(USER_ext)
 \item{USER_ext}{User-supplied Extent argument in download_ERA function call}
 }
 \value{
-A SpatExtent object.
+A list containg (1) a terra/sf object and (2) the corresponding SpatExtent object.
 }
 \description{
-Try to convert user input into (1) a terra or sf object and also read out the coirresponding (2) SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
+Try to convert user input into (1) a terra or sf object and also read out the corresponding (2) SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
 }
 \examples{
  ## raster
