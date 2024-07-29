@@ -22,7 +22,7 @@ Make.SpatialPoints <- function(USER_df){
 ### EXTENT CHECKING ============================================================
 #' Check extent specification
 #'
-#' Try to convert user input into (1) a terra or sf object and also read out the coirresponding (2) SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
+#' Try to convert user input into (1) a terra or sf object and also read out the corresponding (2) SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
 #'
 #' @param USER_ext User-supplied Extent argument in download_ERA function call
 #'
@@ -32,7 +32,7 @@ Make.SpatialPoints <- function(USER_df){
 #' @importFrom sf st_as_sf
 #' @importFrom sf st_bbox
 #'
-#' @return A SpatExtent object.
+#' @return A list containg (1) a terra/sf object and (2) the corresponding SpatExtent object.
 #'
 #' @examples
 #'  ## raster
