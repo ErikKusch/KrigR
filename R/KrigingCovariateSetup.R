@@ -182,6 +182,7 @@ KrigingCovariateSetup <- function(Training,
     Covariates <- do.call(c, Data_ls)
     unlink(Dir.Covs, recursive = TRUE)
   }
+  VarNames <- terra::varnames(Covariates)
 
   ## Spatial Limitting ===============
   ### Extent Handling
@@ -242,8 +243,12 @@ KrigingCovariateSetup <- function(Training,
   }
 
   ## Return data ===============
-  return(list(Training = terra::rast(TrainName),
-              Target = terra::rast(TargetName)
+  TrainRet <- terra::rast(TrainName)
+  TargetRet <- terra::rast(TargetName)
+  terra::varnames(TrainRet) <- terra::varnames(TargetRet) <- VarNames
+
+  return(list(Training = TrainRet,
+              Target = TargetRet
               )
          )
 }
