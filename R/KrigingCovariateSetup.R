@@ -160,6 +160,7 @@ KrigingCovariateSetup <- function(Training,
           Data <- Data+0 # +0 to avoid integer reading in faulty way, https://gis.stackexchange.com/questions/398061/reading-rasters-in-r-using-terra-package
         }
         terra::metags(Data) <- Meta_vec
+        terra::names(Data) <- Name
 
         #### Saving data as single file
         if(FileExtension == ".tif"){
