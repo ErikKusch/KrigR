@@ -47,7 +47,8 @@
 #' terra::plot(Covariates_ls[[2]])
 #' }
 #' @export
-KrigingCovariateSetup <- function(Training = NULL,Target = NULL,
+KrigingCovariateSetup <- function(Training,
+                                  Target,
                                   Covariates = "GMTED2010",
                                   Source = "Origin",
                                   Extent,
