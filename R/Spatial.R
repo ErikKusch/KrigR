@@ -148,7 +148,7 @@ Handle.Spatial <- function(BASE, Shape){
 
   ## regular cropping and masking for SPatRasters not exceeding layer limit
   ret_rast <- crop(BASE, ext(Shape))
-  if(package_name == "sf"){
+  if(class(Shape)[1] == "sf"){
     ret_rast <- mask(ret_rast, Shape, touches = TRUE)
   }
   return(ret_rast)
