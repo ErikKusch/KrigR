@@ -34,13 +34,36 @@
 #'
 #' @examples
 #' \dontrun{
+#' ## Rectangular Covariate data according to input data
 #' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
 #' Covariates_ls <- KrigingCovariateSetup(Training = CDS_rast,
 #'                                        Target = 0.01,
 #'                                        Covariates = "GMTED2010",
-#'                                        Source = "Origin",
-#'                                        Buffer = 0.5,
-#'                                        Dir = getwd(),
+#'                                        Keep_Global = TRUE,
+#'                                        FileExtension = ".nc")
+#' terra::plot(Covariates_ls[[1]])
+#' terra::plot(Covariates_ls[[2]])
+#'
+#' ## Shapefile-limited covariate data
+#' data("Jotunheimen_poly")
+#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
+#' Covariates_ls <- KrigingCovariateSetup(Training = CDS_rast,
+#'                                        Target = 0.01,
+#'                                        Covariates = "GMTED2010",
+#'                                        Extent = Jotunheimen_poly,
+#'                                        Keep_Global = TRUE,
+#'                                        FileExtension = ".nc")
+#' terra::plot(Covariates_ls[[1]])
+#' terra::plot(Covariates_ls[[2]])
+#'
+#' ## buffered-point-limited covariate data
+#' data("Mountains_df")
+#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
+#' Covariates_ls <- KrigingCovariateSetup(Training = CDS_rast,
+#'                                        Target = 0.01,
+#'                                        Covariates = "GMTED2010",
+#'                                        Extent = Mountains_df,
+#'                                        Buffer = 0.2,
 #'                                        Keep_Global = TRUE,
 #'                                        FileExtension = ".nc")
 #' terra::plot(Covariates_ls[[1]])
