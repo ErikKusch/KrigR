@@ -5,8 +5,8 @@
 \title{Preparing Covariate Data for Use in Kriging}
 \usage{
 KrigingCovariateSetup(
-  Training = NULL,
-  Target = NULL,
+  Training,
+  Target,
   Covariates = "GMTED2010",
   Source = "Origin",
   Extent,

@@ -137,7 +137,7 @@ Handle.Spatial <- function(BASE, Shape){
     Indices <- ceiling((1:terra::nlyr(BASE))/2e4)
     r_ls <- terra::split(x = BASE, f = Indices)
     ret_ls <- pblapply(r_ls, FUN = function(BASE_iter){
-      ret_rast <- crop(BASE_iter, CropExt)
+      ret_rast <- crop(BASE_iter, ext(Shape))
       if(class(Shape)[1] == "sf"){
         ret_rast <- mask(ret_rast, Shape, touches = TRUE)
       }
@@ -147,7 +147,7 @@ Handle.Spatial <- function(BASE, Shape){
   }
 
   ## regular cropping and masking for SPatRasters not exceeding layer limit
-  ret_rast <- crop(BASE, CropExt)
+  ret_rast <- crop(BASE, ext(Shape))
   if(package_name == "sf"){
     ret_rast <- mask(ret_rast, Shape, touches = TRUE)
   }
