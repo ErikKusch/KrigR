@@ -81,7 +81,6 @@ KrigingCovariateSetup <- function(Training,
                                   FileExtension = ".nc"
                                   ){
   ## Catching Most Frequent Issues ===============
-  #--- Covariate Specifications
   if(class(Covariates) == "character"){
     if(sum(!(Covariates %in% c("GMTED2010", "HWSD"))) > 0){
       stop("Please specify a valid covariate data set. You may supply either the character string 'GMTED2010' or 'HWSD', or a SpatRaster object.")
