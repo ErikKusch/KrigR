@@ -24,6 +24,7 @@
 #' @importFrom terra aggregate
 #' @importFrom terra writeRaster
 #' @importFrom terra writeCDF
+#' @importFrom terra varnames
 #'
 #' @return A list containing two SpatRaster objects (Training and Target) ready to be used as covariates for kriging, and two files called Covariates_Target and Covariates_Train in the specified directory.
 #'
@@ -160,7 +161,7 @@ KrigingCovariateSetup <- function(Training,
           Data <- Data+0 # +0 to avoid integer reading in faulty way, https://gis.stackexchange.com/questions/398061/reading-rasters-in-r-using-terra-package
         }
         terra::metags(Data) <- Meta_vec
-        terra::names(Data) <- Name
+        terra::varnames(Data) <- Name
 
         #### Saving data as single file
         if(FileExtension == ".tif"){
