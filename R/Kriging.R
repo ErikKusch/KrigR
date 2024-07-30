@@ -57,9 +57,9 @@ Kriging <- function(
   ### OnExit commands
 
   ## Catching Most Frequent Issues ===============
-  Check_Product <- check_Krig(Data = Data, CovariatesCoarse = Covariates_training, CovariatesFine = Covariates_target, KrigingEquation = KrigingEquation)
+  Check_Product <- Check.Krig(Data = Data, CovariatesCoarse = Covariates_training, CovariatesFine = Covariates_target, KrigingEquation = KrigingEquation)
   KrigingEquation <- Check_Product[[1]] # extract KrigingEquation (this may have changed in check_Krig)
-  DataSkips <- Check_Product[[2]] # extract which layers to skip due to missing data (this is unlikely to ever come into action)
+  # DataSkips <- Check_Product[[2]] # extract which layers to skip due to missing data (this is unlikely to ever come into action)
   Terms <- unique(unlist(strsplit(labels(terms(KrigingEquation)), split = ":"))) # identify which layers of data are needed
 
   ## Data Reformatting ===============
@@ -77,6 +77,18 @@ Kriging <- function(
   ## Kriging Specification ===============
   # (this will be parsed and evaluated in parallel and non-parallel evaluations further down)
   looptext <- "
+
+  #### NEW STUFF - ready to work
+  DataSF <- as.data.frame(Data[[1]], xy = TRUE)
+  colnames(DataSF)[-1:-2] <- 'Data'
+  DataSF <- sf::st_as_sf(DataSF, coords = c('x', 'y'))
+  KrigData <- cbind(Origin, DataSF$Data)
+  colnames(KrigData)[ncol(Origin)] <- 'Data'
+  KrigTest <- autoKrige(formula = KrigingEquation, input_data = na.omit(KrigData), new_data = Target, nmax = nmax)
+  Pred_rast <- terra::rast(x = cbind(sf::st_coordinates(KrigTest$krige_output), sf::st_drop_geometry(KrigTest$krige_output)$var1.pred), type = 'xyz')
+  StDe_rast <- terra::rast(x = cbind(sf::st_coordinates(KrigTest$krige_output), sf::st_drop_geometry(KrigTest$krige_output)$var1.stdev), type = 'xyz')
+
+  #### OLD STUFF - combine with new
   OriginK <- cbind(Origin, raster::extract(x = Data[[Iter_Krige]], y = Origin[,1:2], df=TRUE)[, 2]) # combine data of current data layer with training covariate data
   OriginK <- na.omit(OriginK) # get rid of NA cells
   colnames(OriginK)[length(Terms)+3] <- c(terms(KrigingEquation)[[2]]) # assign column names
