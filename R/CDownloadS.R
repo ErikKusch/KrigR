@@ -47,6 +47,8 @@
 #'
 #' \strong{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
 #'
+#' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.QuickFacts}}.
+#'
 #' @examples
 #' \dontrun{
 #' ## Raw data for one month of full globe

@@ -19,5 +19,8 @@ Check.Krig(Data, CovariatesCoarse, CovariatesFine, KrigingEquation)
 A list containing a potentially altered KrigingEquation if needed as well as an identifier for data layers which need to be skipped when kriging due to a variety of reasons.
 }
 \description{
-This function is called upon in the krigR function and performs sanity checks for some of the most common error sources in krigin thereby attempting to return more sensible error messages to the user than what is returned by default.
+This function is called upon in the Kriging function and performs sanity checks for some of the most common error sources in kriging thereby attempting to return more sensible error messages to the user than what is returned by default.
+}
+\seealso{
+\code{\link{Kriging}}, \code{\link{KrigingCovariateSetup}}.
 }

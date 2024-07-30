@@ -25,7 +25,7 @@ Kriging <- function(
     Data,
     Covariates_training,
     Covariates_target,
-    KrigingEquation = "ERA ~ DEM",
+    Equation = NULL,
     Cores = detectCores(),
     Dir = getwd(),
     FileName,
@@ -36,35 +36,43 @@ Kriging <- function(
     ){
 
   ## Run Preparations ===============
-  ### Kriging Formula (assure that KrigingEquation is a formula object)
-  KrigingEquation <- as.formula(KrigingEquation)
+  ## if no equation is specified, assign additive combination of variables in training covariates
+  if(is.null(Equation)){Equation <- paste(terra::varnames(Covariates_training), collapse = " + ")}
+  ### assure that KrigingEquation is a formula object
+  KrigingEquation <- as.formula(paste("Data ~", Equation))
   ### Metadata
-
+  KrigRCall <- match.call()
+  Meta_vec <- as.character(KrigRCall)
+  names(Meta_vec) <- names(KrigRCall)
+  Meta_vec <- c(
+    "Citation" = paste0("Data kriged using KrigR (DOI:10.1088/1748-9326/ac48b3) on ", Sys.time()),
+    "KrigRCall" = Meta_vec
+  )
   ### Temporary Directory
-  Dir.Temp <- file.path(Dir, paste("Kriging", FileName, sep="_"))
+  Dir.Temp <- file.path(Dir, paste("TEMP-Kriging", FileName, sep="_"))
   if(!dir.exists(Dir.Temp)){dir.create(Dir.Temp)}
   ### Establishing objects which the kriging execution refers to
-  Ras_Krig <- as.list(rep(NA, nlayers(Data))) # establish an empty list which will be filled with kriged layers
-  Ras_Var <- as.list(rep(NA, nlayers(Data))) # establish an empty list which will be filled with kriged layers
+  Ras_Krig <- as.list(rep(NA, terra::nlyr(Data))) # establish an empty list which will be filled with kriged layers
+  Ras_SE <- as.list(rep(NA, terra::nlyr(Data))) # establish an empty list which will be filled with kriged layers
   ### OnExit commands
 
   ## Catching Most Frequent Issues ===============
-  Check_Product <- check_Krig(Data = Data, CovariatesCoarse = Covariates_coarse, CovariatesFine = Covariates_fine, KrigingEquation = KrigingEquation)
+  Check_Product <- check_Krig(Data = Data, CovariatesCoarse = Covariates_training, CovariatesFine = Covariates_target, KrigingEquation = KrigingEquation)
   KrigingEquation <- Check_Product[[1]] # extract KrigingEquation (this may have changed in check_Krig)
   DataSkips <- Check_Product[[2]] # extract which layers to skip due to missing data (this is unlikely to ever come into action)
   Terms <- unique(unlist(strsplit(labels(terms(KrigingEquation)), split = ":"))) # identify which layers of data are needed
 
-
   ## Data Reformatting ===============
   # (Kriging requires spatially referenced data frames, reformatting from rasters happens here)
-  Origin <- raster::as.data.frame(Covariates_coarse, xy = TRUE) # extract covariate layers
+  Origin <- as.data.frame(Covariates_training, xy = TRUE)
+  colnames(Origin)[-1:-2] <- terra::varnames(Covariates_training)
   Origin <- Origin[, c(1:2, which(colnames(Origin) %in% Terms))] # retain only columns containing terms
+  Origin <- sf::st_as_sf(Origin, coords = c("x", "y"))
 
-  Target <- raster::as.data.frame(Covariates_fine, xy = TRUE) # extract covariate layers
+  Target <- as.data.frame(Covariates_target, xy = TRUE)
+  colnames(Target)[-1:-2] <- terra::varnames(Covariates_target)
   Target <- Target[, c(1:2, which(colnames(Target) %in% Terms))] # retain only columns containing terms
-  Target <- na.omit(Target)
-  suppressWarnings(gridded(Target) <- ~x+y) # establish a gridded data product ready for use in kriging
-  Target@grid@cellsize[1] <- Target@grid@cellsize[2] # ensure that grid cells are square
+  Target <- sf::st_as_sf(Target, coords = c("x", "y"))
 
   ## Kriging Specification ===============
   # (this will be parsed and evaluated in parallel and non-parallel evaluations further down)
@@ -123,23 +131,8 @@ Kriging <- function(
   } # end of core check
   "
 
-  if(verbose){message("Commencing Kriging")}
-
-  ## Data Skipping ===============
-  # (if certain layers in the data are empty and need to be skipped, this is handled here)
-  if(!is.null(DataSkips)){ # Skip check: if layers need to be skipped
-    for(Iter_Skip in DataSkips){ # Skip loop: loop over all layers that need to be skipped
-      Ras_Krig[[Iter_Skip]] <- Data[[Iter_Skip]] # add raw data (which should be empty) to list
-      terra::writeCDF(x = as(brick(Ras_Krig[[Iter_Skip]]), 'SpatRaster'), filename = file.path(Dir.Temp, str_pad(Iter_Skip,4,'left','0')), overwrite = TRUE)
-      # writeRaster(x = Ras_Krig[[Iter_Skip]], filename = file.path(Dir.Temp, str_pad(Iter_Skip,4,'left','0')), overwrite = TRUE, format = 'CDF') # save raw layer to temporary directory, needed for loading back in when parallel processing
-    } # end of Skip loop
-    Layers_vec <- 1:nlayers(Data) # identify vector of all layers in data
-    Compute_Layers <- Layers_vec[which(!Layers_vec %in% DataSkips)] # identify which layers can actually be computed on
-  }else{ # if we don't need to skip any layers
-    Compute_Layers <- 1:nlayers(Data) # set computing layers to all layers in data
-  } # end of Skip check
-
   ## Kriging Execution ===============
+  if(verbose){message("Commencing Kriging")}
   # carry out kriging according to user specifications either in parallel or on a single core
   if(Cores > 1){ # Cores check: if parallel processing has been specified
     ### PARALLEL KRIGING ---

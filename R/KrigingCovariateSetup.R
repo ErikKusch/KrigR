@@ -33,6 +33,8 @@
 #' \item{Citation}{ - A string which to use for in-line citation of the data product.}
 #' }
 #'
+#' @seealso \code{\link{Kriging}}.
+#'
 #' @examples
 #' \dontrun{
 #' ## Rectangular Covariate data according to input data

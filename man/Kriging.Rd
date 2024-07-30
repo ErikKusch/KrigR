@@ -8,7 +8,7 @@ Kriging(
   Data,
   Covariates_training,
   Covariates_target,
-  KrigingEquation = "ERA ~ DEM",
+  Equation = NULL,
   Cores = detectCores(),
   Dir = getwd(),
   FileName,
@@ -20,8 +20,6 @@ Kriging(
 }
 \arguments{
 \item{Data}{Raster file which is to be downscaled.}
-
-\item{KrigingEquation}{Formula or character string specifying which covariates to use and how. Layer names in Covariates_coarse and Covariates_fine need to match Parameters in this formula. Needs to start with "X ~ ". X can read anything you like.}
 
 \item{Cores}{Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Parallel processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.}
 
@@ -38,6 +36,8 @@ Kriging(
 \item{Covariates_coarse}{Raster file containing covariates at training resolution.}
 
 \item{Covariates_fine}{Raster file containing covariates at target resolution.}
+
+\item{KrigingEquation}{Formula or character string specifying which covariates to use and how. Layer names in Covariates_coarse and Covariates_fine need to match Parameters in this formula. Needs to start with "X ~ ". X can read anything you like.}
 }
 \value{
 A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.

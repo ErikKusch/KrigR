@@ -189,3 +189,6 @@ EnsembleSpreadSum6hour_rast <- CDownloadS(
 terra::plot(EnsembleSpreadSum6hour_rast)
 }
 }
+\seealso{
+\code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.QuickFacts}}.
+}

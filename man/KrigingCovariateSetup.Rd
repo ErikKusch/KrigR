@@ -84,3 +84,6 @@ terra::plot(Covariates_ls[[1]])
 terra::plot(Covariates_ls[[2]])
 }
 }
+\seealso{
+\code{\link{Kriging}}.
+}

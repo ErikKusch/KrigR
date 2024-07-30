@@ -37,7 +37,7 @@ Check.File <- function(FName, Dir = getwd(), loadFun, load = TRUE, verbose = TRU
 ### KRIGING SANITY CHECK =======================================================
 #' Sanity checks before Kriging commences
 #'
-#' This function is called upon in the krigR function and performs sanity checks for some of the most common error sources in krigin thereby attempting to return more sensible error messages to the user than what is returned by default.
+#' This function is called upon in the Kriging function and performs sanity checks for some of the most common error sources in kriging thereby attempting to return more sensible error messages to the user than what is returned by default.
 #'
 #' @param Data A SpatRaster object containing the data to be kriged.
 #' @param CovariatesCoarse A SpatRaster object containing covariates for kriging at training resolution.
@@ -52,6 +52,8 @@ Check.File <- function(FName, Dir = getwd(), loadFun, load = TRUE, verbose = TRU
 #' @importFrom base colSums
 #'
 #' @return A list containing a potentially altered KrigingEquation if needed as well as an identifier for data layers which need to be skipped when kriging due to a variety of reasons.
+#'
+#' @seealso \code{\link{Kriging}}, \code{\link{KrigingCovariateSetup}}.
 #'
 Check.Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   ## Resolutions ===============
