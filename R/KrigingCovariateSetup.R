@@ -200,9 +200,6 @@ KrigingCovariateSetup <- function(Training,
   }
   QuerySpace <- Ext.Check(Extent)
   Extent <- QuerySpace$SpatialObj # terra/sf version of input extent to be used for easy cropping and masking
-  ### Cropping and Masking
-  Training <- Handle.Spatial(BASE = Training, Shape = Extent)
-  Covariates <- Handle.Spatial(BASE = Covariates, Shape = Extent)
 
   ## Spatial Aggregation/Resampling ===============
   ### Sanity Check
@@ -219,9 +216,10 @@ KrigingCovariateSetup <- function(Training,
   if(class(Extent)[1] == "SpatRaster"){
     Cov_target <- terra::resample(Covariates, Extent)
   }else{
-    Cov_target <- suppressWarnings(terra::aggregate(Covariates, fact = Target_res[1]/res(Covariates)[1]))
+    Cov_target <- suppressWarnings(terra::aggregate(Covariates, fact = Target_res[1]/terra::res(Covariates)[1]))
   }
-  ### Masking
+  ### Cropping and Masking
+  Training <- Handle.Spatial(BASE = Training, Shape = Extent)
   Cov_train <- Handle.Spatial(Cov_train, Extent)
   Cov_target <- Handle.Spatial(Cov_target, Extent)
 
@@ -247,8 +245,8 @@ KrigingCovariateSetup <- function(Training,
   TargetRet <- terra::rast(TargetName)
   terra::varnames(TrainRet) <- terra::varnames(TargetRet) <- VarNames
 
-  return(list(Training = TrainRet,
-              Target = TargetRet
-              )
+  return(
+    list(Training = TrainRet,
+         Target = TargetRet)
          )
 }
