@@ -10,44 +10,115 @@ Kriging(
   Covariates_target,
   Equation = NULL,
   Cores = detectCores(),
+  nmax = Inf,
   Dir = getwd(),
   FileName,
   FileExtension,
-  Keep_Temporary = TRUE,
-  nmax = Inf,
+  Keep_Temporary = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{Data}{Raster file which is to be downscaled.}
+\item{Data}{SpatRaster which is to be downscaled.}
 
-\item{Cores}{Numeric. How many cores to use. If you want output to your console during the process, use Cores == 1. Parallel processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.}
+\item{Covariates_training}{SpatRaster containing covariates at training resolution.}
 
-\item{Dir}{Optional. Directory specifying where to place final kriged product. Default is current working directory.}
+\item{Covariates_target}{SpatRaster containing covariates at target resolution.}
 
-\item{FileName}{Optional. A file name for the netcdf produced. Default is a combination parameters in the function call.}
+\item{Equation}{Formula or character string specifying which covariates to use and how. Layer names in Covariates_training and Covariates_target need to match parameters in this formula. Do not include ". ~", just supply the righthand side of this formula like so: "Covariate1+Covariate2" or "Covariate1*Covariate2", etc.}
 
-\item{Keep_Temporary}{Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE.}
+\item{Cores}{Numeric. How many cores to use. Parallel processing is carried out when Cores is bigger than 1. Default is detecting all cores of your machine.}
 
-\item{nmax}{Optional. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric).}
+\item{nmax}{NUmeric. Controls local kriging. Number of nearest observations to be used kriging of each observation. Default is to use all available (Inf). You can specify as a number (numeric).}
+
+\item{Dir}{Character/Directory Pointer. Directory specifying where to place final kriged product. Default is current working directory.}
+
+\item{FileName}{Character. A file name for the produced files.}
+
+\item{FileExtension}{Character. A file extension for the produced file. Supported values are ".nc" (default) and ".tif" (better support for metadata).}
+
+\item{Keep_Temporary}{Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE. These temporary files are stored in a newly created directory in Dir which is pre-pended with "TEMP-" and is deleted if Keep_Temporary = FALSE upon completion.}
 
 \item{verbose}{Optional, logical. Whether to report progress of data download (if queried) in the console or not.}
-
-\item{Covariates_coarse}{Raster file containing covariates at training resolution.}
-
-\item{Covariates_fine}{Raster file containing covariates at target resolution.}
-
-\item{KrigingEquation}{Formula or character string specifying which covariates to use and how. Layer names in Covariates_coarse and Covariates_fine need to match Parameters in this formula. Needs to start with "X ~ ". X can read anything you like.}
 }
 \value{
-A list object containing the downscaled data as well as the standard error for downscaling as well as the call to the krigR function, and two NETCDF (.nc) file in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual NETCDF (.nc) files throughout the runtime of krigR which is deleted upon completion if Keep_Temporary = TRUE and all layers in the Data raster object were kriged successfully.
+A list object containing SpatRasters reporting (1) the downscaled data as well as  (2) the standard deviation for downscaling. Also produces two files of specified extension in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual files during the execution of this function which is deleted upon completion if Keep_Temporary = FALSE and all layers in the Data raster object were kriged successfully.
+
+The produced SpatRasters contains metadata/attributes as a named vector that can be retrieved with terra::metags(...):
+\itemize{
+\item{Citation}{ - A string which to use for in-line citation of the data product obtained with Kriging}.
+\item{KrigRCall.X}{ - Arguments passed to the Kriging function that produced the file}.
+}
+
+\strong{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. Kriging() handles these .nc specific issues when loading .nc files created previously with Kriging() from disk.
 }
 \description{
 This function statistically downscales input data using covariate data and the kriging methodology.
-Use optional arguments such as Dir, FileName, Keep_Temporary, SingularTry, KrigingEquation and Cores for ease of use, substitution of non-GMTED2010 covariates, and parallel processing.
+Use optional arguments such as Dir, Keep_Temporary, KrigingEquation, nmax and Cores for ease of use, substitution of non-default covariates, localisation of kriging, and parallel processing.
 }
 \examples{
 \dontrun{
+## Kriging using pre-fab data with a rectangular extent and a fives layers of data with parallel processing
+### Loading data
+CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
+Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
+Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
+terra::varnames(Cov_train) <- terra::varnames(Cov_target) <- "GMTED2010" # we must ensure that the varnames in the Covariate file match
+### kriging itself
+ExtentKrig <- Kriging(
+  Data = CDS_rast,
+  Covariates_training = Cov_train,
+  Covariates_target = Cov_target,
+  Equation = "GMTED2010",
+  Cores = 2,
+  FileName = "KrigTest1",
+  FileExtension = ".nc",
+  Keep_Temporary = TRUE,
+  nmax = 40,
+  verbose = TRUE
+)
 
+## Kriging using full KrigR pipeline with shapefile data
+### Shapefile loading
+data("Jotunheimen_poly")
+### CDS data download
+Qsoil_rast <- CDownloadS(
+  Variable = "Volumetric soil water layer 1", # can also specify as "volumetric_soil_water_layer_1"
+  # time-window, default set to range of dataset-type
+  DateStart = "1995-01-01 00:00",
+  DateStop = "1995-01-03 23:00",
+  TZone = "CET",
+  # temporal aggregation
+  TResolution = "day",
+  # spatial
+  Extent = Jotunheimen_poly,
+  # file storing
+  FileName = "KrigTest2_Raw",
+  # API credentials
+  API_User = API_User,
+  API_Key = API_Key
+)
+
+### Covariate preparations
+Covariates_ls <- CovariateSetup(Training = Qsoil_rast,
+                                       #' Target = 0.03,
+                                       Covariates = "GMTED2010", # this shiuld really be HWSD
+                                       Extent = Jotunheimen_poly,
+                                       Keep_Global = TRUE)
+terra::varnames(Covariates_ls[[1]]) <- terra::varnames(Covariates_ls[[2]]) <- "GMTED2010" # we must ensure that the varnames in the Covariate file match
+
+### kriging itself
+ShapeKrig <- Kriging(
+  Data = Qsoil_rast,
+  Covariates_training = Covariates_ls[[1]],
+  Covariates_target = Covariates_ls[[2]],
+  Equation = "GMTED2010",
+  Cores = 1,
+  FileName = "KrigTest2",
+  FileExtension = ".nc",
+  Keep_Temporary = FALSE,
+  nmax = 40,
+  verbose = TRUE
+)
 }
 }
