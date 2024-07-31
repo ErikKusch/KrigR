@@ -26,6 +26,7 @@
 #' @importFrom terra metags
 #' @importFrom terra writeRaster
 #' @importFrom terra writeCDF
+#' @importFrom terra time
 #' @importFrom sf st_as_sf
 #' @importFrom sf st_drop_geometry
 #' @importFrom sf st_coordinates
@@ -36,9 +37,7 @@
 #' @importFrom parallel makeCluster
 #' @importFrom parallel stopCluster
 #' @importFrom foreach %dopar%
-#' @importFrom foreach %:%
 #' @importFrom foreach foreach
-#' @importFrom foreach when
 #'
 #' @return A list object containing SpatRasters reporting (1) the downscaled data as well as  (2) the standard deviation for downscaling. Also produces two files of specified extension in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual files during the execution of this function which is deleted upon completion if Keep_Temporary = FALSE and all layers in the Data raster object were kriged successfully.
 #'
@@ -200,49 +199,51 @@ Kriging <- function(
   ## Kriging Specification ===============
   # (this will be parsed and evaluated in parallel and non-parallel evaluations further down)
   looptext <- "
-  ### Iteration-specific data
-  DataSF <- Data_df[, c(1:2, Iter_Krige+2)]
-  colnames(DataSF)[-1:-2] <- 'Data'
-  DataSF <- st_as_sf(DataSF, coords = c('x', 'y'))
-  KrigData <- cbind(Origin, DataSF$Data)
-  KrigData <- na.omit(KrigData)
-  colnames(KrigData)[ncol(Origin)] <- 'Data'
+  ## check if already produced this krigr
+  if(!paste0(str_pad(Iter_Krige,7,'left','0'), '_data.nc') %in% list.files(Dir.Temp)){
+    ### Iteration-specific data
+    DataSF <- Data_df[, c(1:2, Iter_Krige+2)]
+    colnames(DataSF)[-1:-2] <- 'Data'
+    DataSF <- st_as_sf(DataSF, coords = c('x', 'y'))
+    KrigData <- cbind(Origin, DataSF$Data)
+    KrigData <- na.omit(KrigData)
+    colnames(KrigData)[ncol(Origin)] <- 'Data'
 
-  ### Try kriging
-  Iter_Try <- 0 # number of tries set to 0
-  kriging_result <- NULL
-  while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < 10){ # try kriging 10 times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
-    try(invisible(capture.output(kriging_result <- autoKrige(formula = KrigingEquation, input_data = na.omit(KrigData), new_data = Target, nmax = nmax))), silent = TRUE)
-    Iter_Try <- Iter_Try +1
-  }
-  if(class(kriging_result)[1] != 'autoKrige'){ # give error if kriging fails
-    message(paste0('Kriging failed for layer ', Iter_Krige, '. Error message produced by autoKrige function: ', geterrmessage()))
-  }
+    ### Try kriging
+    Iter_Try <- 0 # number of tries set to 0
+    kriging_result <- NULL
+    while(class(kriging_result)[1] != 'autoKrige' & Iter_Try < 10){ # try kriging 10 times, this is because of a random process of variogram identification within the automap package that can fail on smaller datasets randomly when it isn't supposed to
+      try(invisible(capture.output(kriging_result <- autoKrige(formula = KrigingEquation, input_data = na.omit(KrigData), new_data = Target, nmax = nmax))), silent = TRUE)
+      Iter_Try <- Iter_Try +1
+    }
+    if(class(kriging_result)[1] != 'autoKrige'){ # give error if kriging fails
+      message(paste0('Kriging failed for layer ', Iter_Krige, '. Error message produced by autoKrige function: ', geterrmessage()))
+    }
 
-  ### Make SpatRaster from Kriging result
-  try(
-    Pred_rast <- rast(x = cbind(st_coordinates(kriging_result$krige_output), st_drop_geometry(kriging_result$krige_output)$var1.pred), type = 'xyz'),
-    silent = TRUE
-  )
-  try(
-    StDe_rast <- rast(x = cbind(st_coordinates(kriging_result$krige_output), st_drop_geometry(kriging_result$krige_output)$var1.stdev), type = 'xyz'),
-    silent = TRUE
-  )
-  if(!exists('Pred_rast') & !exists('StDe_rast')){
-    stop('Rasterising of kriging result failed.')
-  }
-  crs(StDe_rast) <- crs(Pred_rast) <- CRS_dat # setting the crs according to the data
+    ### Make SpatRaster from Kriging result
+    try(
+      Pred_rast <- rast(x = cbind(st_coordinates(kriging_result$krige_output), st_drop_geometry(kriging_result$krige_output)$var1.pred), type = 'xyz'),
+      silent = TRUE
+    )
+    try(
+      StDe_rast <- rast(x = cbind(st_coordinates(kriging_result$krige_output), st_drop_geometry(kriging_result$krige_output)$var1.stdev), type = 'xyz'),
+      silent = TRUE
+    )
+    if(!exists('Pred_rast') & !exists('StDe_rast')){
+      stop('Rasterising of kriging result failed.')
+    }
+    crs(StDe_rast) <- crs(Pred_rast) <- CRS_dat # setting the crs according to the data
 
-  ### Data writing to disk
-  if(FileExtension == '.tif'){
-    writeRaster(x = Pred_rast, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,7,'left','0'), '_data', FileExtension)), overwrite = TRUE)
-    writeRaster(x = StDe_rast, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,7,'left','0'), '_StDev', FileExtension)), overwrite = TRUE)
+    ### Data writing to disk
+    if(FileExtension == '.tif'){
+      writeRaster(x = Pred_rast, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,7,'left','0'), '_data', FileExtension)), overwrite = TRUE)
+      writeRaster(x = StDe_rast, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,7,'left','0'), '_StDev', FileExtension)), overwrite = TRUE)
+    }
+    if(FileExtension == '.nc'){
+      writeCDF(x = Pred_rast, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,7,'left','0'), '_data', FileExtension)), overwrite = TRUE)
+      writeCDF(x = StDe_rast, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,7,'left','0'), '_StDev', FileExtension)), overwrite = TRUE)
+    }
   }
-  if(FileExtension == '.nc'){
-    writeCDF(x = Pred_rast, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,7,'left','0'), '_data', FileExtension)), overwrite = TRUE)
-    writeCDF(x = StDe_rast, filename = file.path(Dir.Temp, paste0(str_pad(Iter_Krige,7,'left','0'), '_StDev', FileExtension)), overwrite = TRUE)
-  }
-
   ### Return
   NULL # otherwise trying to return SpatRaster
   "
@@ -264,7 +265,7 @@ Kriging <- function(
     foreach(Iter_Krige = 1:KrigIterations, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
             .packages = c("terra", "sf", "stringr", "automap", "ncdf4"), # import packages necessary to each iteration
             .export = ForeachObjects,
-            .options.snow = list(progress = progress)) %:% when(!paste0(str_pad(Iter_Krige,7,"left","0"), '_data.nc') %in% list.files(Dir.Temp)) %dopar% { # parallel kriging loop
+            .options.snow = list(progress = progress))  %dopar% { # parallel kriging loop # %:% when(!paste0(str_pad(Iter_Krige,7,"left","0"), '_data.nc') %in% list.files(Dir.Temp))
               Ras_Krig <- eval(parse(text=looptext)) # evaluate the kriging specification per cluster unit per layer
             } # end of parallel kriging loop
   }
