@@ -37,6 +37,7 @@
 #' @importFrom parallel stopCluster
 #' @importFrom foreach %dopar%
 #' @importFrom foreach %:%
+#' @importFrom foreach foreach
 #'
 #' @return A list object containing SpatRasters reporting (1) the downscaled data as well as  (2) the standard deviation for downscaling. Also produces two files of specified extension in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual files during the execution of this function which is deleted upon completion if Keep_Temporary = FALSE and all layers in the Data raster object were kriged successfully.
 #'
