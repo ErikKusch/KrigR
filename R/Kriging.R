@@ -273,10 +273,10 @@ Kriging <- function(
   ### single-core kriging ----
   if(Cores == 1){
     for(Iter_Krige in 1:KrigIterations){
-      FileExis <- paste0(str_pad(Iter_Krige,7,'left','0'), '_data', FileExtension) %in% list.files(Dir.Temp)
-      if(!FileExis){
+      # FileExis <- paste0(str_pad(Iter_Krige,7,'left','0'), '_data', FileExtension) %in% list.files(Dir.Temp)
+      # if(!FileExis){
         eval(parse(text=looptext)) # evaluate the kriging specification per layer
-      }
+      # }
       pb$tick(tokens = list(layer = progress_layer[Iter_Krige]))
     }
   }
