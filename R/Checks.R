@@ -49,7 +49,6 @@ Check.File <- function(FName, Dir = getwd(), loadFun, load = TRUE, verbose = TRU
 #' @importFrom terra nlyr
 #' @importFrom terra values
 #' @importFrom terra varnames
-#' @importFrom base colSums
 #'
 #' @return A list containing a potentially altered KrigingEquation if needed as well as an identifier for data layers which need to be skipped when kriging due to a variety of reasons.
 #'
