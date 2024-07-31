@@ -166,7 +166,7 @@ Kriging <- function(
       FCheck1 <- Meta.NC(NC = FCheck1, FName = file.path(Dir, paste0(FileName, "_Kriged.nc")), Attrs = Meta_vec, Read = TRUE)
       FCheck2 <- Meta.NC(NC = FCheck2, FName = file.path(Dir, paste0(FileName, "_StDev.nc")), Attrs = Meta_vec, Read = TRUE)
     }
-    time(FCheck1) <- time(FCheck2) <- time(Data)
+    terra::time(FCheck1) <- terra::time(FCheck2) <- terra::time(Data)
     varnames(FCheck1) <- varnames(FCheck2) <- varnames(Data)
     units(FCheck1) <- units(FCheck2) <- units(Data)
     metags(FCheck1) <- metags(FCheck2) <- Meta_vec
@@ -289,7 +289,7 @@ Kriging <- function(
   Krig_rast <- rast(list.files(Dir.Temp, full.names = TRUE, pattern = "_data"))
   SE_rast <- rast(list.files(Dir.Temp, full.names = TRUE, pattern = "_StDev"))
   ### assigning time to products
-  time(Krig_rast) <- time(SE_rast) <- time(Data)
+  terra::time(Krig_rast) <- terra::time(SE_rast) <- terra::time(Data)
   varnames(Krig_rast) <- varnames(SE_rast) <- varnames(Data)
   units(Krig_rast) <- units(SE_rast) <- units(Data)
   metags(Krig_rast) <- metags(SE_rast) <- Meta_vec
