@@ -122,3 +122,6 @@ ShapeKrig <- Kriging(
 )
 }
 }
+\seealso{
+\code{\link{CovariateSetup}}.
+}

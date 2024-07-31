@@ -35,6 +35,7 @@
 #' @importFrom doSNOW registerDoSNOW
 #' @importFrom parallel makeCluster
 #' @importFrom parallel stopCluster
+#' @importFrom foreach %dopar%
 #'
 #' @return A list object containing SpatRasters reporting (1) the downscaled data as well as  (2) the standard deviation for downscaling. Also produces two files of specified extension in the specified directory which are the two data contents of the aforementioned list. A temporary directory is populated with individual files during the execution of this function which is deleted upon completion if Keep_Temporary = FALSE and all layers in the Data raster object were kriged successfully.
 #'
@@ -45,6 +46,8 @@
 #' }
 #'
 #' \strong{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. Kriging() handles these .nc specific issues when loading .nc files created previously with Kriging() from disk.
+#'
+#' @seealso \code{\link{CovariateSetup}}.
 #'
 #' @examples
 #' \dontrun{
