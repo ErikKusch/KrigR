@@ -232,7 +232,7 @@ Kriging <- function(
     if(!exists('Pred_rast') & !exists('StDe_rast')){
       stop('Rasterising of kriging result failed.')
     }
-    crs(StDe_rast) <- crs(Pred_rast) <- CRS_dat # setting the crs according to the data
+    terra::crs(StDe_rast) <- terra::crs(Pred_rast) <- CRS_dat # setting the crs according to the data
 
     ### Data writing to disk
     if(FileExtension == '.tif'){
@@ -266,7 +266,9 @@ Kriging <- function(
             .packages = c("terra", "sf", "stringr", "automap", "ncdf4"), # import packages necessary to each iteration
             .export = ForeachObjects,
             .options.snow = list(progress = progress))  %dopar% { # parallel kriging loop # %:% when(!paste0(str_pad(Iter_Krige,7,"left","0"), '_data.nc') %in% list.files(Dir.Temp))
-              Ras_Krig <- eval(parse(text=looptext)) # evaluate the kriging specification per cluster unit per layer
+              eval(parse(text=looptext)) # evaluate the kriging specification per cluster unit per layer
+              Sys.sleep(0.5)
+              NULL
             } # end of parallel kriging loop
   }
 
@@ -277,6 +279,7 @@ Kriging <- function(
       # if(!FileExis){
         eval(parse(text=looptext)) # evaluate the kriging specification per layer
       # }
+      Sys.sleep(0.5)
       pb$tick(tokens = list(layer = progress_layer[Iter_Krige]))
     }
   }
