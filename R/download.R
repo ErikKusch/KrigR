@@ -57,6 +57,8 @@ download_ERA <- function(Variable = NULL, PrecipFix = FALSE, Type = "reanalysis"
                           Cores = 1, TimeOut = 36000, SingularDL = FALSE,
                           ...) {
 
+  stop("Function currently deprecated as KrigR undergoes major re-development. Please use the stable release to gain access to this functionality.")
+
   if(verbose){message("download_ERA() is starting. Depending on your specifications, this can take a significant time.")}
 
   if(verbose){
@@ -555,6 +557,8 @@ download_DEM <- function(Train_ras = NULL,
                          Target_res = NULL,
                          Shape = NULL, Buffer = 0.5, ID = "ID",
                          Dir = getwd(), Keep_Temporary = FALSE, Source = "USGS"){
+
+  stop("Function currently deprecated as KrigR undergoes major re-development. Please use the stable release to gain access to this functionality.")
 
   ### PREPARATION -----
   Extent <- extent(Train_ras) # extract extent for later cropping

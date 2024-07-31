@@ -1,36 +1,33 @@
 Package: KrigR
 Type: Package
-Title: Downloading, Aggregating, and Kriging of ERA5(Land)-Data
-Version: 0.1.3
+Title: Downloading, Aggregating, and Kriging of ECMWF CDS-Data
+Version: 0.3.0
 Authors@R: as.person(c(
     "Erik Kusch <erik@i-solution.de> [aut, cre]", 
     "Richard Davy <Richard.Davy@nersc.no> [aut]"
   ))
-Description: An R Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the European Centre for Medium‐Range Weather Forecasts (ECMWF).
+Description: An R Package for downloading, preprocessing, and statistical downscaling of data provided by the European Centre for Medium‐Range Weather Forecasts (ECMWF).
     KrigR contains functions for:
-    - Downloading Era5(Land) data directly from within R
-    - Downloading USGS GMTED 2010 elevation data
+    - Downloading ECMWF data directly from within R
+    - Downloading USGS GMTED 2010 elevation data - Working towards also implementing support for HWSD data
+    - Preparing covariate data for Kriging
     - Kriging spatial input to desired output using user-specified covariates
-    - Downloading and Kriging Era5(Land) data using USGS GMTED 2010 elevation as coviariate data in one function call
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
-Depends: 
-    ncdf4, 
+RoxygenNote: 7.3.1
+Imports:
     ecmwfr,
-    keyring,
-    stringr, 
-    raster,
-    rgdal,
-    doParallel,
-    foreach,
-    doSNOW, 
-    automap,
-    lubridate,
-    sp,
-    sf,
-    fasterize,
-    stars,
     httr,
-    terra
+    stringr,
+    lubridate,
+    sf,
+    terra,
+    ncdf4,
+    automap,
+    foreach,
+    tools,
+    progress,
+    doSNOW,
+    pbapply
+Depends: R (>= 4.0.0) 
