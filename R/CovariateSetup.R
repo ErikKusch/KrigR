@@ -39,7 +39,7 @@
 #' \dontrun{
 #' ## Rectangular Covariate data according to input data
 #' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-#' Covariates_ls <- KrigingCovariateSetup(Training = CDS_rast,
+#' Covariates_ls <- CovariateSetup(Training = CDS_rast,
 #'                                        Target = 0.01,
 #'                                        Covariates = "GMTED2010",
 #'                                        Keep_Global = TRUE,
@@ -50,7 +50,7 @@
 #' ## Shapefile-limited covariate data
 #' data("Jotunheimen_poly")
 #' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-#' Covariates_ls <- KrigingCovariateSetup(Training = CDS_rast,
+#' Covariates_ls <- CovariateSetup(Training = CDS_rast,
 #'                                        Target = 0.01,
 #'                                        Covariates = "GMTED2010",
 #'                                        Extent = Jotunheimen_poly,
@@ -62,7 +62,7 @@
 #' ## buffered-point-limited covariate data
 #' data("Mountains_df")
 #' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-#' Covariates_ls <- KrigingCovariateSetup(Training = CDS_rast,
+#' Covariates_ls <- CovariateSetup(Training = CDS_rast,
 #'                                        Target = 0.01,
 #'                                        Covariates = "GMTED2010",
 #'                                        Extent = Mountains_df,
@@ -73,7 +73,7 @@
 #' terra::plot(Covariates_ls[[2]])
 #' }
 #' @export
-KrigingCovariateSetup <- function(Training,
+CovariateSetup <- function(Training,
                                   Target,
                                   Covariates = "GMTED2010",
                                   Source = "Origin",
@@ -117,7 +117,7 @@ KrigingCovariateSetup <- function(Training,
   if(class(Covariates) == "character"){
     CovariatesIn <- Covariates
     ### Directory for raw files
-    Dir.Covs <- file.path(Dir, "KrigingCovariateSetup")
+    Dir.Covs <- file.path(Dir, "CovariateSetup")
     if(!dir.exists(Dir.Covs)){dir.create(Dir.Covs)}
 
     ### Data downloads
