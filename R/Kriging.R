@@ -21,7 +21,6 @@
 #' @importFrom terra varnames
 #' @importFrom tools file_path_sans_ext
 #' @importFrom terra rast
-#' @importFrom terra varnames
 #' @importFrom terra units
 #' @importFrom terra metags
 #' @importFrom terra writeRaster
@@ -141,7 +140,7 @@ Kriging <- function(
   ### CRS for assignment in loop
   CRS_dat <- crs(Data)
   ### if no equation is specified, assign additive combination of variables in training covariates
-  if(is.null(Equation)){Equation <- paste(varnames(Covariates_training), collapse = " + ")}
+  if(is.null(Equation)){Equation <- paste(terra::varnames(Covariates_training), collapse = " + ")}
   ### assure that KrigingEquation is a formula object
   KrigingEquation <- as.formula(paste("Data ~", Equation))
   ### Metadata
@@ -167,9 +166,9 @@ Kriging <- function(
       FCheck2 <- Meta.NC(NC = FCheck2, FName = file.path(Dir, paste0(FileName, "_StDev.nc")), Attrs = Meta_vec, Read = TRUE)
     }
     terra::time(FCheck1) <- terra::time(FCheck2) <- terra::time(Data)
-    varnames(FCheck1) <- varnames(FCheck2) <- varnames(Data)
-    units(FCheck1) <- units(FCheck2) <- units(Data)
-    metags(FCheck1) <- metags(FCheck2) <- Meta_vec
+    terra::varnames(FCheck1) <- terra::varnames(FCheck2) <- terra::varnames(Data)
+    terra::units(FCheck1) <- terra::units(FCheck2) <- terra::units(Data)
+    terra::metags(FCheck1) <- terra::metags(FCheck2) <- Meta_vec
     Krig_ls <- list(FCheck1, FCheck2)
     names(Krig_ls) <- c("Prediction", "StDev")
     return(Krig_ls)
@@ -185,12 +184,12 @@ Kriging <- function(
   # (Kriging requires spatially referenced data frames, reformatting from rasters happens here)
   ### Make Training sf object
   Origin <- as.data.frame(Covariates_training, xy = TRUE, na.rm = FALSE)
-  colnames(Origin)[-1:-2] <- varnames(Covariates_training)
+  colnames(Origin)[-1:-2] <- terra::varnames(Covariates_training)
   Origin <- Origin[, c(1:2, which(colnames(Origin) %in% Terms))] # retain only columns containing terms
   Origin <- st_as_sf(Origin, coords = c("x", "y"))
   ### Make Target sf object
   Target <- as.data.frame(Covariates_target, xy = TRUE)
-  colnames(Target)[-1:-2] <- varnames(Covariates_target)
+  colnames(Target)[-1:-2] <- terra::varnames(Covariates_target)
   Target <- Target[, c(1:2, which(colnames(Target) %in% Terms))] # retain only columns containing terms
   Target <- st_as_sf(Target, coords = c("x", "y"))
   ### Make data into data frame for handling in parallel (SpatRasters cannot be used in foreach)
@@ -290,9 +289,9 @@ Kriging <- function(
   SE_rast <- rast(list.files(Dir.Temp, full.names = TRUE, pattern = "_StDev"))
   ### assigning time to products
   terra::time(Krig_rast) <- terra::time(SE_rast) <- terra::time(Data)
-  varnames(Krig_rast) <- varnames(SE_rast) <- varnames(Data)
-  units(Krig_rast) <- units(SE_rast) <- units(Data)
-  metags(Krig_rast) <- metags(SE_rast) <- Meta_vec
+  terra::varnames(Krig_rast) <- terra::varnames(SE_rast) <- terra::varnames(Data)
+  terra::units(Krig_rast) <- terra::units(SE_rast) <- terra::units(Data)
+  terra::metags(Krig_rast) <- terra::metags(SE_rast) <- Meta_vec
   ### Data Saving
   if(FileExtension == ".tif"){
     writeRaster(Krig_rast, filename = file.path(Dir, paste0(FileName, "_Kriged", FileExtension)))
@@ -300,9 +299,9 @@ Kriging <- function(
   }
   if(FileExtension == ".nc"){
     Krig_rast <- Meta.NC(NC = Krig_rast, FName = file.path(Dir, paste0(FileName, "_Kriged", FileExtension)),
-                        Attrs = metags(Krig_rast), Write = TRUE)
+                        Attrs = terra::metags(Krig_rast), Write = TRUE)
     SE_rast <- Meta.NC(NC = SE_rast, FName = file.path(Dir, paste0(FileName, "_STDev", FileExtension)),
-                        Attrs = metags(SE_rast), Write = TRUE)
+                        Attrs = terra::metags(SE_rast), Write = TRUE)
   }
 
   ## Removing Temporary Files ===============
