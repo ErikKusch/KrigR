@@ -200,7 +200,7 @@ CovariateSetup <- function(Training,
         }
 
         Data <- Check.File(FName = FName, Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = FALSE)
-        if(!is.null(Data) & FileExtension == ".nc"){
+        if(FileExtension == ".nc"){
           Data <- Meta.NC(NC = Data, FName = file.path(Dir, FName), Attrs = Meta_vec, Read = TRUE)
         }
       }else{
