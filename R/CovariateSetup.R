@@ -172,9 +172,14 @@ CovariateSetup <- function(Training,
                   httr::progress(), overwrite = TRUE)
 
         #### Unzipping data
-        ZipF <- ifelse(UnzippedFile == "mn30_grd/w001001.adf", NULL, UnzippedFile)
-        unzip(file.path(Dir.Covs, paste0(Name, ".zip")), # which file to unzip
-              files = ZipF, exdir = Dir.Covs) # where to unzip to
+        if(Name == "GMTED2010"){
+          unzip(file.path(Dir.Covs, paste0(Name, ".zip")), # which file to unzip
+                exdir = Dir.Covs) # where to unzip to
+        }else{
+          unzip(file.path(Dir.Covs, paste0(Name, ".zip")), # which file to unzip
+                files = UnzippedFile, exdir = Dir.Covs) # where to unzip to
+        }
+
 
         #### Loading data
         Data <- terra::rast(file.path(Dir.Covs, UnzippedFile))
