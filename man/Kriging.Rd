@@ -13,7 +13,7 @@ Kriging(
   nmax = Inf,
   Dir = getwd(),
   FileName,
-  FileExtension,
+  FileExtension = ".nc",
   Keep_Temporary = FALSE,
   verbose = TRUE
 )

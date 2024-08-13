@@ -125,11 +125,12 @@ Kriging <- function(
     nmax = Inf,
     Dir = getwd(),
     FileName,
-    FileExtension,
+    FileExtension = ".nc",
     Keep_Temporary = FALSE,
     verbose = TRUE
     ){
   ## Run Preparations ===============
+  if(verbose){message("###### Checking your Kriging Specification")}
   ### Number of layers in data & Progress bar
   KrigIterations <- nlyr(Data) # used for krig looping
   pb <- progress_bar$new(
@@ -181,6 +182,7 @@ Kriging <- function(
   Terms <- unique(unlist(strsplit(labels(terms(KrigingEquation)), split = ":"))) # identify which layers of data are needed
 
   ## Data Reformatting ===============
+  if(verbose){message("###### Preparing And Reformatting your Data")}
   # (Kriging requires spatially referenced data frames, reformatting from rasters happens here)
   ### Make Training sf object
   Origin <- as.data.frame(Covariates_training, xy = TRUE, na.rm = FALSE)
@@ -249,7 +251,7 @@ Kriging <- function(
 
   ## Kriging Execution ===============
   ## carry out kriging according to user specifications either in parallel or on a single core
-  if(verbose){message("Commencing Kriging")}
+  if(verbose){message("###### Commencing Kriging")}
   ### multi-core kriging ----
   if(Cores > 1){
     ## registering cluster and progress bar for foreach
