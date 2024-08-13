@@ -306,6 +306,13 @@ Kriging <- function(
                         Attrs = terra::metags(SE_rast), Write = TRUE)
   }
 
+  Krig_rast <- rast(file.path(Dir, paste0(FileName, "_Kriged", FileExtension)))
+  SE_rast <- rast(file.path(Dir, paste0(FileName, "_STDev", FileExtension)))
+  terra::time(Krig_rast) <- terra::time(SE_rast) <- terra::time(Data)
+  terra::varnames(Krig_rast) <- terra::varnames(SE_rast) <- terra::varnames(Data)
+  terra::units(Krig_rast) <- terra::units(SE_rast) <- terra::units(Data)
+  terra::metags(Krig_rast) <- terra::metags(SE_rast) <- Meta_vec
+
   ## Removing Temporary Files ===============
   if(Keep_Temporary == FALSE){ # cleanup check
     unlink(Dir.Temp, recursive = TRUE)

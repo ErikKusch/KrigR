@@ -109,7 +109,7 @@ CovariateSetup <- function(Training,
       "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/mn30_grd.zip", # Link to GMTED2010
       "https://www.dropbox.com/s/whkje7jc401xuwx/GMTED2010.zip?raw=1", # Link to DropBox with GMTED2010
       NULL, # Link to Harmonized World Soil Database v2.0
-      NULL # Link to DropBox with GMTED2010
+      NULL # Link to DropBox with HWSD
     )
   )
 
@@ -147,7 +147,7 @@ CovariateSetup <- function(Training,
 
       if(is.null(Data)){
         #### Downloading data
-        message("Downloading ", Name, " covariate data.") # inform user of download in console
+        message("###### Downloading ", Name, " covariate data.") # inform user of download in console
         httr::GET(Link,
                   httr::write_disk(file.path(Dir.Covs, paste0(Name, ".zip"))),
                   httr::progress(), overwrite = TRUE)
@@ -175,7 +175,7 @@ CovariateSetup <- function(Training,
         }
 
       }else{
-        message("Raw ", Name, " covariate data already downloaded.")
+        message("###### Raw ", Name, " covariate data already downloaded.")
       }
       Data
     })
@@ -212,6 +212,7 @@ CovariateSetup <- function(Training,
     stop(paste0("You have specified resolution(s) to be finer than ", res(GMTED2010_ras), " (native GMTED2010 reslution). Please download higher-resolution DEM data instead."))
   }
   ### Resampling
+  message("###### Resampling Data")
   Cov_train <- terra::resample(Covariates, Training)
   if(class(Extent)[1] == "SpatRaster"){
     Cov_target <- terra::resample(Covariates, Extent)
