@@ -57,7 +57,7 @@
 #' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
 #' Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
 #' Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
-#' terra::varnames(Cov_train) <- terra::varnames(Cov_target) <- "GMTED2010" # we must ensure that the varnames in the Covariate file match
+#'
 #' ### kriging itself
 #' ExtentKrig <- Kriging(
 #'   Data = CDS_rast,
@@ -95,18 +95,18 @@
 #'
 #' ### Covariate preparations
 #' Covariates_ls <- CovariateSetup(Training = Qsoil_rast,
-#'                                        #' Target = 0.03,
-#'                                        Covariates = "GMTED2010", # this shiuld really be HWSD
-#'                                        Extent = Jotunheimen_poly,
-#'                                        Keep_Global = TRUE)
-#' terra::varnames(Covariates_ls[[1]]) <- terra::varnames(Covariates_ls[[2]]) <- "GMTED2010" # we must ensure that the varnames in the Covariate file match
+#'                                 Target = 0.03,
+#'                                 Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
+#'                                 Source = "Drive",
+#'                                 Extent = Jotunheimen_poly,
+#'                                 Keep_Global = TRUE)
 #'
 #' ### kriging itself
 #' ShapeKrig <- Kriging(
 #'   Data = Qsoil_rast,
 #'   Covariates_training = Covariates_ls[[1]],
 #'   Covariates_target = Covariates_ls[[2]],
-#'   Equation = "GMTED2010",
+#'   Equation = "tksat + tkdry + csol + k_s + lambda + psi + theta_s",
 #'   Cores = 1,
 #'   FileName = "KrigTest2",
 #'   FileExtension = ".nc",
@@ -128,7 +128,7 @@ Kriging <- function(
     FileExtension = ".nc",
     Keep_Temporary = FALSE,
     verbose = TRUE
-    ){
+){
   ## Run Preparations ===============
   if(verbose){message("###### Checking your Kriging Specification")}
   ### Number of layers in data & Progress bar
@@ -141,7 +141,7 @@ Kriging <- function(
   ### CRS for assignment in loop
   CRS_dat <- crs(Data)
   ### if no equation is specified, assign additive combination of variables in training covariates
-  if(is.null(Equation)){Equation <- paste(terra::varnames(Covariates_training), collapse = " + ")}
+  if(is.null(Equation)){Equation <- paste(terra::names(Covariates_training), collapse = " + ")}
   ### assure that KrigingEquation is a formula object
   KrigingEquation <- as.formula(paste("Data ~", Equation))
   ### Metadata
@@ -172,6 +172,7 @@ Kriging <- function(
     terra::metags(FCheck1) <- terra::metags(FCheck2) <- Meta_vec
     Krig_ls <- list(FCheck1, FCheck2)
     names(Krig_ls) <- c("Prediction", "StDev")
+    unlink(Dir.Temp, recursive = TRUE)
     return(Krig_ls)
   }
 
@@ -186,12 +187,12 @@ Kriging <- function(
   # (Kriging requires spatially referenced data frames, reformatting from rasters happens here)
   ### Make Training sf object
   Origin <- as.data.frame(Covariates_training, xy = TRUE, na.rm = FALSE)
-  colnames(Origin)[-1:-2] <- terra::varnames(Covariates_training)
+  colnames(Origin)[-1:-2] <- names(Covariates_training)
   Origin <- Origin[, c(1:2, which(colnames(Origin) %in% Terms))] # retain only columns containing terms
   Origin <- st_as_sf(Origin, coords = c("x", "y"))
   ### Make Target sf object
   Target <- as.data.frame(Covariates_target, xy = TRUE)
-  colnames(Target)[-1:-2] <- terra::varnames(Covariates_target)
+  colnames(Target)[-1:-2] <- names(Covariates_target)
   Target <- Target[, c(1:2, which(colnames(Target) %in% Terms))] # retain only columns containing terms
   Target <- st_as_sf(Target, coords = c("x", "y"))
   ### Make data into data frame for handling in parallel (SpatRasters cannot be used in foreach)
@@ -278,7 +279,7 @@ Kriging <- function(
     for(Iter_Krige in 1:KrigIterations){
       # FileExis <- paste0(str_pad(Iter_Krige,7,'left','0'), '_data', FileExtension) %in% list.files(Dir.Temp)
       # if(!FileExis){
-        eval(parse(text=looptext)) # evaluate the kriging specification per layer
+      eval(parse(text=looptext)) # evaluate the kriging specification per layer
       # }
       Sys.sleep(0.5)
       pb$tick(tokens = list(layer = progress_layer[Iter_Krige]))
@@ -301,9 +302,9 @@ Kriging <- function(
   }
   if(FileExtension == ".nc"){
     Krig_rast <- Meta.NC(NC = Krig_rast, FName = file.path(Dir, paste0(FileName, "_Kriged", FileExtension)),
-                        Attrs = terra::metags(Krig_rast), Write = TRUE)
+                         Attrs = terra::metags(Krig_rast), Write = TRUE)
     SE_rast <- Meta.NC(NC = SE_rast, FName = file.path(Dir, paste0(FileName, "_STDev", FileExtension)),
-                        Attrs = terra::metags(SE_rast), Write = TRUE)
+                       Attrs = terra::metags(SE_rast), Write = TRUE)
   }
 
   Krig_rast <- rast(file.path(Dir, paste0(FileName, "_Kriged", FileExtension)))

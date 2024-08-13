@@ -63,7 +63,7 @@ Use optional arguments such as Dir, Keep_Temporary, KrigingEquation, nmax and Co
 CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
 Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
 Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
-terra::varnames(Cov_train) <- terra::varnames(Cov_target) <- "GMTED2010" # we must ensure that the varnames in the Covariate file match
+
 ### kriging itself
 ExtentKrig <- Kriging(
   Data = CDS_rast,
@@ -101,18 +101,18 @@ Qsoil_rast <- CDownloadS(
 
 ### Covariate preparations
 Covariates_ls <- CovariateSetup(Training = Qsoil_rast,
-                                       #' Target = 0.03,
-                                       Covariates = "GMTED2010", # this shiuld really be HWSD
-                                       Extent = Jotunheimen_poly,
-                                       Keep_Global = TRUE)
-terra::varnames(Covariates_ls[[1]]) <- terra::varnames(Covariates_ls[[2]]) <- "GMTED2010" # we must ensure that the varnames in the Covariate file match
+                                Target = 0.03,
+                                Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
+                                Source = "Drive",
+                                Extent = Jotunheimen_poly,
+                                Keep_Global = TRUE)
 
 ### kriging itself
 ShapeKrig <- Kriging(
   Data = Qsoil_rast,
   Covariates_training = Covariates_ls[[1]],
   Covariates_target = Covariates_ls[[2]],
-  Equation = "GMTED2010",
+  Equation = "tksat + tkdry + csol + k_s + lambda + psi + theta_s",
   Cores = 1,
   FileName = "KrigTest2",
   FileExtension = ".nc",

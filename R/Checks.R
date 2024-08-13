@@ -102,10 +102,10 @@ Check.Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   ## Kriging Equation ===============
   Terms <- unlist(strsplit(labels(terms(KrigingEquation)), split = ":")) # identify parameters called to in formula
   Terms_Required <- unique(Terms) # isolate double-references (e.g. due to ":" indexing for interactions)
-  Terms_Present <- Reduce(intersect, list(Terms_Required, terra::varnames(CovariatesCoarse), terra::varnames(CovariatesFine))) # identify the terms that are available and required
+  Terms_Present <- Reduce(intersect, list(Terms_Required, names(CovariatesCoarse), names(CovariatesFine))) # identify the terms that are available and required
   if(sum(Terms_Required %in% Terms_Present) != length(Terms_Required)){
     if(length(Terms_Present) == 0){ # if none of the specified terms were found
-      KrigingEquation <- paste0("Data ~ ", paste(terra::varnames(CovariatesCoarse), collapse = "+"))
+      KrigingEquation <- paste0("Data ~ ", paste(names(CovariatesCoarse), collapse = "+"))
       warn <- paste("None of the terms specified in your KrigingEquation are present in the covariate data sets. The KrigingEquation has been altered to include all available terms in a linear model:", "\n\n", KrigingEquation)
     }else{ # at least some of the specified terms were found
       KrigingEquation <- paste0("Data ~ ", paste(Terms_Present, collapse = "+"))

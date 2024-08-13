@@ -21,7 +21,7 @@ CovariateSetup(
 
 \item{Target}{Either numeric or a SpatRaster. If numeric, a single number representing the target resolution for the kriging step (i.e. wich resolution to downscale to). If a SpatRaster, data that the covariates and kriged products should align with. In case of a numeric input, covariate data is aggregated as closely as possible to desired resolution. If a SpatRaster, covariate data is resampled to match desired output directly.}
 
-\item{Covariates}{Either character or a SpatRaster. If character, obtain frequently used and provably useful covariate data (i.e., GMTED2010 and HWSD) and prepare for use in Kriging. Supported character values are "GMTED2010" and "HWSD". Note that currently, HWSD data download is not functional. If a SpatRaster, a user-supplied set of covariate data to be prepared for use in Kriging.}
+\item{Covariates}{Either character or a SpatRaster. If character, obtain frequently used and provably useful covariate data (i.e., GMTED2010 and soil data) and prepare for use in Kriging. Supported character values are "GMTED2010", "tksat", "tkdry", "csol", "k_s", "lambda", "psi", and "theta_s". If a SpatRaster, a user-supplied set of covariate data to be prepared for use in Kriging.}
 
 \item{Source}{Character. Only comes into effect when Covariates argument is specified as a character. Whether to attempt download of covariate data from the official sources (Source = "Origin") or a static copy of the data set on a private drive (Source = "Drive"). Default is "Origin".}
 
@@ -44,7 +44,7 @@ The SpatRasters produced and stored when specifying the Covariates argument as a
 }
 }
 \description{
-This function is used to setup products of covariate data ready for use in Kriging. This functiuonality can either be applied to user-supplied covariate data or ready-made data products such as the Harmised World Soil Data Base and the median statistic of the Global Multi-resolution Terrain Elevation Data (GMTED2010; available at \url{https://topotools.cr.usgs.gov/gmted_viewer/gmted2010_global_grids.php}). In case of the latter, the data is downloaded at 30 arc-sec latitude/longitude grid cells and subsequently resampled to match training and target resolutions specified by the user.
+This function is used to setup products of covariate data ready for use in Kriging. This functionality can either be applied to user-supplied covariate data or ready-made data products such as the global dataset of soil hydraulic and thermal parameters for earth system modeling (available at \url{http://globalchange.bnu.edu.cn/research/soil4.jsp}) and the median statistic of the Global Multi-resolution Terrain Elevation Data (GMTED2010; available at \url{https://topotools.cr.usgs.gov/gmted_viewer/gmted2010_global_grids.php}). In case of the latter, the data is downloaded at 30 arc-sec latitude/longitude grid cells and subsequently resampled to match training and target resolutions specified by the user.
 }
 \examples{
 \dontrun{
@@ -75,7 +75,8 @@ data("Mountains_df")
 CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
 Covariates_ls <- CovariateSetup(Training = CDS_rast,
                                        Target = 0.01,
-                                       Covariates = "GMTED2010",
+                                       Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
+                                       Source = "Drive",
                                        Extent = Mountains_df,
                                        Buffer = 0.2,
                                        Keep_Global = TRUE,
