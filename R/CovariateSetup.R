@@ -25,6 +25,8 @@
 #' @importFrom terra writeRaster
 #' @importFrom terra writeCDF
 #' @importFrom terra varnames
+#' @importFrom terra sources
+#' @importFrom tools file_path_sans_ext
 #'
 #' @return A list containing two SpatRaster objects (Training and Target) ready to be used as covariates for kriging, and two files called Covariates_Target and Covariates_Train in the specified directory.
 #'
@@ -75,15 +77,15 @@
 #' }
 #' @export
 CovariateSetup <- function(Training,
-                                  Target,
-                                  Covariates = "GMTED2010",
-                                  Source = "Origin",
-                                  Extent,
-                                  Buffer = 0.5,
-                                  Dir = getwd(),
-                                  Keep_Global = FALSE,
-                                  FileExtension = ".nc"
-                                  ){
+                           Target,
+                           Covariates = "GMTED2010",
+                           Source = "Origin",
+                           Extent,
+                           Buffer = 0.5,
+                           Dir = getwd(),
+                           Keep_Global = FALSE,
+                           FileExtension = ".nc"
+){
   ## Catching Most Frequent Issues ===============
   if(class(Covariates) == "character"){
     if(sum(!(Covariates %in% c("GMTED2010", "tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"))) > 0){
@@ -134,6 +136,7 @@ CovariateSetup <- function(Training,
 
   ## Data Download (skipped if own SpatRaster supplied) ===============
   if(class(Covariates) == "character"){
+    message("###### Downloading global covariate data")
     CovariatesIn <- Covariates
     ### Directory for raw files
     Dir.Covs <- file.path(Dir, "CovariateSetup")
@@ -166,7 +169,7 @@ CovariateSetup <- function(Training,
 
       if(is.null(Data)){
         #### Downloading data
-        message("###### Downloading ", Name, " covariate data.") # inform user of download in console
+        print(paste(Name, "covariate data.")) # inform user of download in console
         httr::GET(Link,
                   httr::write_disk(file.path(Dir.Covs, paste0(Name, ".zip"))),
                   httr::progress(), overwrite = TRUE)
@@ -184,7 +187,7 @@ CovariateSetup <- function(Training,
         #### Loading data
         Data <- terra::rast(file.path(Dir.Covs, UnzippedFile))
         if(class(terra::values(Data)[,1]) == "integer"){
-          print("Reformatting integer data into continuous numeric data.")
+          print("Reformatting integer data into continuous numeric data. Necessary for GMTED2010 data.")
           Data <- Data+0 # +0 to avoid integer reading in faulty way, https://gis.stackexchange.com/questions/398061/reading-rasters-in-r-using-terra-package
         }
         terra::metags(Data) <- Meta_vec
@@ -196,7 +199,7 @@ CovariateSetup <- function(Training,
         }
         if(FileExtension == ".nc"){
           Data <- Meta.NC(NC = Data, FName = file.path(Dir, FName),
-                              Attrs = terra::metags(Data), Write = TRUE)
+                          Attrs = terra::metags(Data), Write = TRUE)
         }
 
         Data <- Check.File(FName = FName, Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = FALSE)
@@ -204,10 +207,20 @@ CovariateSetup <- function(Training,
           Data <- Meta.NC(NC = Data, FName = file.path(Dir, FName), Attrs = Meta_vec, Read = TRUE)
         }
       }else{
-        message("###### Raw ", Name, " covariate data already downloaded.")
+        print(paste(Name, "covariate data already downloaded."))
       }
       Data
     })
+
+    if("GMTED2010" %in% CovariatesIn & any(c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s") %in% CovariatesIn)){
+      message("###### Aligning data from different sources with one another")
+      MinExt <- apply(abs(do.call(rbind, lapply(Data_ls, FUN = function(x){as.vector(ext(x))}))), 2, min)
+      Data_ls <- lapply(Data_ls, FUN = function(x){
+        print(basename(tools::file_path_sans_ext(terra::sources(x))))
+        crop(x, ext(-MinExt[1], MinExt[2], -MinExt[3], MinExt[4])) # I can simply to -/+ here because this data is global
+      })
+    }
+
     Covariates <- do.call(c, Data_ls)
     unlink(Dir.Covs, recursive = TRUE)
   }
@@ -222,7 +235,7 @@ CovariateSetup <- function(Training,
       ifelse(terra::ext(Training)[3] > terra::ext(Covariates)[3], terra::ext(Training)[3], terra::ext(Covariates)[3]),
       ifelse(terra::ext(Training)[4] < terra::ext(Covariates)[4], terra::ext(Training)[4], terra::ext(Covariates)[4])
     )
-    }
+  }
   if(class(Extent)[1] == "data.frame"){
     Extent <- Buffer.pts(USER_pts = Make.SpatialPoints(USER_df = Extent),
                          USER_buffer = Buffer)
@@ -282,5 +295,5 @@ CovariateSetup <- function(Training,
   return(
     list(Training = TrainRet,
          Target = TargetRet)
-         )
+  )
 }
