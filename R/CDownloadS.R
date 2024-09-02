@@ -214,6 +214,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   BaseStart <- Meta.QuickFacts(dataset = DataSet)$TStart
 
   if(BaseResolution == "hour" & CumulVar){
+    DateStopIn <- as.POSIXct(DateStop, tz = TZone)
     DateStop <- as.character(as.POSIXct(DateStop, tz = TZone)+1*60*60*24) # add one day to hourly pulls when cumulVar is turned on as an extra layer of data is needed for proper backcalculation
   }
 
@@ -316,10 +317,9 @@ CDownloadS <- function(Variable = NULL, # which variable
   CDS_rast <- Temporal.Cumul(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone, verbose)
 
   #--- Subset to desired time, happens here to allow for correct disaggregation of cumulative variables in previous step
-  if(verbose){print("Temporal Limiting")}
   terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone
-  CDS_rast <- CDS_rast[[which(!(terra::time(CDS_rast) < Dates_df$IN[1] | terra::time(CDS_rast) > Dates_df$IN[2]))]]
-
+  if(exists("DateStopIn")){Dates_df$IN[2] <- DateStopIn}
+  CDS_rast <- CDS_rast[[which((terra::time(CDS_rast) < Dates_df$IN[1]) + (terra::time(CDS_rast) > Dates_df$IN[2]) == 0)]]
 
   #--- Temporal aggregation
   CDS_rast <- Temporal.Aggr(CDS_rast, BaseResolution, BaseStep,
