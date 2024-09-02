@@ -287,6 +287,7 @@ Kriging <- function(
   }
 
   ## Data Loading and Saving ===============
+  if(verbose){message("###### Loading Temporary Files")}
   ### loading kriged data back in
   Krig_rast <- rast(list.files(Dir.Temp, full.names = TRUE, pattern = "_data"))
   SE_rast <- rast(list.files(Dir.Temp, full.names = TRUE, pattern = "_StDev"))
@@ -296,6 +297,7 @@ Kriging <- function(
   terra::units(Krig_rast) <- terra::units(SE_rast) <- terra::units(Data)
   terra::metags(Krig_rast) <- terra::metags(SE_rast) <- Meta_vec
   ### Data Saving
+  if(verbose){message("###### Saving Kriged Data")}
   if(FileExtension == ".tif"){
     writeRaster(Krig_rast, filename = file.path(Dir, paste0(FileName, "_Kriged", FileExtension)))
     writeRaster(SE_rast, filename = file.path(Dir, paste0(FileName, "_StDev", FileExtension)))

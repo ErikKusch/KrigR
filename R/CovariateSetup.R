@@ -284,7 +284,7 @@ CovariateSetup <- function(Training,
 
   ## Cleaning up files ===============
   if(!Keep_Global){ # cleanup check
-    unlink(list.files(Dir, pattern = paste0(CovariatesIn, FileExtension), full.names = TRUE))
+    unlink(file.path(Dir, paste0(CovariatesIn, FileExtension)))
   }
 
   ## Return data ===============

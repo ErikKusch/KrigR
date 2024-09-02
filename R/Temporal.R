@@ -106,7 +106,7 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
   T_RequestDates <- as.Date(rep(unique(format(T_RequestRange, "%Y-%m-%d")), each = BaseTStep))
   list(QueryTimeWindows = split(T_RequestDates, ceiling(seq_along(T_RequestDates)/TChunkSize)),
        QueryTimes = QueryTimes
-       )
+  )
 }
 
 ### BACK-CALCULATION OF CUMULATIVE VARIABLES ===================================
@@ -119,43 +119,70 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
 #' @param BaseResolution Character. Base temporal resolution of data set
 #' @param BaseStep Numeric. Base time step of data set
 #' @param TZone Character. Time zone for queried data.
+#' @param verbose Logical. Whether to print/message function progress in console or not.
 #'
 #' @importFrom terra rast
 #' @importFrom terra nlyr
 #' @importFrom terra subset
 #' @importFrom terra time
 #' @importFrom lubridate days_in_month
+#' @importFrom pbapply pblapply
 #'
 #' @return A SpatRaster
 #'
-Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
+Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone, verbose = TRUE){
   Era5_ras <- CDS_rast
+  if(verbose & CumulVar){print("Disaggregation of cumulative records")}
   if(CumulVar & BaseResolution == "hour"){
     if(BaseStep != 1){stop("Back-calculation of hourly cumulative variables only supported for 1-hour interval data. The data you have specified reports hourly data in intervals of ", BaseStep, ".")}
     ## removing non-needed layers
     RemovalLyr <- c(1, (nlyr(Era5_ras)-22):nlyr(Era5_ras)) # need to remove first layer and last 23 for backcalculation
     Era5_ras <- subset(Era5_ras, RemovalLyr, negate=TRUE)
     ## back-calculation
-    counter <- 1
-    Era5_ls <- as.list(rep(NA, nlyr(Era5_ras)))
-    names(Era5_ls) <- terra::time(Era5_ras)
-    for(i in 1:nlyr(Era5_ras)){
-      if(counter > 24){counter <- 1}
-      if(counter == 1){
-        Era5_ls[[i]] <- Era5_ras[[i]]
-        StartI <- i
+    #' break apart sequence by UTC days and apply back-calculation per day in pblapply loop, for loop for each hour in each day
+    DataDays <- ceiling(1:nlyr(Era5_ras)/24)
+    DissagDays <- unique(DataDays)
+    Era5_ls <- pblapply(DissagDays, FUN = function(DissagDay_Iter){
+      counter <- 1
+      Interior_ras <- Era5_ras[[which(DataDays == DissagDay_Iter)]]
+      Interior_ls <- as.list(rep(NA, nlyr(Interior_ras)))
+      names(Interior_ls) <- terra::time(Interior_ras)
+      for(i in 1:nlyr(Interior_ras)){
+        # if(counter > 24){counter <- 1}
+        if(counter == 1){
+          Interior_ls[[i]] <- Interior_ras[[i]]
+          # StartI <- i
+        }
+        if(counter == 24){
+          Interior_ls[[i]] <- Interior_ras[[i]]-sum(rast(Interior_ls[1:(1+counter-2)]))
+        }
+        if(counter != 24 & counter != 1){
+          Interior_ls[[i]] <- Interior_ras[[i+1]] - Interior_ras[[i]]
+        }
+        counter <- counter + 1
       }
-      if(counter == 24){
-        Era5_ls[[i]] <- Era5_ras[[i]]-sum(rast(Era5_ls[StartI:(StartI+counter-2)]))
-      }
-      if(counter != 24 & counter != 1){
-        Era5_ls[[i]] <- Era5_ras[[i+1]] - Era5_ras[[i]]
-      }
-      counter <- counter + 1
-    }
+      rast(Interior_ls)
+    })
+    # counter <- 1
+    # Era5_ls <- as.list(rep(NA, nlyr(Era5_ras)))
+    # names(Era5_ls) <- terra::time(Era5_ras)
+    # for(i in 1:nlyr(Era5_ras)){
+    #   if(counter > 24){counter <- 1}
+    #   if(counter == 1){
+    #     Era5_ls[[i]] <- Era5_ras[[i]]
+    #     StartI <- i
+    #   }
+    #   if(counter == 24){
+    #     Era5_ls[[i]] <- Era5_ras[[i]]-sum(rast(Era5_ls[StartI:(StartI+counter-2)]))
+    #   }
+    #   if(counter != 24 & counter != 1){
+    #     Era5_ls[[i]] <- Era5_ras[[i+1]] - Era5_ras[[i]]
+    #   }
+    #   counter <- counter + 1
+    # }
     ## finishing off object
     Ret_ras <- rast(Era5_ls)
-    terra::time(Ret_ras) <- as.POSIXct(terra::time(Era5_ras), tz = TZone) - 60*60 # back-dating to be in-line with regular specifications
+    # terra::time(Ret_ras) <- as.POSIXct(terra::time(Era5_ras), tz = TZone) - 60*60 # back-dating to be in-line with regular specifications
     Era5_ras <- Ret_ras
     warning("You toggled on the CumulVar option in the function call. Hourly records have been converted from cumulative aggregates to individual hourly records.")
   }
@@ -185,6 +212,7 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
 #' @param Cores Numeric. Number of cores for parallel processing
 #' @param QueryTargetSteps Character. Target resolution steps
 #' @param TZone Character. Time zone for queried data.
+#' @param verbose Logical. Whether to print/message function progress in console or not.
 #'
 #' @importFrom terra time
 #' @importFrom terra tapp
@@ -193,7 +221,8 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone){
 #' @return A SpatRaster
 #'
 Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
-                          TResolution, TStep, FUN, Cores, QueryTargetSteps, TZone){
+                          TResolution, TStep, FUN, Cores, QueryTargetSteps, TZone, verbose = TRUE){
+  if(verbose){print("Temporal Aggregation")}
   if(BaseResolution == TResolution & BaseStep == TStep){
     Final_rast <- CDS_rast # no temporal aggregation needed
   }else{
@@ -220,8 +249,8 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
 
     if(length(unique(AggrIndex)) == 1){ ## this is to avoid a warning message thrown by terra
       Final_rast <- app(x = CDS_rast,
-                         cores = Cores,
-                         fun = FUN)
+                        cores = Cores,
+                        fun = FUN)
     }else{
       Final_rast <- tapp(x = CDS_rast,
                          index = AggrIndex,

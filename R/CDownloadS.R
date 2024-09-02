@@ -25,7 +25,6 @@
 #' @param Cores Numeric. How many cores to use when carrying out temporal aggregation. Default is 1.
 #' @param verbose Logical. Whether to print/message function progress in console or not.
 #' @param Keep_Raw Logical. Whether to retain raw downloaded data or not. Default is FALSE.
-#' @param Save_Final Logical. Whether to write the final SpatRaster to the hard drive. Default is TRUE.
 #'
 #' @importFrom tools file_path_sans_ext
 #' @importFrom terra rast
@@ -158,9 +157,8 @@ CDownloadS <- function(Variable = NULL, # which variable
                        TChunkSize = 6000,
                        Cores = 1, # parallelisation
                        verbose = TRUE, # verbosity
-                       Keep_Raw = FALSE,
-                       Save_Final = TRUE
-                       ){
+                       Keep_Raw = FALSE
+){
   ## Catching Most Frequent Issues ===============
   #--- API Credentials
   ### checking if API User and Key have been supplied
@@ -174,7 +172,7 @@ CDownloadS <- function(Variable = NULL, # which variable
   if(!(DataSet %in% Meta.List())){
     stop("Please specify a supported dataset as the DataSet argument. Your options are:",
          "\n", paste(Meta.List(), collapse = (" \n")))
-    }
+  }
   if(!(Type %in% Meta.QuickFacts(dataset = DataSet)$Type)){
     stop("Please specify a Type argument that is supported by your chosen data set. Your options are:",
          "\n", paste(Meta.QuickFacts(dataset = DataSet)$Type, collapse = (" \n")),
@@ -308,21 +306,24 @@ CDownloadS <- function(Variable = NULL, # which variable
   #--- Loading data
   CDS_rast <- rast(TempFs)
   terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone
-  ## subset to desired time
-  CDS_rast <- CDS_rast[[which(!(terra::time(CDS_rast) < Dates_df$IN[1] | terra::time(CDS_rast) > Dates_df$IN[2]))]]
 
   ## Spatial =====
   if(verbose){print("Spatial Limiting")}
   CDS_rast <- Handle.Spatial(CDS_rast, Extent)
 
   ## Temporal =====
-  if(verbose){print("Temporal Aggregation")}
   #--- Cumulative Fix
-  CDS_rast <- Temporal.Cumul(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone)
+  CDS_rast <- Temporal.Cumul(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone, verbose)
+
+  #--- Subset to desired time, happens here to allow for correct disaggregation of cumulative variables in previous step
+  if(verbose){print("Temporal Limiting")}
+  terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone
+  CDS_rast <- CDS_rast[[which(!(terra::time(CDS_rast) < Dates_df$IN[1] | terra::time(CDS_rast) > Dates_df$IN[2]))]]
+
 
   #--- Temporal aggregation
   CDS_rast <- Temporal.Aggr(CDS_rast, BaseResolution, BaseStep,
-                            TResolution, TStep, FUN, Cores, QueryTargetSteps, TZone)
+                            TResolution, TStep, FUN, Cores, QueryTargetSteps, TZone, verbose)
 
   ## Exports =================================
   if(verbose){message("###### Data Export & Return")}
@@ -333,14 +334,12 @@ CDownloadS <- function(Variable = NULL, # which variable
   terra::metags(CDS_rast) <- Meta_vec
 
   ### write file
-  if(Save_Final){
-    if(FileExtension == ".tif"){
-      terra::writeRaster(CDS_rast, filename = file.path(Dir, FileName))
-    }
-    if(FileExtension == ".nc"){
-      CDS_rast <- Meta.NC(NC = CDS_rast, FName = file.path(Dir, FileName),
-                          Attrs = terra::metags(CDS_rast), Write = TRUE)
-    }
+  if(FileExtension == ".tif"){
+    terra::writeRaster(CDS_rast, filename = file.path(Dir, FileName))
+  }
+  if(FileExtension == ".nc"){
+    CDS_rast <- Meta.NC(NC = CDS_rast, FName = file.path(Dir, FileName),
+                        Attrs = terra::metags(CDS_rast), Write = TRUE)
   }
 
   ### unlink temporary files

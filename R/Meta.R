@@ -33,7 +33,7 @@ Meta.Register <- function(Dir = file.path(getwd(), "metadata")){
 #'
 #' @export
 Meta.List <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/Development/metadata"
-                      ){
+){
   file_path_sans_ext(read.table(file.path(URL, "metadata.txt"))[,1])
 }
 
@@ -57,9 +57,9 @@ Meta.Read <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/D
                       dataset = "reanalysis-era5-land"){
   load(url(
     paste0(
-    "https://github.com/ErikKusch/KrigR/blob/Development/metadata/",
-    dataset,
-    ".RData?raw=true"
+      "https://github.com/ErikKusch/KrigR/blob/Development/metadata/",
+      dataset,
+      ".RData?raw=true"
     )
   ))
   get(ls()[ls() == gsub(dataset, pattern = "-", replacement = "_")])
@@ -176,7 +176,7 @@ Meta.QuickFacts <- function(dataset = "reanalysis-era5-land"){
 #' @examples
 #' Meta.Check(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck = "2m_temperature", CumulativeCheck = FALSE, ExtentCheck = c(53.06, 9.87, 49.89, 15.03), DateCheck = data.frame(IN = c(as.POSIXct("1995-01-01 CET"), as.POSIXct("2005-01-01 23:00:00 CET")), UTC = c(as.POSIXct("1994-12-31 23:00:00 UTC"), as.POSIXct("2005-01-01 22:00:00 UTC"))), AggrCheck = list(1, "hour"), QueryTimes = c('00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'))
 #'
-Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck, CumulativeCheck, ExtentCheck,  DateCheck, AggrCheck, QueryTimes){
+Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck, CumulativeCheck, ExtentCheck, DateCheck, AggrCheck, QueryTimes){
   #--- Variable
   ### if a variable not in the data set has been specified
   if(length(VariableCheck) == 0){stop("Please specify a variable provided by the data set. Your can be retrieved with the function call: ", "\n", "Meta.Variables(dataset = '", DataSet, "')")}
@@ -185,6 +185,9 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
   CumVar <- Meta.Variables(dataset = DataSet)$Cumulative[which(Meta.Variables(dataset = DataSet)$CDSname == VariableCheck)]
   if(CumulativeCheck & !CumVar){
     stop("You have specified to back-calculation of cumulative data for a non-cumulatively recorded variable. This would produce nonsense data. Please specify CumulVar = FALSE instead. For an overview of which variables are recorded cumulatively for the data set you are querying, please consider the function call:", "\n", "Meta.Variables(dataset = '", DataSet, "')")
+  }
+  if(!CumulativeCheck & CumVar & Meta.QuickFacts(dataset = DataSet)$TResolution == "hour" & attr(DateCheck$IN[1],"tzone") != "UTC"){
+    warning("You have selected to download data recorded cumulatively in hourly intervals for a different timezone than UTC while not applying back-calculation/disaggregation of these cumulative records. Be aware that the resulting data will likely not be useful as the cumulative window resets at each new day in UTC.")
   }
   #--- Extent
   ### if an extent outside the data product has been specified
