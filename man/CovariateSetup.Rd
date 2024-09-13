@@ -7,6 +7,7 @@
 CovariateSetup(
   Training,
   Target,
+  Filename = "",
   Covariates = "GMTED2010",
   Source = "Origin",
   Extent,
@@ -34,6 +35,8 @@ CovariateSetup(
 \item{Keep_Global}{Logical. Only comes into effect when Covariates argument is specified as a character. Whether to retain raw downloaded covariate data or not. Default is FALSE.}
 
 \item{FileExtension}{Character. A file extension for the produced files. Supported values are ".nc" (default) and ".tif" (better support for metadata).}
+
+\item{FileName}{Character. A file name prefix for the produced files.}
 }
 \value{
 A list containing two SpatRaster objects (Training and Target) ready to be used as covariates for kriging, and two files called Covariates_Target and Covariates_Train in the specified directory.
