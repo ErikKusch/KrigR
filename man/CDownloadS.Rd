@@ -27,8 +27,7 @@ CDownloadS(
   TChunkSize = 6000,
   Cores = 1,
   verbose = TRUE,
-  Keep_Raw = FALSE,
-  Save_Final = TRUE
+  Keep_Raw = FALSE
 )
 }
 \arguments{
@@ -77,8 +76,6 @@ CDownloadS(
 \item{verbose}{Logical. Whether to print/message function progress in console or not.}
 
 \item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not. Default is FALSE.}
-
-\item{Save_Final}{Logical. Whether to write the final SpatRaster to the hard drive. Default is TRUE.}
 }
 \value{
 A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a file (either .nc or .tif) in the specified directory.
