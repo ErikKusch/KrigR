@@ -7,7 +7,7 @@
 CovariateSetup(
   Training,
   Target,
-  Filename = "",
+  FilePrefix = "",
   Covariates = "GMTED2010",
   Source = "Origin",
   Extent,
@@ -22,6 +22,8 @@ CovariateSetup(
 
 \item{Target}{Either numeric or a SpatRaster. If numeric, a single number representing the target resolution for the kriging step (i.e. wich resolution to downscale to). If a SpatRaster, data that the covariates and kriged products should align with. In case of a numeric input, covariate data is aggregated as closely as possible to desired resolution. If a SpatRaster, covariate data is resampled to match desired output directly.}
 
+\item{FilePrefix}{Character. A file name prefix for the produced files.}
+
 \item{Covariates}{Either character or a SpatRaster. If character, obtain frequently used and provably useful covariate data (i.e., GMTED2010 and soil data) and prepare for use in Kriging. Supported character values are "GMTED2010", "tksat", "tkdry", "csol", "k_s", "lambda", "psi", and "theta_s". If a SpatRaster, a user-supplied set of covariate data to be prepared for use in Kriging.}
 
 \item{Source}{Character. Only comes into effect when Covariates argument is specified as a character. Whether to attempt download of covariate data from the official sources (Source = "Origin") or a static copy of the data set on a private drive (Source = "Drive"). Default is "Origin".}
@@ -35,8 +37,6 @@ CovariateSetup(
 \item{Keep_Global}{Logical. Only comes into effect when Covariates argument is specified as a character. Whether to retain raw downloaded covariate data or not. Default is FALSE.}
 
 \item{FileExtension}{Character. A file extension for the produced files. Supported values are ".nc" (default) and ".tif" (better support for metadata).}
-
-\item{FileName}{Character. A file name prefix for the produced files.}
 }
 \value{
 A list containing two SpatRaster objects (Training and Target) ready to be used as covariates for kriging, and two files called Covariates_Target and Covariates_Train in the specified directory.

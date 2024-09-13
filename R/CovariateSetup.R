@@ -4,7 +4,7 @@
 #'
 #' @param Training A SpatRaster file containing the data which is to be downscaled. Covariate data will be resampled to match this.
 #' @param Target Either numeric or a SpatRaster. If numeric, a single number representing the target resolution for the kriging step (i.e. wich resolution to downscale to). If a SpatRaster, data that the covariates and kriged products should align with. In case of a numeric input, covariate data is aggregated as closely as possible to desired resolution. If a SpatRaster, covariate data is resampled to match desired output directly.
-#' @param FileName Character. A file name prefix for the produced files.
+#' @param FilePrefix Character. A file name prefix for the produced files.
 #' @param Covariates Either character or a SpatRaster. If character, obtain frequently used and provably useful covariate data (i.e., GMTED2010 and soil data) and prepare for use in Kriging. Supported character values are "GMTED2010", "tksat", "tkdry", "csol", "k_s", "lambda", "psi", and "theta_s". If a SpatRaster, a user-supplied set of covariate data to be prepared for use in Kriging.
 #' @param Source Character. Only comes into effect when Covariates argument is specified as a character. Whether to attempt download of covariate data from the official sources (Source = "Origin") or a static copy of the data set on a private drive (Source = "Drive"). Default is "Origin".
 #' @param Extent Optional, prepare covariate data according to desired spatial specification. If missing/unspecified, maximal area of supplied data and covariat sets is used. Can be specified either as a raster object, an sf object, a terra object, or a data.frame. If Extent is a raster or terra object, covariates will be prepared according to rectangular extent thereof. If Extent is an sf (MULTI-)POLYGON object, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns around which a buffered shapefile will be created using the Buffer argument.
@@ -79,7 +79,7 @@
 #' @export
 CovariateSetup <- function(Training,
                            Target,
-                           Filename = "",
+                           FilePrefix = "",
                            Covariates = "GMTED2010",
                            Source = "Origin",
                            Extent,
@@ -273,8 +273,8 @@ CovariateSetup <- function(Training,
   Cov_target <- Handle.Spatial(Cov_target, Extent)
 
   ## Data Saving & Export ===============
-  TrainName <- file.path(Dir, paste0(FileName, "Covariates_Train", FileExtension))
-  TargetName <- file.path(Dir, paste0(FileName, "Covariates_Target", FileExtension))
+  TrainName <- file.path(Dir, paste0(FilePrefix, "Covariates_Train", FileExtension))
+  TargetName <- file.path(Dir, paste0(FilePrefix, "Covariates_Target", FileExtension))
   if(FileExtension == ".tif"){
     terra::writeRaster(x = Cov_train, filename = TrainName, overwrite = TRUE)
     terra::writeRaster(x = Cov_target, filename = TargetName, overwrite = TRUE)
