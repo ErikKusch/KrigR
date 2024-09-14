@@ -187,14 +187,25 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
         }
       }
       ## download file for current request when ready
-      FileDown <- tryCatch(ecmwfr::wf_transfer(url = API_request$get_url(),
-                                               user = API_User,
-                                               service = "cds",
-                                               verbose = TRUE,
-                                               path = Dir,
-                                               filename = API_request$get_request()$target),
-                           error = function(e){e}
-      )
+      if(packageVersion("ecmwfr") < "2.0.0"){
+        FileDown <- tryCatch(ecmwfr::wf_transfer(url = API_request$get_url(),
+                                                 user = API_User,
+                                                 service = "cds",
+                                                 verbose = TRUE,
+                                                 path = Dir,
+                                                 filename = API_request$get_request()$target),
+                             error = function(e){e}
+        )
+      }else{
+        FileDown <- tryCatch(ecmwfr::wf_transfer(url = API_request$get_url(),
+                                                 user = API_User,
+                                                 # service = "cds",
+                                                 verbose = TRUE,
+                                                 path = Dir,
+                                                 filename = API_request$get_request()$target),
+                             error = function(e){e}
+        )
+      }
       if(Down_try == TryDown){
         stop("Download of CDS query result continues to fail after ", Down_try, " trys. The most recent error message is: \n", FileDown,  "Assess issues at https://cds.climate.copernicus.eu/cdsapp#!/yourrequests.")
       }
