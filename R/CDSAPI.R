@@ -15,13 +15,24 @@
 #'
 Register.Credentials <- function(API_User, API_Key){
   API_Service = "cds"
-  KeyRegisterCheck <- tryCatch(ecmwfr::wf_get_key(user = API_User, service = API_Service),
-                               error = function(e){e})
-  if(any(class(KeyRegisterCheck) == "simpleError")){
-    ecmwfr::wf_set_key(user = API_User,
-                       key = as.character(API_Key),
-                       service = API_Service)
+  if(packageVersion("ecmwfr") < "2.0.0"){
+    KeyRegisterCheck <- tryCatch(ecmwfr::wf_get_key(user = API_User, service = API_Service),
+                                 error = function(e){e})
+    if(any(class(KeyRegisterCheck) == "simpleError")){
+      ecmwfr::wf_set_key(user = API_User,
+                         key = as.character(API_Key),
+                         service = API_Service)
+    }
+  }else{
+    KeyRegisterCheck <- tryCatch(ecmwfr::wf_get_key(user = API_User),
+                                 error = function(e){e})
+    if(any(class(KeyRegisterCheck) == "simpleError")){
+      ecmwfr::wf_set_key(user = API_User,
+                         key = as.character(API_Key))
+    }
   }
+
+
 }
 ### FORMING CDS Requests =======================================================
 #' Form CDS Requests
