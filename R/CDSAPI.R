@@ -14,8 +14,9 @@
 #' @seealso \code{\link{Make.Request}}, \code{\link{Execute.Requests}}.
 #'
 Register.Credentials <- function(API_User, API_Key){
-  API_Service = "cds"
   if(packageVersion("ecmwfr") < "2.0.0"){
+    warning("You are using an ecmwfr (a KrigR dependency) of version < 2.0.0. This causes queries to be directed to the old CDS service (https://cds.climate.copernicus.eu) instead of the new CDS (https://cds-beta.climate.copernicus.eu/). You may want to update ecmwfr to the latest version to ensure reliable downloads of CDS data going forward.")
+    API_Service <- "cds"
     KeyRegisterCheck <- tryCatch(ecmwfr::wf_get_key(user = API_User, service = API_Service),
                                  error = function(e){e})
     if(any(class(KeyRegisterCheck) == "simpleError")){
@@ -24,6 +25,7 @@ Register.Credentials <- function(API_User, API_Key){
                          service = API_Service)
     }
   }else{
+    if(!grepl("@", API_User)){stop("With the adoption of the new CDS (https://cds-beta.climate.copernicus.eu/), API_User must be you E-mail registered with the new CDS.")}
     KeyRegisterCheck <- tryCatch(ecmwfr::wf_get_key(user = API_User),
                                  error = function(e){e})
     if(any(class(KeyRegisterCheck) == "simpleError")){
@@ -119,14 +121,12 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
       # if(verbose){print("File with this name is already present.")}
       next()
     }
-    API_request <- suppressMessages({
-      ecmwfr::wf_request(user = API_User,
-                         request = Requests_ls[[requestID]],
-                         transfer = FALSE,
-                         path = Dir,
-                         verbose = verbose,
-                         time_out = TimeOut)
-    })
+    API_request <- ecmwfr::wf_request(user = API_User,
+                                      request = Requests_ls[[requestID]],
+                                      transfer = FALSE,
+                                      path = Dir,
+                                      verbose = FALSE,
+                                      time_out = TimeOut)
     Requests_ls[[requestID]]$API_request <- API_request
   }
   Requests_ls
@@ -148,6 +148,7 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
 #' @importFrom httr DELETE
 #' @importFrom httr authenticate
 #' @importFrom httr add_headers
+#' @importFrom ecmwfr wf_delete
 #'
 #' @return No R object. Resulting files of CDS query/queries in signated directory.
 #'
@@ -155,39 +156,43 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
 #'
 Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE){
   if(verbose){print("## Listening for CDS Requests")}
+
   for(requestID in 1:length(Requests_ls)){ ## looping over CDS requests
     if(verbose){print(names(Requests_ls)[requestID])}
+
     if(class(Requests_ls[[requestID]]) == "logical"){
       if(verbose){print("File with this name is already present.")}
       next()
     }
     API_request <- Requests_ls[[requestID]]$API_request
-    FileDown <- list(state = "queued")
-    Down_try <- 0
-    while(FileDown$state != "completed" & Down_try <= TryDown){
-      ## console output that shows the status of the request on CDS
-      if(verbose){
-        if(FileDown$state == "queued"){
-          for(rep_iter in 1:10){
-            cat(rep(" ", 100))
-            flush.console()
-            cat('\r', "Waiting for CDS to start processing the query", rep(".", rep_iter))
-            flush.console()
-            Sys.sleep(0.5)
+
+    ## old CDS
+    if(packageVersion("ecmwfr") < "2.0.0"){
+      FileDown <- list(state = "queued")
+      Down_try <- 0
+      while(FileDown$state != "completed" & Down_try <= TryDown){
+        ## console output that shows the status of the request on CDS
+        if(verbose){
+          if(FileDown$state == "queued"){
+            for(rep_iter in 1:10){
+              cat(rep(" ", 100))
+              flush.console()
+              cat('\r', "Waiting for CDS to start processing the query", rep(".", rep_iter))
+              flush.console()
+              Sys.sleep(0.25)
+            }
+          }
+          if(FileDown$state == "running"){
+            for(rep_iter in 1:10){
+              cat(rep(" ", 100))
+              flush.console()
+              cat('\r', "CDS is processing the query", rep(".", rep_iter))
+              flush.console()
+              Sys.sleep(0.25)
+            }
           }
         }
-        if(FileDown$state == "running"){
-          for(rep_iter in 1:10){
-            cat(rep(" ", 100))
-            flush.console()
-            cat('\r', "CDS is processing the query", rep(".", rep_iter))
-            flush.console()
-            Sys.sleep(0.5)
-          }
-        }
-      }
-      ## download file for current request when ready
-      if(packageVersion("ecmwfr") < "2.0.0"){
+        ## download file for current request when ready
         FileDown <- tryCatch(ecmwfr::wf_transfer(url = API_request$get_url(),
                                                  user = API_User,
                                                  service = "cds",
@@ -196,32 +201,83 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
                                                  filename = API_request$get_request()$target),
                              error = function(e){e}
         )
-      }else{
-        FileDown <- tryCatch(ecmwfr::wf_transfer(url = API_request$get_url(),
-                                                 user = API_User,
-                                                 # service = "cds",
-                                                 verbose = TRUE,
-                                                 path = Dir,
-                                                 filename = API_request$get_request()$target),
-                             error = function(e){e}
+        if(Down_try == TryDown){
+          stop("Download of CDS query result continues to fail after ", Down_try, " trys. The most recent error message is: \n", FileDown,  "Assess issues at https://cds.climate.copernicus.eu/cdsapp#!/yourrequests.")
+        }
+        if(any(class(FileDown) == "simpleError")){
+          FileDown <- list(state = "queued")
+          Down_try <- Down_try+1
+        }
+      }
+      if(FileDown$state == "completed"){
+        delete <- httr::DELETE(
+          API_request$get_url(),
+          httr::authenticate(API_User, API_Key),
+          httr::add_headers(
+            "Accept" = "application/json",
+            "Content-Type" = "application/json")
         )
       }
-      if(Down_try == TryDown){
-        stop("Download of CDS query result continues to fail after ", Down_try, " trys. The most recent error message is: \n", FileDown,  "Assess issues at https://cds.climate.copernicus.eu/cdsapp#!/yourrequests.")
+    }else{ ## new CDS!!!
+      FileDown <- list(state = "accepted")
+      API_request <- API_request$update_status(verbose = FALSE)
+
+      while(FileDown$state != "successful"){
+        ## console output that shows the status of the request on CDS
+        if(verbose){
+          if(FileDown$state == "accepted"){
+            for(rep_iter in 1:10){
+              cat(rep(" ", 100))
+              flush.console()
+              cat('\r', "Waiting for CDS to start processing the query", rep(".", rep_iter))
+              flush.console()
+              Sys.sleep(0.25)
+            }
+          }
+          if(FileDown$state == "running"){
+            for(rep_iter in 1:10){
+              cat(rep(" ", 100))
+              flush.console()
+              cat('\r', "CDS is processing the query", rep(".", rep_iter))
+              flush.console()
+              Sys.sleep(0.25)
+            }
+          }
+        }
+
+        API_request <- API_request$update_status(verbose = FALSE)
+        FileDown$state <- API_request$get_status()
+
+        if(API_request$is_failed()){
+          stop("Query failed on CDS. Assess issues at https://cds.climate.copernicus.eu/cdsapp#!/yourrequests.")
+        }
+
+        if(FileDown$state == "successful"){
+          for(rep_iter in 1:10){
+            cat(rep(" ", 100))
+            flush.console()
+            cat('\r', "CDS finished processing the query. Download starting soon.", rep(".", rep_iter))
+            flush.console()
+            Sys.sleep(0.25)
+          }
+          Download_CDS <- capture.output(
+            ecmwfr::wf_transfer(url = API_request$get_url(),
+                                user = API_User,
+                                verbose = TRUE,
+                                path = Dir,
+                                filename = API_request$get_request()$target),
+            type = "message"
+          )
+
+          ## purge request and check succes of doing so
+          checkdeletion <- capture.output(wf_delete(
+            url = API_request$get_url(),
+            user = API_User
+          ),
+          type = "message")
+          # checkdeletion == "- request purged from queue!"
+        }
       }
-      if(any(class(FileDown) == "simpleError")){
-        FileDown <- list(state = "queued")
-        Down_try <- Down_try+1
-      }
-    }
-    if(FileDown$state == "completed"){
-      delete <- httr::DELETE(
-        API_request$get_url(),
-        httr::authenticate(API_User, API_Key),
-        httr::add_headers(
-          "Accept" = "application/json",
-          "Content-Type" = "application/json")
-      )
-    }
-  }
-}
+    } # new CDS end
+  } # request loop
+} # function

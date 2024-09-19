@@ -65,9 +65,9 @@ CDownloadS(
 
 \item{API_Key}{Character; ECMWF cds API key.}
 
-\item{TryDown}{Optional, numeric. How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.}
+\item{TryDown}{Optional, numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.}
 
-\item{TimeOut}{Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).}
+\item{TimeOut}{Numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). The timeout for each download in seconds. Default 36000 seconds (10 hours).}
 
 \item{TChunkSize}{Numeric. Number of layers to bundle in each individual download. Default is 6000 to adhere to most restrictive CDS limits: https://cds.climate.copernicus.eu/live/limits.}
 
