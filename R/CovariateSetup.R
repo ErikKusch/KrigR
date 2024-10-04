@@ -36,7 +36,7 @@
 #' \item{Citation}{ - A string which to use for in-line citation of the data product.}
 #' }
 #'
-#' @seealso \code{\link{Kriging}}.
+#' @seealso \code{\link{Kriging}}, \code{\link{Plot.Covariates}}.
 #'
 #' @examples
 #' \dontrun{
@@ -47,8 +47,7 @@
 #'                                        Covariates = "GMTED2010",
 #'                                        Keep_Global = TRUE,
 #'                                        FileExtension = ".nc")
-#' terra::plot(Covariates_ls[[1]])
-#' terra::plot(Covariates_ls[[2]])
+#' Plot.Covariates(Covariates_ls)
 #'
 #' ## Shapefile-limited covariate data
 #' data("Jotunheimen_poly")
@@ -59,8 +58,7 @@
 #'                                        Extent = Jotunheimen_poly,
 #'                                        Keep_Global = TRUE,
 #'                                        FileExtension = ".nc")
-#' terra::plot(Covariates_ls[[1]])
-#' terra::plot(Covariates_ls[[2]])
+#' Plot.Covariates(Covariates_ls, SF = Jotunheimen_poly)
 #'
 #' ## buffered-point-limited covariate data
 #' data("Mountains_df")
@@ -73,8 +71,7 @@
 #'                                        Buffer = 0.2,
 #'                                        Keep_Global = TRUE,
 #'                                        FileExtension = ".nc")
-#' terra::plot(Covariates_ls[[1]])
-#' terra::plot(Covariates_ls[[2]])
+#' Plot.Covariates(Covariates_ls)
 #' }
 #' @export
 CovariateSetup <- function(Training,

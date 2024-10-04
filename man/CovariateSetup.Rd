@@ -58,8 +58,7 @@ Covariates_ls <- CovariateSetup(Training = CDS_rast,
                                        Covariates = "GMTED2010",
                                        Keep_Global = TRUE,
                                        FileExtension = ".nc")
-terra::plot(Covariates_ls[[1]])
-terra::plot(Covariates_ls[[2]])
+Plot.Covariates(Covariates_ls)
 
 ## Shapefile-limited covariate data
 data("Jotunheimen_poly")
@@ -70,8 +69,7 @@ Covariates_ls <- CovariateSetup(Training = CDS_rast,
                                        Extent = Jotunheimen_poly,
                                        Keep_Global = TRUE,
                                        FileExtension = ".nc")
-terra::plot(Covariates_ls[[1]])
-terra::plot(Covariates_ls[[2]])
+Plot.Covariates(Covariates_ls, SF = Jotunheimen_poly)
 
 ## buffered-point-limited covariate data
 data("Mountains_df")
@@ -84,10 +82,9 @@ Covariates_ls <- CovariateSetup(Training = CDS_rast,
                                        Buffer = 0.2,
                                        Keep_Global = TRUE,
                                        FileExtension = ".nc")
-terra::plot(Covariates_ls[[1]])
-terra::plot(Covariates_ls[[2]])
+Plot.Covariates(Covariates_ls)
 }
 }
 \seealso{
-\code{\link{Kriging}}.
+\code{\link{Kriging}}, \code{\link{Plot.Covariates}}.
 }

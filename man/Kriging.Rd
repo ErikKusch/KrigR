@@ -63,6 +63,7 @@ Use optional arguments such as Dir, Keep_Temporary, KrigingEquation, nmax and Co
 CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
 Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
 Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
+names(Cov_train) <- names(Cov_target) <- "GMTED2010"
 
 ### kriging itself
 ExtentKrig <- Kriging(
@@ -77,7 +78,7 @@ ExtentKrig <- Kriging(
   nmax = 40,
   verbose = TRUE
 )
-
+Plot.Kriged(Krigs = ExtentKrig)
 ## Kriging using full KrigR pipeline with shapefile data
 ### Shapefile loading
 data("Jotunheimen_poly")
@@ -120,8 +121,9 @@ ShapeKrig <- Kriging(
   nmax = 40,
   verbose = TRUE
 )
+Plot.Kriged(Krigs = ShapeKrig, SF = Jotunheimen_poly)
 }
 }
 \seealso{
-\code{\link{CovariateSetup}}.
+\code{\link{CovariateSetup}}, \code{\link{Plot.Kriged}}.
 }

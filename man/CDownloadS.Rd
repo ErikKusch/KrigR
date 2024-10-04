@@ -111,7 +111,7 @@ RawGlobe_rast <- CDownloadS(
 	API_User = API_User,
 	API_Key = API_Key
 )
-terra::plot(RawGlobe_rast)
+Plot.SpatRast(RawGlobe_rast)
 
 ## Monthly air temperature aggregated to bi-annual maximum by SpatRaster
 CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
@@ -134,7 +134,7 @@ BiAnnAirTemp_rast <- CDownloadS(
 	API_User = API_User,
 	API_Key = API_Key
 )
-terra::plot(BiAnnAirTemp_rast)
+Plot.SpatRast(BiAnnAirTemp_rast)
 
 ## Hourly back-calculated precipitation aggregated to daily averages by shapefiles
 data("Jotunheimen_poly")
@@ -156,7 +156,7 @@ DailyBackCPrecip_rast <- CDownloadS(
   API_User = API_User,
   API_Key = API_Key
 )
-terra::plot(DailyBackCPrecip_rast)
+Plot.SpatRast(DailyBackCPrecip_rast, SF = Jotunheimen_poly, Legend = "Precipitation [m]", COL = rev(viridis::cividis(100)))
 
 ## 6-hourly ensemble member spread sum for air temperature by buffered points
 data("Mountains_df")
@@ -183,9 +183,9 @@ EnsembleSpreadSum6hour_rast <- CDownloadS(
 	API_Key = API_Key,
 	Keep_Raw = TRUE
 )
-terra::plot(EnsembleSpreadSum6hour_rast)
+Plot.SpatRast(EnsembleSpreadSum6hour_rast, Legend = "Air Temperature Uncertainty [K]")
 }
 }
 \seealso{
-\code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.QuickFacts}}.
+\code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.QuickFacts}}, \code{\link{Plot.SpatRast}}.
 }

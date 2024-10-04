@@ -48,7 +48,7 @@
 #'
 #' \strong{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. Kriging() handles these .nc specific issues when loading .nc files created previously with Kriging() from disk.
 #'
-#' @seealso \code{\link{CovariateSetup}}.
+#' @seealso \code{\link{CovariateSetup}}, \code{\link{Plot.Kriged}}.
 #'
 #' @examples
 #' \dontrun{
@@ -57,7 +57,8 @@
 #' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
 #' Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
 #' Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
-#'
+#' names(Cov_train) <- names(Cov_target) <- "GMTED2010"
+#' 
 #' ### kriging itself
 #' ExtentKrig <- Kriging(
 #'   Data = CDS_rast,
@@ -71,7 +72,7 @@
 #'   nmax = 40,
 #'   verbose = TRUE
 #' )
-#'
+#' Plot.Kriged(Krigs = ExtentKrig)
 #' ## Kriging using full KrigR pipeline with shapefile data
 #' ### Shapefile loading
 #' data("Jotunheimen_poly")
@@ -114,6 +115,7 @@
 #'   nmax = 40,
 #'   verbose = TRUE
 #' )
+#' Plot.Kriged(Krigs = ShapeKrig, SF = Jotunheimen_poly)
 #' }
 #' @export
 Kriging <- function(

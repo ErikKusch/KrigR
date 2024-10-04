@@ -46,7 +46,7 @@
 #'
 #' \strong{ATTENTION:} If data is loaded again from disk at a later point with a different function, take note that the time zone will have to be set anew and existing time parameters in the .nc contents will need to be converted to the desired time zone. Likewise, citation and KrigR-call metadata will not be loaded properly from a .nc when loading data through a different function. CDownloads() handles these .nc specific issues when loading .nc files created previously with CDownloadS from disk.
 #'
-#' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.QuickFacts}}.
+#' @seealso \code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.QuickFacts}}, \code{\link{Plot.SpatRast}}.
 #'
 #' @examples
 #' \dontrun{
@@ -68,7 +68,7 @@
 #' 	API_User = API_User,
 #' 	API_Key = API_Key
 #' )
-#' terra::plot(RawGlobe_rast)
+#' Plot.SpatRast(RawGlobe_rast)
 #'
 #' ## Monthly air temperature aggregated to bi-annual maximum by SpatRaster
 #' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
@@ -91,7 +91,7 @@
 #' 	API_User = API_User,
 #' 	API_Key = API_Key
 #' )
-#' terra::plot(BiAnnAirTemp_rast)
+#' Plot.SpatRast(BiAnnAirTemp_rast)
 #'
 #' ## Hourly back-calculated precipitation aggregated to daily averages by shapefiles
 #' data("Jotunheimen_poly")
@@ -113,7 +113,7 @@
 #'   API_User = API_User,
 #'   API_Key = API_Key
 #' )
-#' terra::plot(DailyBackCPrecip_rast)
+#' Plot.SpatRast(DailyBackCPrecip_rast, SF = Jotunheimen_poly, Legend = "Precipitation [m]", COL = rev(viridis::cividis(100)))
 #'
 #' ## 6-hourly ensemble member spread sum for air temperature by buffered points
 #' data("Mountains_df")
@@ -140,7 +140,7 @@
 #' 	API_Key = API_Key,
 #' 	Keep_Raw = TRUE
 #' )
-#' terra::plot(EnsembleSpreadSum6hour_rast)
+#' Plot.SpatRast(EnsembleSpreadSum6hour_rast, Legend = "Air Temperature Uncertainty [K]")
 #' }
 #' @export
 CDownloadS <- function(Variable = NULL, # which variable

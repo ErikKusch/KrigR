@@ -1,7 +1,7 @@
 Package: KrigR
 Type: Package
 Title: Downloading, Aggregating, and Kriging of ECMWF CDS-Data
-Version: 0.3.6
+Version: 0.4.0
 Authors@R: as.person(c(
     "Erik Kusch <erik@i-solution.de> [aut, cre]", 
     "Richard Davy <Richard.Davy@nersc.no> [aut]"
@@ -15,7 +15,7 @@ Description: An R Package for downloading, preprocessing, and statistical downsc
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Imports:
     ecmwfr,
     httr,
@@ -29,5 +29,9 @@ Imports:
     tools,
     progress,
     doSNOW,
-    pbapply
+    pbapply,
+    tidyr,
+    ggplot2,
+    viridis,
+    cowplot
 Depends: R (>= 4.0.0) 
