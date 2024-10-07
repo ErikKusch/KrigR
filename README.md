@@ -1,6 +1,11 @@
 # KrigR
 An R Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the [European Centre for Medium‐Range Weather Forecasts (ECMWF)](https://www.ecmwf.int/).The package interfaces with the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s) for retrieval of climate data.
-    
+
+```diff
+- NOTE: KrigR is currently undergoing substantial development in response to the establishment of a new CDS and deprecation of previous dependency packages, you have to install the latest development version.
+```
+
+
 KrigR contains functions for:
     - Downloading Era5(-Land) data directly from within `R` via a wrapper function for the [`ecmwfr` package](https://github.com/bluegreen-labs/ecmwfr)
     - Downloading [USGS GMTED 2010](https://www.usgs.gov/core-science-systems/eros/coastal-changes-and-impacts/gmted2010?qt-science_support_page_related_con=0#qt-science_support_page_related_con) elevation data  
