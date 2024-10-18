@@ -140,8 +140,8 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
       request = Requests_ls[[requestID]],
       transfer = FALSE,
       path = Dir,
-      verbose = FALSE,
-      time_out = TimeOut
+      verbose = FALSE
+      # , time_out = TimeOut
     )
     Requests_ls[[requestID]]$API_request <- API_request
   }
