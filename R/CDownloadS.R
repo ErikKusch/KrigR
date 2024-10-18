@@ -17,6 +17,7 @@
 #' @param Dir Character/Directory Pointer. Directory specifying where to download data to.
 #' @param FileName Character. A file name for the produced file.
 #' @param FileExtension Character. A file extension for the produced file. Supported values are ".nc" (default) and ".tif" (better support for metadata).
+#' @param Compression Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".
 #' @param API_Key Character; ECMWF cds API key.
 #' @param API_User Character; ECMWF cds user number.
 #' @param TChunkSize Numeric. Number of layers to bundle in each individual download. Default is 6000 to adhere to most restrictive CDS limits: https://cds.climate.copernicus.eu/live/limits.
@@ -52,44 +53,44 @@
 #' \dontrun{
 #' ## Raw data for one month of full globe
 #' RawGlobe_rast <- CDownloadS(
-#' 	Variable = "2m_temperature",
-#' 	DataSet = "reanalysis-era5-land-monthly-means",
-#' 	Type = "monthly_averaged_reanalysis",
-#' 	# time-window, default set to range of dataset-type
-#' 	DateStart = "1995-01-01 00:00",
-#' 	DateStop = "1995-01-01 23:00",
-#' 	TZone = "CET",
-#' 	# temporal aggregation
-#' 	TResolution = "month",
-#' 	TStep = 1,
-#' 	# file storing
-#' 	FileName = "RawGlobe",
-#' 	# API credentials
-#' 	API_User = API_User,
-#' 	API_Key = API_Key
+#'   Variable = "2m_temperature",
+#'   DataSet = "reanalysis-era5-land-monthly-means",
+#'   Type = "monthly_averaged_reanalysis",
+#'   # time-window, default set to range of dataset-type
+#'   DateStart = "1995-01-01 00:00",
+#'   DateStop = "1995-01-01 23:00",
+#'   TZone = "CET",
+#'   # temporal aggregation
+#'   TResolution = "month",
+#'   TStep = 1,
+#'   # file storing
+#'   FileName = "RawGlobe",
+#'   # API credentials
+#'   API_User = API_User,
+#'   API_Key = API_Key
 #' )
 #' Plot.SpatRast(RawGlobe_rast)
 #'
 #' ## Monthly air temperature aggregated to bi-annual maximum by SpatRaster
-#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
+#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
 #' BiAnnAirTemp_rast <- CDownloadS(
-#' 	Variable = "2m_temperature",
-#' 	DataSet = "reanalysis-era5-land-monthly-means",
-#' 	Type = "monthly_averaged_reanalysis",
-#' 	# time-window, default set to range of dataset-type
-#' 	DateStart = "1995-01-01 00:00",
-#' 	DateStop = "1996-12-31 23:00",
-#' 	TZone = "EET",
-#' 	# temporal aggregation
-#' 	TResolution = "year",
-#' 	TStep = 2,
-#' 	# spatial
-#' 	Extent = CDS_rast,
-#' 	# file storing
-#' 	FileName = "BiAnnAirTemp",
-#' 	# API credentials
-#' 	API_User = API_User,
-#' 	API_Key = API_Key
+#'   Variable = "2m_temperature",
+#'   DataSet = "reanalysis-era5-land-monthly-means",
+#'   Type = "monthly_averaged_reanalysis",
+#'   # time-window, default set to range of dataset-type
+#'   DateStart = "1995-01-01 00:00",
+#'   DateStop = "1996-12-31 23:00",
+#'   TZone = "EET",
+#'   # temporal aggregation
+#'   TResolution = "year",
+#'   TStep = 2,
+#'   # spatial
+#'   Extent = CDS_rast,
+#'   # file storing
+#'   FileName = "BiAnnAirTemp",
+#'   # API credentials
+#'   API_User = API_User,
+#'   API_Key = API_Key
 #' )
 #' Plot.SpatRast(BiAnnAirTemp_rast)
 #'
@@ -118,117 +119,136 @@
 #' ## 6-hourly ensemble member spread sum for air temperature by buffered points
 #' data("Mountains_df")
 #' EnsembleSpreadSum6hour_rast <- CDownloadS(
-#' 	Variable = "2m_temperature",
-#' 	DataSet = "reanalysis-era5-single-levels",
-#' 	Type = "ensemble_spread",
-#' 	# time-window, default set to range of dataset-type
-#' 	DateStart = "1995-01-01 00:00:00",
-#' 	DateStop = "1995-01-01 21:00:00",
-#' 	TZone = "UTC",
-#' 	# temporal aggregation
-#' 	TResolution = "hour",
-#' 	TStep = 6,
-#' 	FUN = sum,
-#' 	# spatial
-#' 	Extent = Mountains_df,
-#' 	Buffer = 0.2,
-#' 	# file storing
-#' 	FileName = "EnsembleSpreadSum6hour",
-#' 	FileExtension = ".tif",
-#' 	# API credentials
-#' 	API_User = API_User,
-#' 	API_Key = API_Key,
-#' 	Keep_Raw = TRUE
+#'   Variable = "2m_temperature",
+#'   DataSet = "reanalysis-era5-single-levels",
+#'   Type = "ensemble_spread",
+#'   # time-window, default set to range of dataset-type
+#'   DateStart = "1995-01-01 00:00:00",
+#'   DateStop = "1995-01-01 21:00:00",
+#'   TZone = "UTC",
+#'   # temporal aggregation
+#'   TResolution = "hour",
+#'   TStep = 6,
+#'   FUN = sum,
+#'   # spatial
+#'   Extent = Mountains_df,
+#'   Buffer = 0.2,
+#'   # file storing
+#'   FileName = "EnsembleSpreadSum6hour",
+#'   FileExtension = ".tif",
+#'   # API credentials
+#'   API_User = API_User,
+#'   API_Key = API_Key,
+#'   Keep_Raw = TRUE
 #' )
 #' Plot.SpatRast(EnsembleSpreadSum6hour_rast, Legend = "Air Temperature Uncertainty [K]")
 #' }
 #' @export
-CDownloadS <- function(Variable = NULL, # which variable
+CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_linter.
                        CumulVar = FALSE, # cumulative variable?
                        DataSet = "reanalysis-era5-land", # data set
                        Type = NA, # type of data set
                        DateStart, DateStop, TZone = "UTC", # time-window, default set to range of dataset-type
-                       TResolution = "month", TStep = 1, FUN = 'mean', # temporal aggregation
+                       TResolution = "month", TStep = 1, FUN = "mean", # temporal aggregation
                        Extent, # spatial limitation, default set to range of dataset-type
                        Buffer = 0.5, # point buffering if desired
-                       Dir = getwd(), FileName, FileExtension = ".nc", # file storing
+                       Dir = getwd(), FileName, FileExtension = ".nc", Compression = 9, # file storing
                        API_User, API_Key, # API credentials
                        TryDown = 10, TimeOut = 36000, # Calls to CDS
                        TChunkSize = 6000,
                        Cores = 1, # parallelisation
                        verbose = TRUE, # verbosity
-                       Keep_Raw = FALSE
-){
+                       Keep_Raw = FALSE) {
   ## Catching Most Frequent Issues ===============
   #--- API Credentials
   ### checking if API User and Key have been supplied
-  if(exists("API_User") + exists("API_Key") != 2){
+  if (exists("API_User") + exists("API_Key") != 2) {
     stop("Please provide a value for the API_User and API_Key arguments.")
   }
   ### making API_User into a character string
   API_User <- as.character(API_User)
   #--- Data set & Type
   ### checking if a supported data set has been queried
-  if(!(DataSet %in% Meta.List())){
-    stop("Please specify a supported dataset as the DataSet argument. Your options are:",
-         "\n", paste(Meta.List(), collapse = (" \n")))
+  if (!(DataSet %in% Meta.List())) {
+    stop(
+      "Please specify a supported dataset as the DataSet argument. Your options are:",
+      "\n", paste(Meta.List(), collapse = (" \n"))
+    )
   }
-  if(!(Type %in% Meta.QuickFacts(dataset = DataSet)$Type)){
-    stop("Please specify a Type argument that is supported by your chosen data set. Your options are:",
-         "\n", paste(Meta.QuickFacts(dataset = DataSet)$Type, collapse = (" \n")),
-         "\n !! If you are seeing an NA on the above line, note that this is not an error. Please specify NA as the Type.")
+  if (!(Type %in% Meta.QuickFacts(dataset = DataSet)$Type)) {
+    stop(
+      "Please specify a Type argument that is supported by your chosen data set. Your options are:",
+      "\n", paste(Meta.QuickFacts(dataset = DataSet)$Type, collapse = (" \n")),
+      "\n !! If you are seeing an NA on the above line, note that this is not an error. Please specify NA as the Type."
+    )
   }
   #--- File Name and Extension
   ### check if file name has been specified
-  if(!exists("FileName")){stop("Please provide a value for the FileName argument.")}
+  if (!exists("FileName")) {
+    stop("Please provide a value for the FileName argument.")
+  }
   FileName <- paste0(file_path_sans_ext(FileName), FileExtension)
-  if(!(FileExtension %in% c(".nc", ".tif"))){stop("Please specify a FileExtension of either '.tif' or '.nc'")}
+  if (!(FileExtension %in% c(".nc", ".tif"))) {
+    stop("Please specify a FileExtension of either '.tif' or '.nc'")
+  }
 
   #--- Time Zone
-  if(!(TZone %in% OlsonNames())){stop("The TZone argument you have specified is not supported. Please refer to OlsonNames() for an overview of all supported specifications.")}
+  if (!(TZone %in% OlsonNames())) {
+    stop("The TZone argument you have specified is not supported. Please refer to OlsonNames() for an overview of all supported specifications.")
+  }
 
   ## The Request =================================
-  if(verbose){message("###### CDS Request & Data Download")}
+  if (verbose) {
+    message("###### CDS Request & Data Download")
+  }
 
   ### Building =====
-  if(verbose){print("Building request")}
+  if (verbose) {
+    print("Building request")
+  }
 
   #--- Name resolving
-  VarPos <- which(rowSums(Meta.Variables(dataset = DataSet)[,1:2] == Variable) != 0)
-  QueryVariable <- Meta.Variables(dataset = DataSet)[VarPos,"CDSname"]
+  VarPos <- which(rowSums(Meta.Variables(dataset = DataSet)[, 1:2] == Variable) != 0)
+  QueryVariable <- Meta.Variables(dataset = DataSet)[VarPos, "CDSname"]
 
   #--- Extent resolving; formatting as SpatExtent object
-  if(missing(Extent)){Extent <- ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area)} ## assign maximum extent for dataset if not specified
-  if(class(Extent)[1] == "data.frame"){
-    Extent <- Buffer.pts(USER_pts = Make.SpatialPoints(USER_df = Extent),
-                         USER_buffer = Buffer)
+  if (missing(Extent)) {
+    Extent <- ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area)
+  } ## assign maximum extent for dataset if not specified
+  if (class(Extent)[1] == "data.frame") {
+    Extent <- Buffer.pts(
+      USER_pts = Make.SpatialPoints(USER_df = Extent),
+      USER_buffer = Buffer
+    )
   }
   QuerySpace <- Ext.Check(Extent)
-  QueryExtent <- QuerySpace$Ext[c(4,1,3,2)] #N,W,S,E
+  QueryExtent <- QuerySpace$Ext[c(4, 1, 3, 2)] # N,W,S,E
   Extent <- QuerySpace$SpatialObj # terra/sf version of input extent to be used for easy cropping and masking
 
   #--- Base Dataset Information
   BaseResolution <- Meta.QuickFacts(dataset = DataSet)$TResolution
   BaseStep <- Meta.QuickFacts(dataset = DataSet)$TStep[
-    na.omit(match(Type, Meta.QuickFacts(dataset = DataSet)$Type))]
+    na.omit(match(Type, Meta.QuickFacts(dataset = DataSet)$Type))
+  ]
   BaseStart <- Meta.QuickFacts(dataset = DataSet)$TStart
 
-  if(BaseResolution == "hour" & CumulVar){
+  if (BaseResolution == "hour" && CumulVar) {
     DateStopIn <- as.POSIXct(DateStop, tz = TZone)
-    DateStop <- as.character(as.POSIXct(DateStop, tz = TZone)+1*60*60*24) # add one day to hourly pulls when cumulVar is turned on as an extra layer of data is needed for proper backcalculation
+    DateStop <- as.character(as.POSIXct(DateStop, tz = TZone) + 1 * 60 * 60 * 24) # add one day to hourly pulls when cumulVar is turned on as an extra layer of data is needed for proper backcalculation
   }
 
   #--- Time windows
   Dates_df <- Make.UTC(DatesVec = c(
     as.POSIXct(DateStart, tz = TZone),
-    as.POSIXct(DateStop, tz = TZone))
-  )
-  QueryTimeWindows <- Make.RequestWindows(Dates_df = Dates_df,
-                                          BaseTResolution = BaseResolution,
-                                          BaseTStep = 24/BaseStep,
-                                          BaseTStart = BaseStart,
-                                          TChunkSize = TChunkSize,
-                                          DataSet = DataSet
+    as.POSIXct(DateStop, tz = TZone)
+  ))
+  QueryTimeWindows <- Make.RequestWindows(
+    Dates_df = Dates_df,
+    BaseTResolution = BaseResolution,
+    BaseTStep = 24 / BaseStep,
+    BaseTStart = BaseStart,
+    TChunkSize = TChunkSize,
+    DataSet = DataSet
   )
   QueryTimes <- QueryTimeWindows$QueryTimes
   QueryTimeWindows <- QueryTimeWindows$QueryTimeWindows
@@ -245,17 +265,21 @@ CDownloadS <- function(Variable = NULL, # which variable
   )
 
   ### Checking =====
-  if(verbose){print("Checking request validity")}
+  if (verbose) {
+    print("Checking request validity")
+  }
 
   #--- Metadata check - can the queried dataset-type deliver the queried data?
-  MetaCheck_ls <- Meta.Check(DataSet = DataSet,
-                             Type = Type,
-                             VariableCheck = QueryVariable,
-                             CumulativeCheck = CumulVar,
-                             ExtentCheck = QueryExtent,
-                             DateCheck = Dates_df,
-                             AggrCheck = list(TStep, TResolution),
-                             QueryTimes = QueryTimes)
+  MetaCheck_ls <- Meta.Check(
+    DataSet = DataSet,
+    Type = Type,
+    VariableCheck = QueryVariable,
+    CumulativeCheck = CumulVar,
+    ExtentCheck = QueryExtent,
+    DateCheck = Dates_df,
+    AggrCheck = list(TStep, TResolution),
+    QueryTimes = QueryTimes
+  )
 
   ## File/Call metadata
   KrigRCall <- match.call()
@@ -269,8 +293,8 @@ CDownloadS <- function(Variable = NULL, # which variable
 
   #--- File check, if already a file with this name present then load from disk
   FCheck <- Check.File(FName = FileName, Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = TRUE)
-  if(!is.null(FCheck)){
-    if(FileExtension == ".nc"){
+  if (!is.null(FCheck)) {
+    if (FileExtension == ".nc") {
       FCheck <- Meta.NC(NC = FCheck, FName = file.path(Dir, FileName), Attrs = Meta_vec, Read = TRUE)
     }
     terra::time(FCheck) <- as.POSIXct(terra::time(FCheck), tz = TZone) # assign the correct time zone, when loading from disk, time zone is set to UTC
@@ -278,29 +302,38 @@ CDownloadS <- function(Variable = NULL, # which variable
   }
 
   ### Executing =====
-  if(verbose){print("Executing request - Notice that time windows may vary slightly at this step due to timezone conversions. This will be resolved automatically.")}
+  if (verbose) {
+    print("Executing request - Notice that time windows may vary slightly at this step due to timezone conversions. This will be resolved automatically.")
+  }
   #--- API credentials
   Register.Credentials(API_User, API_Key)
   #--- Make list of CDS Requests
   Requests_ls <- Make.Request(QueryTimeWindows,
-                              MetaCheck_ls$QueryDataSet, MetaCheck_ls$QueryType, MetaCheck_ls$QueryVariable,
-                              QueryTimes, QueryExtent, MetaCheck_ls$QueryFormat,
-                              Dir, verbose = TRUE, API_User, API_Key)
+    MetaCheck_ls$QueryDataSet, MetaCheck_ls$QueryType, MetaCheck_ls$QueryVariable,
+    QueryTimes, QueryExtent, MetaCheck_ls$QueryFormat,
+    Dir,
+    verbose = TRUE, API_User, API_Key,
+    TimeOut = TimeOut
+  )
   ## work an on.exit in here to allow restarting downloads themselves without new queries
   #--- Execution of requests
   Execute.Requests(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE)
 
   ## The Data =================================
-  if(verbose){message("###### Data Checking & Limitting & Aggregating")}
+  if (verbose) {
+    message("###### Data Checking & Limitting & Aggregating")
+  }
   TempFs <- file.path(Dir, unlist(lapply(strsplit(names(Requests_ls), " "), "[[", 2)))
   ## Checking =====
-  if(verbose){print("Checking for known data issues")}
+  if (verbose) {
+    print("Checking for known data issues")
+  }
   #--- layers
-  NLyrCheck <- unlist(lapply(TempFs, FUN = function(LayerCheckIter){
+  NLyrCheck <- unlist(lapply(TempFs, FUN = function(LayerCheckIter) {
     nlyr(rast(LayerCheckIter))
   }))
   NLyrIssue <- which(NLyrCheck != unlist(lapply(QueryTimeWindows, length)))
-  if(length(NLyrIssue) > 0){
+  if (length(NLyrIssue) > 0) {
     stop("Download of ", paste(basename(TempFs[NLyrIssue]), collapse = ", "), " produced file(s) of incorrect amount of layers. You may want to delete these files and try again. If the error persists. Please consult your queue on CDS: https://cds.climate.copernicus.eu/cdsapp#!/yourrequests. Alternatively, you may want to consult the corresponding download query/queries used behind the scenes:", paste(capture.output(str(Requests_ls[NLyrIssue])), collapse = "\n"))
   }
 
@@ -309,7 +342,9 @@ CDownloadS <- function(Variable = NULL, # which variable
   terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone
 
   ## Spatial =====
-  if(verbose){print("Spatial Limiting")}
+  if (verbose) {
+    print("Spatial Limiting")
+  }
   CDS_rast <- Handle.Spatial(CDS_rast, Extent)
 
   ## Temporal =====
@@ -318,15 +353,21 @@ CDownloadS <- function(Variable = NULL, # which variable
 
   #--- Subset to desired time, happens here to allow for correct disaggregation of cumulative variables in previous step
   terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone
-  if(exists("DateStopIn")){Dates_df$IN[2] <- DateStopIn}
+  if (exists("DateStopIn")) {
+    Dates_df$IN[2] <- DateStopIn
+  }
   CDS_rast <- CDS_rast[[which((terra::time(CDS_rast) < Dates_df$IN[1]) + (terra::time(CDS_rast) > Dates_df$IN[2]) == 0)]]
 
   #--- Temporal aggregation
-  CDS_rast <- Temporal.Aggr(CDS_rast, BaseResolution, BaseStep,
-                            TResolution, TStep, FUN, Cores, QueryTargetSteps, TZone, verbose)
+  CDS_rast <- Temporal.Aggr(
+    CDS_rast, BaseResolution, BaseStep,
+    TResolution, TStep, FUN, Cores, QueryTargetSteps, TZone, verbose
+  )
 
   ## Exports =================================
-  if(verbose){message("###### Data Export & Return")}
+  if (verbose) {
+    message("###### Data Export & Return")
+  }
 
   ### Assign additional information
   terra::varnames(CDS_rast) <- MetaCheck_ls$QueryVariable
@@ -334,16 +375,20 @@ CDownloadS <- function(Variable = NULL, # which variable
   terra::metags(CDS_rast) <- Meta_vec
 
   ### write file
-  if(FileExtension == ".tif"){
+  if (FileExtension == ".tif") {
     terra::writeRaster(CDS_rast, filename = file.path(Dir, FileName))
+    CDS_rast <- terra::rast(filename = file.path(Dir, FileName))
   }
-  if(FileExtension == ".nc"){
-    CDS_rast <- Meta.NC(NC = CDS_rast, FName = file.path(Dir, FileName),
-                        Attrs = terra::metags(CDS_rast), Write = TRUE)
+  if (FileExtension == ".nc") {
+    CDS_rast <- Meta.NC(
+      NC = CDS_rast, FName = file.path(Dir, FileName),
+      Attrs = terra::metags(CDS_rast), Write = TRUE,
+      Compression = Compression
+    )
   }
 
   ### unlink temporary files
-  if(!Keep_Raw){
+  if (!Keep_Raw) {
     unlink(TempFs)
   }
 

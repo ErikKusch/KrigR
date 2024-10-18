@@ -13,23 +13,29 @@
 #'
 #' @examples
 #' KrigR::Check.File(
-#'           FName = basename(system.file("extdata", "CentralNorway.nc", package="KrigR")),
-#'           Dir = dirname(system.file("extdata", "CentralNorway.nc", package="KrigR")),
-#'           loadFun = terra::rast
-#'           )
+#'   FName = basename(system.file("extdata", "CentralNorway.nc", package = "KrigR")),
+#'   Dir = dirname(system.file("extdata", "CentralNorway.nc", package = "KrigR")),
+#'   loadFun = terra::rast
+#' )
 #' @export
-Check.File <- function(FName, Dir = getwd(), loadFun, load = TRUE, verbose = TRUE){
+Check.File <- function(FName, Dir = getwd(), loadFun, load = TRUE, verbose = TRUE) {
   FNAME <- file.path(Dir, FName)
   file <- NULL
-  if(file.exists(FNAME)){
-    if(verbose){print(paste0("A file with the name ", FName, " already exists in ", Dir,
-                             "."))}
-    if(load){
-      if(verbose){print("Loading this file for you from the disk.")}
-      file <- sapply(FNAME, loadFun)[[1]]
-    }else{
-      file <- "Present. Not Loaded."
+  if (file.exists(FNAME)) {
+    if (verbose) {
+      print(paste0(
+        "A file with the name ", FName, " already exists in ", Dir,
+        "."
+      ))
+    }
+    if (load) {
+      if (verbose) {
+        print("Loading this file for you from the disk.")
       }
+      file <- sapply(FNAME, loadFun)[[1]]
+    } else {
+      file <- "Present. Not Loaded."
+    }
   }
   return(file)
 }
@@ -54,48 +60,48 @@ Check.File <- function(FName, Dir = getwd(), loadFun, load = TRUE, verbose = TRU
 #'
 #' @seealso \code{\link{Kriging}}, \code{\link{KrigingCovariateSetup}}.
 #'
-Check.Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
+Check.Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation) {
   ## Resolutions ===============
-  if(terra::res(CovariatesFine)[1] < terra::res(Data)[1]/10){
+  if (terra::res(CovariatesFine)[1] < terra::res(Data)[1] / 10) {
     warning("It is not recommended to use kriging for statistical downscaling of more than one order of magnitude. You are currently attempting this. Kriging will proceed.")
   }
-  if(all.equal(terra::res(CovariatesCoarse)[1], terra::res(Data)[1]) != TRUE){
-    stop(paste0("The resolution of your data (", terra::res(Data)[1], ") does not match the resolution of your covariate data (", terra::res(CovariatesCoarse)[1], ") used for training the kriging model. Kriging can't be performed!" ))
+  if (all.equal(terra::res(CovariatesCoarse)[1], terra::res(Data)[1]) != TRUE) {
+    stop(paste0("The resolution of your data (", terra::res(Data)[1], ") does not match the resolution of your covariate data (", terra::res(CovariatesCoarse)[1], ") used for training the kriging model. Kriging can't be performed!"))
   }
   ## Extent ===============
-  if(terra::ext(Data) == terra::ext(-180, 180, -90, 90)){
+  if (terra::ext(Data) == terra::ext(-180, 180, -90, 90)) {
     stop("You are attempting to use kriging at a global extent. For reasons of computational expense and identity of relationships between covariates and variables not being homogenous across the globe, this is not recommended. Instead, try kriging of latitude bands if global kriging is really your goal.")
   }
-  if(!all.equal(terra::ext(CovariatesCoarse), terra::ext(Data))){
+  if (!all.equal(terra::ext(CovariatesCoarse), terra::ext(Data))) {
     stop("The extents of your data and training covariates don't match. Kriging can't be performed!")
   }
 
   ## Data Availability ===============
   DataSkips <- NULL # data layers without enough data to be skipped in kriging
   Data_vals <- base::colSums(matrix(!is.na(terra::values(Data)), ncol = terra::nlyr(Data))) # a value of 0 indicates a layer only made of NAs
-  if(length(which(Data_vals < 2)) > 0){
-    if(length(which(Data_vals < 2)) != terra::nlyr(Data)){
-      stop(paste0("Layer(s) ", paste(which(Data_vals == 0), collapse=", "), " of your data do(es) not contain enough data. Kriging cannot be performed. Usually, increasing the extent of kriging can fix this issue."))
+  if (length(which(Data_vals < 2)) > 0) {
+    if (length(which(Data_vals < 2)) != terra::nlyr(Data)) {
+      stop(paste0("Layer(s) ", paste(which(Data_vals == 0), collapse = ", "), " of your data do(es) not contain enough data. Kriging cannot be performed. Usually, increasing the extent of kriging can fix this issue."))
       DataSkips <- which(Data_vals < 2)
-    }else{
+    } else {
       stop("Your Data does not contain enough values. Kriging cannot be performed. Usually, increasing the extent of kriging can fix this issue.")
     }
   }
   CovCo_vals <- base::colSums(matrix(!is.na(terra::values(CovariatesCoarse)), ncol = terra::nlyr(CovariatesCoarse))) # a value of 0 indicates a layer only made of NAs
-  if(length(which(CovCo_vals < 2)) > 0){
-    if(length(which(CovCo_vals < 2)) != terra::nlyr(CovariatesCoarse)){
-      warning(paste0("Layer(s) ", paste(which(CovCo_vals < 2), collapse=", "), " of your covariates at training resolution do(es) not contain enough data. This/these layer(s) is/are dropped. The Kriging equation might get altered."))
+  if (length(which(CovCo_vals < 2)) > 0) {
+    if (length(which(CovCo_vals < 2)) != terra::nlyr(CovariatesCoarse)) {
+      warning(paste0("Layer(s) ", paste(which(CovCo_vals < 2), collapse = ", "), " of your covariates at training resolution do(es) not contain enough data. This/these layer(s) is/are dropped. The Kriging equation might get altered."))
       CovariatesCoarse <- CovariatesCoarse[[-which(CovCo_vals < 2)]]
-    }else{
+    } else {
       stop("Your covariate data at training resolution does not contain enough values. Kriging can't be performed!")
     }
   }
   CovFin_vals <- base::colSums(matrix(!is.na(terra::values(CovariatesFine)), ncol = terra::nlyr(CovariatesFine))) # a value of 0 indicates a layer only made of NAs
-  if(length(which(CovFin_vals < 2)) > 0){
-    if(length(which(CovFin_vals < 2)) != terra::nlyr(CovariatesFine)){
-      warning(paste0("Layer(s) ", paste(which(CovFin_vals == 0), collapse=", "), " of your covariates at target resolution do(es) not contain enough data. This/these layer(s) is/are dropped."))
+  if (length(which(CovFin_vals < 2)) > 0) {
+    if (length(which(CovFin_vals < 2)) != terra::nlyr(CovariatesFine)) {
+      warning(paste0("Layer(s) ", paste(which(CovFin_vals == 0), collapse = ", "), " of your covariates at target resolution do(es) not contain enough data. This/these layer(s) is/are dropped."))
       CovariatesFine <- CovariatesFine[[-which(CovFin_vals < 2)]]
-    }else{
+    } else {
       stop("Your covariate data at target resolution does not contain enough values. Kriging can't be performed!")
     }
   }
@@ -103,16 +109,16 @@ Check.Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation){
   Terms <- unlist(strsplit(labels(terms(KrigingEquation)), split = ":")) # identify parameters called to in formula
   Terms_Required <- unique(Terms) # isolate double-references (e.g. due to ":" indexing for interactions)
   Terms_Present <- Reduce(intersect, list(Terms_Required, names(CovariatesCoarse), names(CovariatesFine))) # identify the terms that are available and required
-  if(sum(Terms_Required %in% Terms_Present) != length(Terms_Required)){
-    if(length(Terms_Present) == 0){ # if none of the specified terms were found
+  if (sum(Terms_Required %in% Terms_Present) != length(Terms_Required)) {
+    if (length(Terms_Present) == 0) { # if none of the specified terms were found
       KrigingEquation <- paste0("Data ~ ", paste(names(CovariatesCoarse), collapse = "+"))
       warn <- paste("None of the terms specified in your KrigingEquation are present in the covariate data sets. The KrigingEquation has been altered to include all available terms in a linear model:", "\n\n", KrigingEquation)
-    }else{ # at least some of the specified terms were found
+    } else { # at least some of the specified terms were found
       KrigingEquation <- paste0("Data ~ ", paste(Terms_Present, collapse = "+"))
       warn <- paste("Not all of the terms specified in your KrigingEquation are present in the covariate data sets. The KrigingEquation has been altered to include all available and specified terms in a linear model:", "\n\n", KrigingEquation)
     }
-    Cotinue <- menu(c("Yes", "No"), title=paste0(warn, ". \n\nDo you wish to continue using the new formula?"))
-    if(Cotinue == 2){ # break operation if user doesn't want this
+    Cotinue <- menu(c("Yes", "No"), title = paste0(warn, ". \n\nDo you wish to continue using the new formula?"))
+    if (Cotinue == 2) { # break operation if user doesn't want this
       stop("Kriging terminated by user due to formula issues.")
     }
   }

@@ -4,7 +4,7 @@
 \alias{Meta.NC}
 \title{Read or write metadata into NetCDF files}
 \usage{
-Meta.NC(NC, FName, Attrs, Write = FALSE, Read = FALSE)
+Meta.NC(NC, FName, Attrs, Write = FALSE, Read = TRUE, Compression = 9)
 }
 \arguments{
 \item{NC}{SpatRaster}
@@ -16,6 +16,8 @@ Meta.NC(NC, FName, Attrs, Write = FALSE, Read = FALSE)
 \item{Write}{Logical. Whether to write metadata}
 
 \item{Read}{Logical Whether to read metadata}
+
+\item{Compression}{Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".}
 }
 \value{
 A SpatRaster with metadata

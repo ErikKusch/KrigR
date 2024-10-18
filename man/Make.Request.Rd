@@ -15,7 +15,8 @@ Make.Request(
   Dir = getwd(),
   verbose = TRUE,
   API_User,
-  API_Key
+  API_Key,
+  TimeOut = 36000
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ Make.Request(
 \item{API_User}{Character. CDS API User}
 
 \item{API_Key}{Character. CDS API Key}
+
+\item{TimeOut}{Numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). The timeout for each download in seconds. Default 36000 seconds (10 hours).}
 }
 \value{
 List. Each element holding either (1) a list object representing a CDS request or (2) the value NA indicating that a file of this name is already present.

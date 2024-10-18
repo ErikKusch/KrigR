@@ -14,9 +14,11 @@
 #' Make.SpatialPoints(Mountains_df)
 #'
 #' @export
-Make.SpatialPoints <- function(USER_df){
+Make.SpatialPoints <- function(USER_df) {
   USER_df <- data.frame(USER_df) ## attempt to catch tibbles or data.tables
-  if(sum(c("Lat", "Lon") %in% colnames(USER_df)) != 2){stop("Please provide your geo-locations with a Lat and a Lon column (named exactly like such).")}
+  if (sum(c("Lat", "Lon") %in% colnames(USER_df)) != 2) {
+    stop("Please provide your geo-locations with a Lat and a Lon column (named exactly like such).")
+  }
   st_as_sf(USER_df, coords = c("Lon", "Lat"), remove = FALSE)
 }
 ### EXTENT CHECKING ============================================================
@@ -35,7 +37,7 @@ Make.SpatialPoints <- function(USER_df){
 #' @return A list containg (1) a terra/sf object and (2) the corresponding SpatExtent object.
 #'
 #' @examples
-#'  ## raster
+#' ## raster
 #' Check.Ext(raster::extent(c(9.87, 15.03, 49.89, 53.06)))
 #' ## terra
 #' Check.Ext(terra::ext(c(9.87, 15.03, 49.89, 53.06)))
@@ -43,13 +45,13 @@ Make.SpatialPoints <- function(USER_df){
 #' set.seed(42)
 #' nb_pt <- 10
 #' dd <- data.frame(x = runif(nb_pt, 9.87, 15.03), y = runif(nb_pt, 49.89, 53.06), val = rnorm(nb_pt))
-#' sf <- sf::st_as_sf(dd, coords = c("x","y"))
+#' sf <- sf::st_as_sf(dd, coords = c("x", "y"))
 #' Check.Ext(sf)
 #' ## sp
 #' Check.Ext(as(sf, "Spatial"))
 #'
 #' @export
-Ext.Check <- function(USER_ext){
+Ext.Check <- function(USER_ext) {
   ## find package where USER_ext class originates
   class_name <- class(USER_ext)
   class_def <- getClass(class_name)
@@ -57,31 +59,33 @@ Ext.Check <- function(USER_ext){
 
   ## sanity check if USER_ext is supported
   SupportedPackages <- c("raster", "terra", "sf", "sp")
-  if(!(package_name %in% SupportedPackages)){
+  if (!(package_name %in% SupportedPackages)) {
     stop("Please specify the Extent argument as an object defined either with classes found in the raster, terra, or sf packages")
   }
 
   ## Transform into SpatExtent class
-  if(package_name == "raster"){
+  if (package_name == "raster") {
     OUT_spatialobj <- rast(USER_ext)
     OUT_ext <- ext(USER_ext)
   }
-  if(package_name == "terra" | package_name == "sf"){
+  if (package_name == "terra" || package_name == "sf") {
     OUT_spatialobj <- USER_ext
-    if(class_name[1] == "sfc_MULTIPOLYGON"){
+    if (class_name[1] == "sfc_MULTIPOLYGON") {
       OUT_ext <- ext(st_bbox(USER_ext))
-    }else{
+    } else {
       OUT_ext <- ext(USER_ext)
     }
   }
-  if(package_name == "sp"){
+  if (package_name == "sp") {
     OUT_spatialobj <- st_as_sf(USER_ext)
     OUT_ext <- ext(OUT_spatialobj)
   }
 
   ## Round digits and return
-  OUT_list = list(SpatialObj = OUT_spatialobj,
-                  Ext = round(OUT_ext, 3))
+  OUT_list <- list(
+    SpatialObj = OUT_spatialobj,
+    Ext = round(OUT_ext, 3)
+  )
   return(OUT_list)
 }
 
@@ -105,7 +109,7 @@ Ext.Check <- function(USER_ext){
 #' Buffer.pts(User_pts, USER_buffer = 0.5)
 #'
 #' @export
-Buffer.pts <- function(USER_pts, USER_buffer = .5){
+Buffer.pts <- function(USER_pts, USER_buffer = .5) {
   st_as_sf(st_union(st_buffer(USER_pts, USER_buffer, endCapStyle = "SQUARE")))
 }
 
@@ -130,15 +134,14 @@ Buffer.pts <- function(USER_pts, USER_buffer = .5){
 #' Mask.Shape(Jotunheimen_ras, Jotunheimen_poly)
 #'
 #' @export
-Handle.Spatial <- function(BASE, Shape){
-
+Handle.Spatial <- function(BASE, Shape) {
   ## splitting by rasterlayers if necessary to avoid error reported in https://github.com/rspatial/terra/issues/1556
-  if(terra::nlyr(BASE) > 65535){
-    Indices <- ceiling((1:terra::nlyr(BASE))/2e4)
+  if (terra::nlyr(BASE) > 65535) {
+    Indices <- ceiling((1:terra::nlyr(BASE)) / 2e4)
     r_ls <- terra::split(x = BASE, f = Indices)
-    ret_ls <- pblapply(r_ls, FUN = function(BASE_iter){
+    ret_ls <- pblapply(r_ls, FUN = function(BASE_iter) {
       ret_rast <- crop(BASE_iter, ext(Shape))
-      if(class(Shape)[1] == "sf"){
+      if (class(Shape)[1] == "sf") {
         ret_rast <- mask(ret_rast, Shape, touches = TRUE)
       }
     })
@@ -148,7 +151,7 @@ Handle.Spatial <- function(BASE, Shape){
 
   ## regular cropping and masking for SPatRasters not exceeding layer limit
   ret_rast <- crop(BASE, ext(Shape))
-  if(class(Shape)[1] == "sf"){
+  if (class(Shape)[1] == "sf") {
     ret_rast <- mask(ret_rast, Shape, touches = TRUE)
   }
   return(ret_rast)

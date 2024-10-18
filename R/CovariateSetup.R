@@ -12,6 +12,7 @@
 #' @param Dir Character/Directory Pointer. Directory specifying where to download data to.
 #' @param Keep_Global Logical. Only comes into effect when Covariates argument is specified as a character. Whether to retain raw downloaded covariate data or not. Default is FALSE.
 #' @param FileExtension Character. A file extension for the produced files. Supported values are ".nc" (default) and ".tif" (better support for metadata).
+#' @param Compression Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".
 #'
 #' @importFrom httr GET
 #' @importFrom httr write_disk
@@ -41,40 +42,46 @@
 #' @examples
 #' \dontrun{
 #' ## Rectangular Covariate data according to input data
-#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-#' Covariates_ls <- CovariateSetup(Training = CDS_rast,
-#'                                        Target = 0.01,
-#'                                        Covariates = "GMTED2010",
-#'                                        Keep_Global = TRUE,
-#'                                        FileExtension = ".nc")
+#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+#' Covariates_ls <- CovariateSetup(
+#'   Training = CDS_rast,
+#'   Target = 0.01,
+#'   Covariates = "GMTED2010",
+#'   Keep_Global = TRUE,
+#'   FileExtension = ".nc"
+#' )
 #' Plot.Covariates(Covariates_ls)
 #'
 #' ## Shapefile-limited covariate data
 #' data("Jotunheimen_poly")
-#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-#' Covariates_ls <- CovariateSetup(Training = CDS_rast,
-#'                                        Target = 0.01,
-#'                                        Covariates = "GMTED2010",
-#'                                        Extent = Jotunheimen_poly,
-#'                                        Keep_Global = TRUE,
-#'                                        FileExtension = ".nc")
+#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+#' Covariates_ls <- CovariateSetup(
+#'   Training = CDS_rast,
+#'   Target = 0.01,
+#'   Covariates = "GMTED2010",
+#'   Extent = Jotunheimen_poly,
+#'   Keep_Global = TRUE,
+#'   FileExtension = ".nc"
+#' )
 #' Plot.Covariates(Covariates_ls, SF = Jotunheimen_poly)
 #'
 #' ## buffered-point-limited covariate data
 #' data("Mountains_df")
-#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-#' Covariates_ls <- CovariateSetup(Training = CDS_rast,
-#'                                        Target = 0.01,
-#'                                        Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
-#'                                        Source = "Drive",
-#'                                        Extent = Mountains_df,
-#'                                        Buffer = 0.2,
-#'                                        Keep_Global = TRUE,
-#'                                        FileExtension = ".nc")
+#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+#' Covariates_ls <- CovariateSetup(
+#'   Training = CDS_rast,
+#'   Target = 0.01,
+#'   Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
+#'   Source = "Drive",
+#'   Extent = Mountains_df,
+#'   Buffer = 0.2,
+#'   Keep_Global = TRUE,
+#'   FileExtension = ".nc"
+#' )
 #' Plot.Covariates(Covariates_ls)
 #' }
 #' @export
-CovariateSetup <- function(Training,
+CovariateSetup <- function(Training, # nolint: cyclocomp_linter.
                            Target,
                            FilePrefix = "",
                            Covariates = "GMTED2010",
@@ -83,28 +90,32 @@ CovariateSetup <- function(Training,
                            Buffer = 0.5,
                            Dir = getwd(),
                            Keep_Global = FALSE,
-                           FileExtension = ".nc"
-){
+                           FileExtension = ".nc",
+                           Compression = 9) {
   ## Catching Most Frequent Issues ===============
-  if(class(Covariates) == "character"){
-    if(sum(!(Covariates %in% c("GMTED2010", "tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"))) > 0){
+  if (class(Covariates) == "character") {
+    if (sum(!(Covariates %in% c("GMTED2010", "tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"))) > 0) {
       stop("Please specify a valid covariate data set. You may supply either a character string (allowed values are: 'GMTED2010', 'tksat', 'tkdry', 'csol', 'k_s', 'lambda', 'psi' and 'theta_s') or a SpatRaster object.")
     }
-    if(length(Source) > 1){
+    if (length(Source) > 1) {
       stop("Please specify only one source type for the covariate data that will be downloaded. You may specify either 'Origin' or 'Drive'.")
     }
-    if(!(Source %in% c("Origin", "Drive"))){
+    if (!(Source %in% c("Origin", "Drive"))) {
       stop("Please specify a valid source type for the covariate data that will be downloaded. You may specify either 'Origin' or 'Drive'.")
     }
   }
 
   ## Links for Data download ===============
   Links_df <- data.frame(
-    Cov = rep(c("GMTED2010",
-                "tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"), each = 2),
+    Cov = rep(c(
+      "GMTED2010",
+      "tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"
+    ), each = 2),
     Source = rep(c("Origin", "Drive"), 8),
-    UnzippedFile = rep(c("mn30_grd/w001001.adf",
-                         paste0(c("tksatu", "tkdry", "csol", "k_s", "lambda", "psi_s", "theta_s"), "_l1.nc")), each = 2),
+    UnzippedFile = rep(c(
+      "mn30_grd/w001001.adf",
+      paste0(c("tksatu", "tkdry", "csol", "k_s", "lambda", "psi_s", "theta_s"), "_l1.nc")
+    ), each = 2),
     DOI = rep(c("10.3133/ofr20111073", "10.1175/JHM-D-12-0149.1"), c(2, 14)),
     Link = c(
       "https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/downloads/GMTED/Grid_ZipFiles/mn30_grd.zip", # Link to GMTED2010
@@ -134,18 +145,19 @@ CovariateSetup <- function(Training,
   )
 
   ## Data Download (skipped if own SpatRaster supplied) ===============
-  if(class(Covariates) == "character"){
+  if (class(Covariates) == "character") {
     message("###### Downloading global covariate data")
     CovariatesIn <- Covariates
     ### Directory for raw files
     Dir.Covs <- file.path(Dir, "CovariateSetup")
-    if(!dir.exists(Dir.Covs)){dir.create(Dir.Covs)}
+    if (!dir.exists(Dir.Covs)) {
+      dir.create(Dir.Covs)
+    }
 
     ### Data downloads
-    Data_ls <- lapply(Covariates, FUN = function(Cov_iter){
-
+    Data_ls <- lapply(Covariates, FUN = function(Cov_iter) {
       #### Figure out which link to use
-      Match_vec <- sapply(1:nrow(Links_df), FUN = function(x){
+      Match_vec <- sapply(1:nrow(Links_df), FUN = function(x) {
         sum(Links_df$Cov[x] == Cov_iter, Links_df$Source[x] == Source)
       })
 
@@ -162,59 +174,68 @@ CovariateSetup <- function(Training,
 
       #### Check if data is already present
       Data <- Check.File(FName = FName, Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = FALSE)
-      if(!is.null(Data) & FileExtension == ".nc"){
+      if (!is.null(Data) & FileExtension == ".nc") {
         Data <- Meta.NC(NC = Data, FName = file.path(Dir, FName), Attrs = Meta_vec, Read = TRUE)
       }
 
-      if(is.null(Data)){
+      if (is.null(Data)) {
         #### Downloading data
         print(paste(Name, "covariate data.")) # inform user of download in console
         httr::GET(Link,
-                  httr::write_disk(file.path(Dir.Covs, paste0(Name, ".zip"))),
-                  httr::progress(), overwrite = TRUE)
+          httr::write_disk(file.path(Dir.Covs, paste0(Name, ".zip"))),
+          httr::progress(),
+          overwrite = TRUE
+        )
 
         #### Unzipping data
-        if(Name == "GMTED2010"){
+        if (Name == "GMTED2010") {
           unzip(file.path(Dir.Covs, paste0(Name, ".zip")), # which file to unzip
-                exdir = Dir.Covs) # where to unzip to
-        }else{
+            exdir = Dir.Covs
+          ) # where to unzip to
+        } else {
           unzip(file.path(Dir.Covs, paste0(Name, ".zip")), # which file to unzip
-                files = UnzippedFile, exdir = Dir.Covs) # where to unzip to
+            files = UnzippedFile, exdir = Dir.Covs
+          ) # where to unzip to
         }
 
 
         #### Loading data
         Data <- terra::rast(file.path(Dir.Covs, UnzippedFile))
-        if(class(terra::values(Data)[,1]) == "integer"){
+        if (class(terra::values(Data)[, 1]) == "integer") {
           print("Reformatting integer data into continuous numeric data. Necessary for GMTED2010 data.")
-          Data <- Data+0 # +0 to avoid integer reading in faulty way, https://gis.stackexchange.com/questions/398061/reading-rasters-in-r-using-terra-package
+          Data <- Data + 0 # +0 to avoid integer reading in faulty way, https://gis.stackexchange.com/questions/398061/reading-rasters-in-r-using-terra-package
         }
         terra::metags(Data) <- Meta_vec
         terra::varnames(Data) <- Name
 
         #### Saving data as single file
-        if(FileExtension == ".tif"){
+        if (FileExtension == ".tif") {
           terra::writeRaster(Data, filename = file.path(Dir, FName))
         }
-        if(FileExtension == ".nc"){
-          Data <- Meta.NC(NC = Data, FName = file.path(Dir, FName),
-                          Attrs = terra::metags(Data), Write = TRUE)
+        if (FileExtension == ".nc") {
+          Data <- Meta.NC(
+            NC = Data, FName = file.path(Dir, FName),
+            Attrs = terra::metags(Data), Write = TRUE,
+            Compression = Compression
+          )
         }
 
         Data <- Check.File(FName = FName, Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = FALSE)
-        if(FileExtension == ".nc"){
+        if (FileExtension == ".nc") {
           Data <- Meta.NC(NC = Data, FName = file.path(Dir, FName), Attrs = Meta_vec, Read = TRUE)
         }
-      }else{
+      } else {
         print(paste(Name, "covariate data already downloaded."))
       }
       Data
     })
 
-    if("GMTED2010" %in% CovariatesIn & any(c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s") %in% CovariatesIn)){
+    if ("GMTED2010" %in% CovariatesIn && any(c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s") %in% CovariatesIn)) {
       message("###### Aligning data from different sources with one another")
-      MinExt <- apply(abs(do.call(rbind, lapply(Data_ls, FUN = function(x){as.vector(ext(x))}))), 2, min)
-      Data_ls <- lapply(Data_ls, FUN = function(x){
+      MinExt <- apply(abs(do.call(rbind, lapply(Data_ls, FUN = function(x) {
+        as.vector(ext(x))
+      }))), 2, min)
+      Data_ls <- lapply(Data_ls, FUN = function(x) {
         print(basename(tools::file_path_sans_ext(terra::sources(x))))
         crop(x, ext(-MinExt[1], MinExt[2], -MinExt[3], MinExt[4])) # I can simply to -/+ here because this data is global
       })
@@ -227,17 +248,19 @@ CovariateSetup <- function(Training,
 
   ## Spatial Limitting ===============
   ### Extent Handling
-  if(missing("Extent")){ ## assign maximum extent of supplied data and covariates (only when no extent is specified)
-    Extent <-terra::ext(
+  if (missing("Extent")) { ## assign maximum extent of supplied data and covariates (only when no extent is specified)
+    Extent <- terra::ext(
       ifelse(terra::ext(Training)[1] > terra::ext(Covariates)[1], terra::ext(Training)[1], terra::ext(Covariates)[1]),
       ifelse(terra::ext(Training)[2] < terra::ext(Covariates)[2], terra::ext(Training)[2], terra::ext(Covariates)[2]),
       ifelse(terra::ext(Training)[3] > terra::ext(Covariates)[3], terra::ext(Training)[3], terra::ext(Covariates)[3]),
       ifelse(terra::ext(Training)[4] < terra::ext(Covariates)[4], terra::ext(Training)[4], terra::ext(Covariates)[4])
     )
   }
-  if(class(Extent)[1] == "data.frame"){
-    Extent <- Buffer.pts(USER_pts = Make.SpatialPoints(USER_df = Extent),
-                         USER_buffer = Buffer)
+  if (class(Extent)[1] == "data.frame") {
+    Extent <- Buffer.pts(
+      USER_pts = Make.SpatialPoints(USER_df = Extent),
+      USER_buffer = Buffer
+    )
   }
   QuerySpace <- Ext.Check(Extent)
   Extent <- QuerySpace$SpatialObj # terra/sf version of input extent to be used for easy cropping and masking
@@ -247,42 +270,41 @@ CovariateSetup <- function(Training,
   Covariates <- Handle.Spatial(Covariates, ext(Extent))
 
   ### Sanity Check
-  if(class(Target) == "numeric"){
+  if (class(Target) == "numeric") {
     Target_res <- Target[1]
-  }else{
+  } else {
     Target_res <- terra::res(Target)
   }
-  if(Target_res < terra::res(Covariates)[1]){
+  if (Target_res < terra::res(Covariates)[1]) {
     stop(paste0("You have specified resolution(s) to be finer than ", res(Covariates), " (native covariate reslution). Please provide higher-resolution data instead."))
   }
   ### Resampling
   message("###### Resampling Data")
   Cov_train <- terra::resample(Covariates, Training)
-  if(class(Extent)[1] == "SpatRaster"){
+  if (class(Extent)[1] == "SpatRaster") {
     Cov_target <- terra::resample(Covariates, Extent)
-  }else{
-    Cov_target <- suppressWarnings(terra::aggregate(Covariates, fact = Target_res[1]/terra::res(Covariates)[1]))
+  } else {
+    Cov_target <- suppressWarnings(terra::aggregate(Covariates, fact = Target_res[1] / terra::res(Covariates)[1]))
   }
 
   ### Cropping and Masking
-  # Training <- Handle.Spatial(BASE = Training, Shape = Extent)
   Cov_train <- Handle.Spatial(Cov_train, Extent)
   Cov_target <- Handle.Spatial(Cov_target, Extent)
 
   ## Data Saving & Export ===============
   TrainName <- file.path(Dir, paste0(FilePrefix, "Covariates_Train", FileExtension))
   TargetName <- file.path(Dir, paste0(FilePrefix, "Covariates_Target", FileExtension))
-  if(FileExtension == ".tif"){
+  if (FileExtension == ".tif") {
     terra::writeRaster(x = Cov_train, filename = TrainName, overwrite = TRUE)
     terra::writeRaster(x = Cov_target, filename = TargetName, overwrite = TRUE)
   }
-  if(FileExtension == ".nc"){
-    terra::writeCDF(x = Cov_train, filename = TrainName, overwrite = TRUE)
-    terra::writeCDF(x = Cov_target, filename = TargetName, overwrite = TRUE)
+  if (FileExtension == ".nc") {
+    terra::writeCDF(x = Cov_train, filename = TrainName, overwrite = TRUE, Compression = Compression)
+    terra::writeCDF(x = Cov_target, filename = TargetName, overwrite = TRUE, Compression = Compression)
   }
 
   ## Cleaning up files ===============
-  if(!Keep_Global){ # cleanup check
+  if (!Keep_Global) { # cleanup check
     unlink(file.path(Dir, paste0(CovariatesIn, FileExtension)))
   }
 
@@ -292,7 +314,9 @@ CovariateSetup <- function(Training,
   names(TrainRet) <- names(TargetRet) <- VarNames
 
   return(
-    list(Training = TrainRet,
-         Target = TargetRet)
+    list(
+      Training = TrainRet,
+      Target = TargetRet
+    )
   )
 }

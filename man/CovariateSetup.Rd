@@ -14,7 +14,8 @@ CovariateSetup(
   Buffer = 0.5,
   Dir = getwd(),
   Keep_Global = FALSE,
-  FileExtension = ".nc"
+  FileExtension = ".nc",
+  Compression = 9
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ CovariateSetup(
 \item{Keep_Global}{Logical. Only comes into effect when Covariates argument is specified as a character. Whether to retain raw downloaded covariate data or not. Default is FALSE.}
 
 \item{FileExtension}{Character. A file extension for the produced files. Supported values are ".nc" (default) and ".tif" (better support for metadata).}
+
+\item{Compression}{Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".}
 }
 \value{
 A list containing two SpatRaster objects (Training and Target) ready to be used as covariates for kriging, and two files called Covariates_Target and Covariates_Train in the specified directory.
@@ -52,36 +55,42 @@ This function is used to setup products of covariate data ready for use in Krigi
 \examples{
 \dontrun{
 ## Rectangular Covariate data according to input data
-CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-Covariates_ls <- CovariateSetup(Training = CDS_rast,
-                                       Target = 0.01,
-                                       Covariates = "GMTED2010",
-                                       Keep_Global = TRUE,
-                                       FileExtension = ".nc")
+CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+Covariates_ls <- CovariateSetup(
+  Training = CDS_rast,
+  Target = 0.01,
+  Covariates = "GMTED2010",
+  Keep_Global = TRUE,
+  FileExtension = ".nc"
+)
 Plot.Covariates(Covariates_ls)
 
 ## Shapefile-limited covariate data
 data("Jotunheimen_poly")
-CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-Covariates_ls <- CovariateSetup(Training = CDS_rast,
-                                       Target = 0.01,
-                                       Covariates = "GMTED2010",
-                                       Extent = Jotunheimen_poly,
-                                       Keep_Global = TRUE,
-                                       FileExtension = ".nc")
+CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+Covariates_ls <- CovariateSetup(
+  Training = CDS_rast,
+  Target = 0.01,
+  Covariates = "GMTED2010",
+  Extent = Jotunheimen_poly,
+  Keep_Global = TRUE,
+  FileExtension = ".nc"
+)
 Plot.Covariates(Covariates_ls, SF = Jotunheimen_poly)
 
 ## buffered-point-limited covariate data
 data("Mountains_df")
-CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-Covariates_ls <- CovariateSetup(Training = CDS_rast,
-                                       Target = 0.01,
-                                       Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
-                                       Source = "Drive",
-                                       Extent = Mountains_df,
-                                       Buffer = 0.2,
-                                       Keep_Global = TRUE,
-                                       FileExtension = ".nc")
+CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+Covariates_ls <- CovariateSetup(
+  Training = CDS_rast,
+  Target = 0.01,
+  Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
+  Source = "Drive",
+  Extent = Mountains_df,
+  Buffer = 0.2,
+  Keep_Global = TRUE,
+  FileExtension = ".nc"
+)
 Plot.Covariates(Covariates_ls)
 }
 }

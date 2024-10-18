@@ -22,30 +22,33 @@
 #' @importFrom ggplot2 theme
 #' @importFrom ggplot2 unit
 #' @importFrom ggplot2 geom_sf
-#' 
+#'
 #' @return A ggplot2 object visualising a raster.
-#' 
+#'
 #' @seealso \code{\link{CDownloadS}}.
 #'
 #' @examples
-#' SpatRast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))[[1:2]]
+#' SpatRast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))[[1:2]]
 #' data("Jotunheimen_poly")
 #' SF <- Jotunheimen_poly
 #' Plot.SpatRast(SpatRast = SpatRast, SF = SF)
 #'
 #' @export
 Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", COL = viridis::inferno(100)) {
-  if(missing(Dates)){Dates <- as.character(terra::time(SpatRast))}
+  if (missing(Dates)) {
+    Dates <- as.character(terra::time(SpatRast))
+  }
   Raw_df <- as.data.frame(SpatRast, xy = TRUE) # turn raster into dataframe
   colnames(Raw_df)[c(-1, -2)] <- Dates # set colnames
   Raw_df <- tidyr::gather(data = Raw_df, key = Values, value = "value", colnames(Raw_df)[c(-1, -2)]) #  make ggplot-ready
   Raw_plot <- ggplot() + # create plot
     geom_raster(data = Raw_df, aes(x = x, y = y, fill = value)) + # plot the covariate data
-    theme_bw() + facet_wrap(~Values) + 
+    theme_bw() +
+    facet_wrap(~Values) +
     labs(x = "Longitude", y = "Latitude") + # make plot more readable
     scale_fill_gradientn(name = Legend, colours = COL, na.value = "transparent") + # add colour and legend
     theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) + # reduce margins (for fusing of plots)
-    theme(legend.key.size = unit(1.5, 'cm'))
+    theme(legend.key.size = unit(1.5, "cm"))
   if (!missing(SF)) { # if a shape has been designated
     Raw_plot <- Raw_plot + geom_sf(data = SF, colour = "black", fill = "NA") # add shape
   }
@@ -75,16 +78,16 @@ Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", C
 #' @importFrom ggplot2 unit
 #' @importFrom ggplot2 geom_sf
 #' @importFrom cowplot plot_grid
-#' 
+#'
 #' @return A ggplot2 object visualising a raster.
-#' 
+#'
 #' @seealso \code{\link{CovariateSetup}}.
 #'
 #' @examples
-#' Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
-#' Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
+#' Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package = "KrigR"))
+#' Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package = "KrigR"))
 #' names(Cov_train) <- names(Cov_target) <- "GMTED2010 [m]"
-#' Covariates = list(Training = Cov_train, Target = Cov_target)
+#' Covariates <- list(Training = Cov_train, Target = Cov_target)
 #' data("Jotunheimen_poly")
 #' SF <- Jotunheimen_poly
 #' Plot.Covariates(Covariates = Covariates, SF = SF)
@@ -94,29 +97,30 @@ Plot.Covariates <- function(Covariates, SF, COL = viridis::cividis(100)) {
   Plots_ls <- as.list(rep(NA, nlyr(Covariates[[1]]))) # create as many plots as there are covariates variables
   for (Variable in 1:nlyr(Covariates[[1]])) { # loop over all covariate variables
     Covariates_Iter <- list(Covariates[[1]][[Variable]], Covariates[[2]][[Variable]]) # extract the data for this variable
-    Covariates_Iter <- lapply(Covariates_Iter, FUN = function(x){
+    Covariates_Iter <- lapply(Covariates_Iter, FUN = function(x) {
       Cov_df <- as.data.frame(x, xy = TRUE) # turn raster into dataframe
       gather(data = Cov_df, key = Values, value = "value", colnames(Cov_df)[c(-1, -2)]) #  make ggplot-ready
     })
-    Covariates_Iter[[1]][,3] <- "Native"
-    Covariates_Iter[[2]][,3] <- "Target"
+    Covariates_Iter[[1]][, 3] <- "Native"
+    Covariates_Iter[[2]][, 3] <- "Target"
     Cov_df <- do.call(rbind, Covariates_Iter)
     Plots_ls[[Variable]] <- ggplot() + # create plot
       geom_raster(data = Cov_df, aes(x = x, y = y, fill = value)) + # plot the covariate data
-      theme_bw() + facet_wrap(~Values) + 
+      theme_bw() +
+      facet_wrap(~Values) +
       labs(x = "Longitude", y = "Latitude") + # make plot more readable
       scale_fill_gradientn(name = names(Covariates[[1]][[Variable]]), colours = COL, na.value = "transparent") + # add colour and legend
       theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) + # reduce margins (for fusing of plots)
-      theme(legend.key.size = unit(1.5, 'cm'))
+      theme(legend.key.size = unit(1.5, "cm"))
     if (!missing(SF)) { # if a shape has been designated
       Plots_ls[[Variable]] <- Plots_ls[[Variable]] + geom_sf(data = SF, colour = "black", fill = "NA") # add shape
     }
     # } # end of resolution loop
   } # end of variable loop
-  if(nlyr(Covariates[[1]]) > 1){
-    ggPlot <- plot_grid(plotlist = Plots_ls, ncol = 1, labels = "AUTO") # fuse the plots into one big plot 
+  if (nlyr(Covariates[[1]]) > 1) {
+    ggPlot <- plot_grid(plotlist = Plots_ls, ncol = 1, labels = "AUTO") # fuse the plots into one big plot
     return(ggPlot)
-  }else{
+  } else {
     return(Plots_ls[[1]])
   }
 } # export the plot
@@ -146,17 +150,17 @@ Plot.Covariates <- function(Covariates, SF, COL = viridis::cividis(100)) {
 #' @importFrom ggplot2 unit
 #' @importFrom ggplot2 geom_sf
 #' @importFrom cowplot plot_grid
-#' 
+#'
 #' @return A ggplot2 object visualising a raster.
-#' 
+#'
 #' @seealso \code{\link{Kriging}}.
 #'
 #' @examples
-#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-#' Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
-#' Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
+#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+#' Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package = "KrigR"))
+#' Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package = "KrigR"))
 #' names(Cov_train) <- names(Cov_target) <- "GMTED2010 [m]"
-#' 
+#'
 #' ### kriging itself
 #' ExtentKrig <- Kriging(
 #'   Data = CDS_rast[[1:2]],
@@ -175,7 +179,9 @@ Plot.Covariates <- function(Covariates, SF, COL = viridis::cividis(100)) {
 #'
 #' @export
 Plot.Kriged <- function(Krigs, SF, Dates, Legend = "Air Temperature [K]") {
-  if(missing(Dates)){Dates <- as.character(terra::time(Krigs[[1]]))}
+  if (missing(Dates)) {
+    Dates <- as.character(terra::time(Krigs[[1]]))
+  }
   Type_vec <- c("Prediction", "Standard Error") # these are the output types of krigR
   Colours_ls <- list(inferno(100), rev(viridis(100))) # we want separate colours for the types
   Plots_ls <- as.list(NA, NA) # this list will be filled with the output plots
@@ -190,7 +196,7 @@ Plot.Kriged <- function(Krigs, SF, Dates, Legend = "Air Temperature [K]") {
       labs(x = "Longitude", y = "Latitude") + # make plot more readable
       scale_fill_gradientn(name = Legend, colours = Colours_ls[[Plot]], na.value = "transparent") + # add colour and legend
       theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) + # reduce margins (for fusing of plots)
-      theme(legend.key.size = unit(1, 'cm'))
+      theme(legend.key.size = unit(1, "cm"))
     if (!missing(SF)) { # if a shape has been designated
       Plots_ls[[Plot]] <- Plots_ls[[Plot]] + geom_sf(data = SF, colour = "black", fill = "NA") # add shape
     }

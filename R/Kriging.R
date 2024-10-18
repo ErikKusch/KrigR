@@ -12,6 +12,7 @@
 #' @param Dir Character/Directory Pointer. Directory specifying where to place final kriged product. Default is current working directory.
 #' @param FileName Character. A file name for the produced files.
 #' @param FileExtension Character. A file extension for the produced file. Supported values are ".nc" (default) and ".tif" (better support for metadata).
+#' @param Compression Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".
 #' @param Keep_Temporary Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE. These temporary files are stored in a newly created directory in Dir which is pre-pended with "TEMP-" and is deleted if Keep_Temporary = FALSE upon completion.
 #' @param verbose Optional, logical. Whether to report progress of data download (if queried) in the console or not.
 #'
@@ -33,6 +34,7 @@
 #' @importFrom automap autoKrige
 #' @importFrom stringr str_pad
 #' @importFrom doSNOW registerDoSNOW
+#' @importFrom parallel detectCores
 #' @importFrom parallel makeCluster
 #' @importFrom parallel stopCluster
 #' @importFrom foreach %dopar%
@@ -54,11 +56,11 @@
 #' \dontrun{
 #' ## Kriging using pre-fab data with a rectangular extent and a fives layers of data with parallel processing
 #' ### Loading data
-#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-#' Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
-#' Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
+#' CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+#' Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package = "KrigR"))
+#' Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package = "KrigR"))
 #' names(Cov_train) <- names(Cov_target) <- "GMTED2010"
-#' 
+#'
 #' ### kriging itself
 #' ExtentKrig <- Kriging(
 #'   Data = CDS_rast,
@@ -95,12 +97,14 @@
 #' )
 #'
 #' ### Covariate preparations
-#' Covariates_ls <- CovariateSetup(Training = Qsoil_rast,
-#'                                 Target = 0.03,
-#'                                 Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
-#'                                 Source = "Drive",
-#'                                 Extent = Jotunheimen_poly,
-#'                                 Keep_Global = TRUE)
+#' Covariates_ls <- CovariateSetup(
+#'   Training = Qsoil_rast,
+#'   Target = 0.03,
+#'   Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
+#'   Source = "Drive",
+#'   Extent = Jotunheimen_poly,
+#'   Keep_Global = TRUE
+#' )
 #'
 #' ### kriging itself
 #' ShapeKrig <- Kriging(
@@ -118,32 +122,37 @@
 #' Plot.Kriged(Krigs = ShapeKrig, SF = Jotunheimen_poly)
 #' }
 #' @export
-Kriging <- function(
+Kriging <- function( # nolint: cyclocomp_linter.
     Data,
     Covariates_training,
     Covariates_target,
     Equation = NULL,
-    Cores = detectCores(),
+    Cores = parallel::detectCores(),
     nmax = Inf,
     Dir = getwd(),
     FileName,
     FileExtension = ".nc",
+    Compression = 9,
     Keep_Temporary = FALSE,
-    verbose = TRUE
-){
+    verbose = TRUE) {
   ## Run Preparations ===============
-  if(verbose){message("###### Checking your Kriging Specification")}
+  if (verbose) {
+    message("###### Checking your Kriging Specification")
+  }
   ### Number of layers in data & Progress bar
   KrigIterations <- nlyr(Data) # used for krig looping
   pb <- progress_bar$new(
     format = "Kriging (:current/:total) | [:bar] Elapsed: :elapsed | Remaining: :eta",
-    total = KrigIterations,    # 100
-    width = getOption("width"))
-  progress_layer <- 1:KrigIterations  # token reported in progress bar
+    total = KrigIterations, # 100
+    width = getOption("width")
+  )
+  progress_layer <- 1:KrigIterations # token reported in progress bar
   ### CRS for assignment in loop
   CRS_dat <- crs(Data)
   ### if no equation is specified, assign additive combination of variables in training covariates
-  if(is.null(Equation)){Equation <- paste(terra::names(Covariates_training), collapse = " + ")}
+  if (is.null(Equation)) {
+    Equation <- paste(terra::names(Covariates_training), collapse = " + ")
+  }
   ### assure that KrigingEquation is a formula object
   KrigingEquation <- as.formula(paste("Data ~", Equation))
   ### Metadata
@@ -155,16 +164,18 @@ Kriging <- function(
     "KrigRCall" = Meta_vec
   )
   ### Temporary Directory
-  Dir.Temp <- file.path(Dir, paste("TEMP-Kriging", FileName, sep="_"))
-  if(!dir.exists(Dir.Temp)){dir.create(Dir.Temp)}
+  Dir.Temp <- file.path(Dir, paste("TEMP-Kriging", FileName, sep = "_"))
+  if (!dir.exists(Dir.Temp)) {
+    dir.create(Dir.Temp)
+  }
   ### Remove extension from file name
   FileName <- file_path_sans_ext(FileName)
 
   ## Check if already executed once ===============
   FCheck1 <- Check.File(FName = paste0(FileName, "_Kriged", FileExtension), Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = TRUE)
   FCheck2 <- Check.File(FName = paste0(FileName, "_StDev", FileExtension), Dir = Dir, loadFun = terra::rast, load = TRUE, verbose = TRUE)
-  if(!is.null(FCheck1)){
-    if(FileExtension == ".nc"){
+  if (!is.null(FCheck1)) {
+    if (FileExtension == ".nc") {
       FCheck1 <- Meta.NC(NC = FCheck1, FName = file.path(Dir, paste0(FileName, "_Kriged.nc")), Attrs = Meta_vec, Read = TRUE)
       FCheck2 <- Meta.NC(NC = FCheck2, FName = file.path(Dir, paste0(FileName, "_StDev.nc")), Attrs = Meta_vec, Read = TRUE)
     }
@@ -181,11 +192,12 @@ Kriging <- function(
   ## Catching Most Frequent Issues ===============
   Check_Product <- Check.Krig(Data = Data, CovariatesCoarse = Covariates_training, CovariatesFine = Covariates_target, KrigingEquation = KrigingEquation)
   KrigingEquation <- Check_Product[[1]] # extract KrigingEquation (this may have changed in check_Krig)
-  # DataSkips <- Check_Product[[2]] # extract which layers to skip due to missing data (this is unlikely to ever come into action)
   Terms <- unique(unlist(strsplit(labels(terms(KrigingEquation)), split = ":"))) # identify which layers of data are needed
 
   ## Data Reformatting ===============
-  if(verbose){message("###### Preparing And Reformatting your Data")}
+  if (verbose) {
+    message("###### Preparing And Reformatting your Data")
+  }
   # (Kriging requires spatially referenced data frames, reformatting from rasters happens here)
   ### Make Training sf object
   Origin <- as.data.frame(Covariates_training, xy = TRUE, na.rm = FALSE)
@@ -254,42 +266,45 @@ Kriging <- function(
 
   ## Kriging Execution ===============
   ## carry out kriging according to user specifications either in parallel or on a single core
-  if(verbose){message("###### Commencing Kriging")}
+  if (verbose) {
+    message("###### Commencing Kriging")
+  }
   ### multi-core kriging ----
-  if(Cores > 1){
+  if (Cores > 1) {
     ## registering cluster and progress bar for foreach
     cl <- makeCluster(Cores)
     registerDoSNOW(cl)
-    progress <- function(n){
+    progress <- function(n) {
       pb$tick(tokens = list(layer = progress_layer[n]))
     }
     on.exit(stopCluster(cl))
     ## executing foreach kriging
     ForeachObjects <- c("Dir.Temp", "Cores", "CRS_dat", "Data_df", "KrigingEquation", "Origin", "Target", "nmax", "FileExtension") # objects which are needed in Kriging
-    foreach(Iter_Krige = 1:KrigIterations, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
-            .packages = c("terra", "sf", "stringr", "automap", "ncdf4"), # import packages necessary to each iteration
-            .export = ForeachObjects,
-            .options.snow = list(progress = progress))  %dopar% { # parallel kriging loop # %:% when(!paste0(str_pad(Iter_Krige,7,"left","0"), '_data.nc') %in% list.files(Dir.Temp))
-              eval(parse(text=looptext)) # evaluate the kriging specification per cluster unit per layer
-              Sys.sleep(0.5)
-              NULL
-            } # end of parallel kriging loop
+    foreach(
+      Iter_Krige = 1:KrigIterations, # kriging loop over all layers in Data, with condition (%:% when(...)) to only run if current layer is not present in Dir.Temp yet
+      .packages = c("terra", "sf", "stringr", "automap", "ncdf4"), # import packages necessary to each iteration
+      .export = ForeachObjects,
+      .options.snow = list(progress = progress)
+    ) %dopar% { # parallel kriging loop # %:% when(!paste0(str_pad(Iter_Krige,7,"left","0"), '_data.nc') %in% list.files(Dir.Temp))
+      eval(parse(text = looptext)) # evaluate the kriging specification per cluster unit per layer
+      Sys.sleep(0.5)
+      NULL
+    } # end of parallel kriging loop
   }
 
   ### single-core kriging ----
-  if(Cores == 1){
-    for(Iter_Krige in 1:KrigIterations){
-      # FileExis <- paste0(str_pad(Iter_Krige,7,'left','0'), '_data', FileExtension) %in% list.files(Dir.Temp)
-      # if(!FileExis){
-      eval(parse(text=looptext)) # evaluate the kriging specification per layer
-      # }
+  if (Cores == 1) {
+    for (Iter_Krige in 1:KrigIterations) {
+      eval(parse(text = looptext)) # evaluate the kriging specification per layer
       Sys.sleep(0.5)
       pb$tick(tokens = list(layer = progress_layer[Iter_Krige]))
     }
   }
 
   ## Data Loading and Saving ===============
-  if(verbose){message("###### Loading Temporary Files")}
+  if (verbose) {
+    message("###### Loading Temporary Files")
+  }
   ### loading kriged data back in
   Krig_rast <- rast(list.files(Dir.Temp, full.names = TRUE, pattern = "_data"))
   SE_rast <- rast(list.files(Dir.Temp, full.names = TRUE, pattern = "_StDev"))
@@ -299,16 +314,24 @@ Kriging <- function(
   terra::units(Krig_rast) <- terra::units(SE_rast) <- terra::units(Data)
   terra::metags(Krig_rast) <- terra::metags(SE_rast) <- Meta_vec
   ### Data Saving
-  if(verbose){message("###### Saving Kriged Data")}
-  if(FileExtension == ".tif"){
-    writeRaster(Krig_rast, filename = file.path(Dir, paste0(FileName, "_Kriged", FileExtension)))
-    writeRaster(SE_rast, filename = file.path(Dir, paste0(FileName, "_StDev", FileExtension)))
+  if (verbose) {
+    message("###### Saving Kriged Data")
   }
-  if(FileExtension == ".nc"){
-    Krig_rast <- Meta.NC(NC = Krig_rast, FName = file.path(Dir, paste0(FileName, "_Kriged", FileExtension)),
-                         Attrs = terra::metags(Krig_rast), Write = TRUE)
-    SE_rast <- Meta.NC(NC = SE_rast, FName = file.path(Dir, paste0(FileName, "_STDev", FileExtension)),
-                       Attrs = terra::metags(SE_rast), Write = TRUE)
+  if (FileExtension == ".tif") {
+    writeRaster(Krig_rast, filename = file.path(Dir, paste0(FileName, "_Kriged", FileExtension)))
+    Krig_rast <- rast(filename = file.path(Dir, paste0(FileName, "_Kriged", FileExtension)))
+    writeRaster(SE_rast, filename = file.path(Dir, paste0(FileName, "_StDev", FileExtension)))
+    SE_rast <- rast(filename = file.path(Dir, paste0(FileName, "_StDev", FileExtension)))
+  }
+  if (FileExtension == ".nc") {
+    Krig_rast <- Meta.NC(
+      NC = Krig_rast, FName = file.path(Dir, paste0(FileName, "_Kriged", FileExtension)),
+      Attrs = terra::metags(Krig_rast), Write = TRUE, Compression = Compression
+    )
+    SE_rast <- Meta.NC(
+      NC = SE_rast, FName = file.path(Dir, paste0(FileName, "_STDev", FileExtension)),
+      Attrs = terra::metags(SE_rast), Write = TRUE, Compression = Compression
+    )
   }
 
   Krig_rast <- rast(file.path(Dir, paste0(FileName, "_Kriged", FileExtension)))
@@ -319,9 +342,9 @@ Kriging <- function(
   terra::metags(Krig_rast) <- terra::metags(SE_rast) <- Meta_vec
 
   ## Removing Temporary Files ===============
-  if(Keep_Temporary == FALSE){ # cleanup check
+  if (Keep_Temporary == FALSE) { # cleanup check
     unlink(Dir.Temp, recursive = TRUE)
-  }  # end of cleanup check
+  } # end of cleanup check
 
   ## Data Return ===============
   Krig_ls <- list(Krig_rast, SE_rast)

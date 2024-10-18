@@ -30,7 +30,7 @@ A ggplot2 object visualising a raster.
 Use the ggplot2 plotting engine to easily create visualisations of raster data - like the ones obtained using CDownloadS(...) - and overlay sf polygon data if desired.
 }
 \examples{
-SpatRast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))[[1:2]]
+SpatRast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))[[1:2]]
 data("Jotunheimen_poly")
 SF <- Jotunheimen_poly
 Plot.SpatRast(SpatRast = SpatRast, SF = SF)

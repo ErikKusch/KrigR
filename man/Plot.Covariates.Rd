@@ -20,10 +20,10 @@ A ggplot2 object visualising a raster.
 Use the ggplot2 plotting engine to easily create visualisations of covariate raster data - like the ones obtained using CovariateSetup(...) - and overlay sf polygon data if desired.
 }
 \examples{
-Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
-Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
+Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package = "KrigR"))
+Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package = "KrigR"))
 names(Cov_train) <- names(Cov_target) <- "GMTED2010 [m]"
-Covariates = list(Training = Cov_train, Target = Cov_target)
+Covariates <- list(Training = Cov_train, Target = Cov_target)
 data("Jotunheimen_poly")
 SF <- Jotunheimen_poly
 Plot.Covariates(Covariates = Covariates, SF = SF)

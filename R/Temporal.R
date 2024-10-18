@@ -14,9 +14,11 @@
 #' Dates_df
 #'
 #' @export
-Make.UTC <- function(DatesVec = NULL){
+Make.UTC <- function(DatesVec = NULL) {
   data.frame(IN = DatesVec,
-             UTC = do.call(c ,lapply(DatesVec, FUN = function(x){as.POSIXct(x, tz = "UTC")}))
+    UTC = do.call(c, lapply(DatesVec, FUN = function(x) {
+      as.POSIXct(x, tz = "UTC")
+    }))
   )
 }
 ### QUERY SEPARATING INTO TIME WINDOWS =========================================
@@ -50,62 +52,74 @@ Make.UTC <- function(DatesVec = NULL){
 #'                     BaseTStart = as.POSIXct("1950-01-01 00:01", tz = "UTC")
 #'                     TChunkSize = 12000)
 #'
-Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart, TChunkSize, DataSet){
+Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart, TChunkSize, DataSet) {
   ## reformat input
   DateStart <- Dates_df$UTC[1]
   DateStop <- Dates_df$UTC[2]
-  if(BaseTResolution == "month"){
+  if (BaseTResolution == "month") {
     DateStart <- as.POSIXct(paste0(format(DateStart, "%Y-"), "01-01 00:00"), tz = "UTC") # ensure that first of first month in first queried year is used for sequence creation to avoid month skips
     DateStop <- as.POSIXct(paste0(format(DateStop, "%Y-"), "12-31 23:00"), tz = "UTC") # ensure that last of last month in last queried year is used for sequence creation to avoid month skips
   }
 
   ## checking chunksize specification
-  if((TChunkSize/BaseTStep)%%1!=0){stop("Please specify a TChunkSize (currently = ", TChunkSize,
-                                        ") that is a multiple of the base temporal resolution of the data you queried from CDS (curently = ", BaseTStep, ").")}
+  if ((TChunkSize / BaseTStep) %% 1 != 0) {
+    stop(
+      "Please specify a TChunkSize (currently = ", TChunkSize,
+      ") that is a multiple of the base temporal resolution of the data you queried from CDS (curently = ", BaseTStep, ")."
+    )
+  }
 
   ## checking alignment of queried data with raw data
-  if(BaseTResolution == "hour" & BaseTStep != 24){
+  if (BaseTResolution == "hour" && BaseTStep != 24) {
     # when we are pulling from non-1-hourly records, check whether specified start-date aligns with date layers in raw data
-    StartCheck <- difftime(DateStart, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
-    EndCheck <- difftime(DateStop, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour")/BaseTStep
-    AlignCheck <- (as.numeric(StartCheck)%%1==0 | as.numeric(EndCheck)%%1==0)
+    StartCheck <- difftime(DateStart, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour") / BaseTStep
+    EndCheck <- difftime(DateStop, Meta.QuickFacts(dataset = DataSet)$TStart, units = "hour") / BaseTStep
+    AlignCheck <- (as.numeric(StartCheck) %% 1 == 0 || as.numeric(EndCheck) %% 1 == 0)
   }
 
   ## making query time call
-  if(!(BaseTResolution %in% c("hour", "month"))){stop("Non-hour or -month base resolutions not supported yet")}
-  if(BaseTResolution == "hour"){
-    if(BaseTStep == 24){
-      QueryTimes <- str_pad(str_c(0:23,"00",sep=":"), 5,"left","0") ## this is used for telling CDS which layers we want per day
-    }else{
+  if (!(BaseTResolution %in% c("hour", "month"))) {
+    stop("Non-hour or -month base resolutions not supported yet")
+  }
+  if (BaseTResolution == "hour") {
+    if (BaseTStep == 24) {
+      QueryTimes <- str_pad(str_c(0:23, "00", sep = ":"), 5, "left", "0") ## this is used for telling CDS which layers we want per day
+    } else {
       QueryTimes <- str_pad(str_c(
-        seq(from = as.numeric(format(Meta.QuickFacts(dataset = DataSet)$TStart, "%H")),
-            to = 23,
-            by = 24/BaseTStep)
-        ,"00",sep=":"), 5,"left","0") ## this is used for telling CDS which layers we want per day, relevant for ensemble_mean and ensemble_spread for example, which are recorded at 3-hour intervals starting at 00:00 per day
+        seq(
+          from = as.numeric(format(Meta.QuickFacts(dataset = DataSet)$TStart, "%H")),
+          to = 23,
+          by = 24 / BaseTStep
+        ),
+        "00",
+        sep = ":"
+      ), 5, "left", "0") ## this is used for telling CDS which layers we want per day, relevant for ensemble_mean and ensemble_spread for example, which are recorded at 3-hour intervals starting at 00:00 per day
     }
   }
-  if(BaseTResolution == "month"){
+  if (BaseTResolution == "month") {
     QueryTimes <- "00:00" ## this is used for telling CDS which layers we want per day
   }
 
 
   ## check alignment with non-1-BaseTStep data products
-  if(exists("AlignCheck")){
-    if(!AlignCheck){
-      stop("You have specified download of a data set whose raw layers are provided at a temporal resolution = ", BaseTResolution, " at intervalstime steps = ", BaseTStep, ".",
-           "\n Either one or both of the the time-window defining dates (DateStart and DateStop arguments) you have specified, once converted to UTC (", DateStart, " and ", DateStop, ") do not align with the structure of the raw data which requires querying of data to start and terminate at any of the following UTC hours of the day: ", paste(QueryTimes, collapse = "; "), ". Please adjust your date specification accordingly.")
+  if (exists("AlignCheck")) {
+    if (!AlignCheck) {
+      stop(
+        "You have specified download of a data set whose raw layers are provided at a temporal resolution = ", BaseTResolution, " at intervalstime steps = ", BaseTStep, ".",
+        "\n Either one or both of the the time-window defining dates (DateStart and DateStop arguments) you have specified, once converted to UTC (", DateStart, " and ", DateStop, ") do not align with the structure of the raw data which requires querying of data to start and terminate at any of the following UTC hours of the day: ", paste(QueryTimes, collapse = "; "), ". Please adjust your date specification accordingly."
+      )
     }
   }
 
   ## making request ranges
-  if(BaseTResolution == "month"){
+  if (BaseTResolution == "month") {
     BaseTStep <- 1 # do not repeat each month, hence set this to 1
   }
   T_RequestRange <- seq(from = DateStart, to = DateStop, by = BaseTResolution)
-  # T_RequestRange <- as.POSIXct(paste(rep(unique(T_RequestDates), each = length(QueryTimes)), QueryTimes), tz = "UTC")
   T_RequestDates <- as.Date(rep(unique(format(T_RequestRange, "%Y-%m-%d")), each = BaseTStep))
-  list(QueryTimeWindows = split(T_RequestDates, ceiling(seq_along(T_RequestDates)/TChunkSize)),
-       QueryTimes = QueryTimes
+  list(
+    QueryTimeWindows = split(T_RequestDates, ceiling(seq_along(T_RequestDates) / TChunkSize)),
+    QueryTimes = QueryTimes
   )
 }
 
@@ -130,66 +144,50 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
 #'
 #' @return A SpatRaster
 #'
-Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone, verbose = TRUE){
+Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone, verbose = TRUE) { # nolint: cyclocomp_linter.
   Era5_ras <- CDS_rast
-  if(verbose & CumulVar){print("Disaggregation of cumulative records")}
-  if(CumulVar & BaseResolution == "hour"){
-    if(BaseStep != 1){stop("Back-calculation of hourly cumulative variables only supported for 1-hour interval data. The data you have specified reports hourly data in intervals of ", BaseStep, ".")}
+  if (verbose && CumulVar) {
+    print("Disaggregation of cumulative records")
+  }
+  if (CumulVar && BaseResolution == "hour") {
+    if (BaseStep != 1) {
+      stop("Back-calculation of hourly cumulative variables only supported for 1-hour interval data. The data you have specified reports hourly data in intervals of ", BaseStep, ".")
+    }
     ## removing non-needed layers
-    RemovalLyr <- c(1, (nlyr(Era5_ras)-22):nlyr(Era5_ras)) # need to remove first layer and last 23 for backcalculation
-    Era5_ras <- subset(Era5_ras, RemovalLyr, negate=TRUE)
+    RemovalLyr <- c(1, (nlyr(Era5_ras) - 22):nlyr(Era5_ras)) # need to remove first layer and last 23 for backcalculation
+    Era5_ras <- subset(Era5_ras, RemovalLyr, negate = TRUE)
     ## back-calculation
     #' break apart sequence by UTC days and apply back-calculation per day in pblapply loop, for loop for each hour in each day
-    DataDays <- ceiling(1:nlyr(Era5_ras)/24)
+    DataDays <- ceiling(1:nlyr(Era5_ras) / 24)
     DissagDays <- unique(DataDays)
-    Era5_ls <- pblapply(DissagDays, FUN = function(DissagDay_Iter){
+    Era5_ls <- pblapply(DissagDays, FUN = function(DissagDay_Iter) {
       counter <- 1
       Interior_ras <- Era5_ras[[which(DataDays == DissagDay_Iter)]]
       Interior_ls <- as.list(rep(NA, nlyr(Interior_ras)))
       names(Interior_ls) <- terra::time(Interior_ras)
-      for(i in 1:nlyr(Interior_ras)){
-        # if(counter > 24){counter <- 1}
-        if(counter == 1){
+      for (i in 1:nlyr(Interior_ras)) {
+        if (counter == 1) {
           Interior_ls[[i]] <- Interior_ras[[i]]
-          # StartI <- i
         }
-        if(counter == 24){
-          Interior_ls[[i]] <- Interior_ras[[i]]-sum(rast(Interior_ls[1:(1+counter-2)]))
+        if (counter == 24) {
+          Interior_ls[[i]] <- Interior_ras[[i]] - sum(rast(Interior_ls[1:(1 + counter - 2)]))
         }
-        if(counter != 24 & counter != 1){
-          Interior_ls[[i]] <- Interior_ras[[i+1]] - Interior_ras[[i]]
+        if (counter != 24 & counter != 1) {
+          Interior_ls[[i]] <- Interior_ras[[i + 1]] - Interior_ras[[i]]
         }
         counter <- counter + 1
       }
       rast(Interior_ls)
     })
-    # counter <- 1
-    # Era5_ls <- as.list(rep(NA, nlyr(Era5_ras)))
-    # names(Era5_ls) <- terra::time(Era5_ras)
-    # for(i in 1:nlyr(Era5_ras)){
-    #   if(counter > 24){counter <- 1}
-    #   if(counter == 1){
-    #     Era5_ls[[i]] <- Era5_ras[[i]]
-    #     StartI <- i
-    #   }
-    #   if(counter == 24){
-    #     Era5_ls[[i]] <- Era5_ras[[i]]-sum(rast(Era5_ls[StartI:(StartI+counter-2)]))
-    #   }
-    #   if(counter != 24 & counter != 1){
-    #     Era5_ls[[i]] <- Era5_ras[[i+1]] - Era5_ras[[i]]
-    #   }
-    #   counter <- counter + 1
-    # }
     ## finishing off object
     Ret_ras <- rast(Era5_ls)
-    # terra::time(Ret_ras) <- as.POSIXct(terra::time(Era5_ras), tz = TZone) - 60*60 # back-dating to be in-line with regular specifications
     Era5_ras <- Ret_ras
     warning("You toggled on the CumulVar option in the function call. Hourly records have been converted from cumulative aggregates to individual hourly records.")
   }
   ## multiply by number of days per month
-  if(CumulVar & BaseResolution == "month"){
+  if (CumulVar && BaseResolution == "month") {
     Days_in_Month_vec <- days_in_month(terra::time(CDS_rast))
-    if(grepl("ensemble_members", Type)){
+    if (grepl("ensemble_members", Type)) {
       Days_in_Month_vec <- rep(Days_in_Month_vec, each = 10)
     }
     Era5_ras <- Era5_ras * Days_in_Month_vec
@@ -221,64 +219,64 @@ Temporal.Cumul <- function(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone, 
 #' @return A SpatRaster
 #'
 Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
-                          TResolution, TStep, FUN, Cores, QueryTargetSteps, TZone, verbose = TRUE){
-  if(verbose){print("Temporal Aggregation")}
-  if(BaseResolution == TResolution & BaseStep == TStep){
+                          TResolution, TStep, FUN, Cores, QueryTargetSteps, TZone, verbose = TRUE) {
+  if (verbose) {
+    print("Temporal Aggregation")
+  }
+  if (BaseResolution == TResolution && BaseStep == TStep) {
     Final_rast <- CDS_rast # no temporal aggregation needed
-  }else{
-
-
-    TimeDiff <- sapply(terra::time(CDS_rast), FUN = function(xDate){
-      length(seq(from = terra::time(CDS_rast)[1],
-                 to = xDate,
-                 by = TResolution))-1
+  } else {
+    TimeDiff <- sapply(terra::time(CDS_rast), FUN = function(xDate) {
+      length(seq(
+        from = terra::time(CDS_rast)[1],
+        to = xDate,
+        by = TResolution
+      )) - 1
     })
-    AggrIndex <- floor(TimeDiff/TStep)+1
+    AggrIndex <- floor(TimeDiff / TStep) + 1
 
     Form <- substr(TResolution, 1, 1)
     Form <- ifelse(Form %in% c("h", "y"), toupper(Form), Form)
     LayerFormat <- format(terra::time(CDS_rast), paste0("%", Form))
-    # LayerMatches <- match(LayerFormat, QueryTargetSteps)
-    #
-    # if(grepl("Factor =", QueryTargetSteps)){ # happens for hourly ensemble data
-    #   Factor <- as.numeric(sub("Ensembling at base resolution, Factor = ", "", QueryTargetSteps))
-    #   AggrIndex <- rep(seq(from = 1, to = length(LayerFormat)/(Factor)), each = Factor)
-    # }else{
-    #   AggrIndex <- ceiling(LayerMatches/TStep)
-    # }
 
-    if(length(unique(AggrIndex)) == 1){ ## this is to avoid a warning message thrown by terra
-      Final_rast <- app(x = CDS_rast,
-                        cores = Cores,
-                        fun = FUN)
-    }else{
-      Final_rast <- tapp(x = CDS_rast,
-                         index = AggrIndex,
-                         cores = Cores,
-                         fun = FUN)
+    if (length(unique(AggrIndex)) == 1) { ## this is to avoid a warning message thrown by terra
+      Final_rast <- app(
+        x = CDS_rast,
+        cores = Cores,
+        fun = FUN
+      )
+    } else {
+      Final_rast <- tapp(
+        x = CDS_rast,
+        index = AggrIndex,
+        cores = Cores,
+        fun = FUN
+      )
     }
 
-
-
-    if(TResolution == "year"){
+    if (TResolution == "year") {
       terra::time(Final_rast) <- as.POSIXct(
         paste0(LayerFormat[!duplicated(AggrIndex)], "-01-01"),
-        tz = TZone)
+        tz = TZone
+      )
     }
-    if(TResolution == "month"){
+    if (TResolution == "month") {
       terra::time(Final_rast) <- as.POSIXct(
         paste0(format(terra::time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m"), "-01"),
-        tz = TZone)
+        tz = TZone
+      )
     }
-    if(TResolution == "day"){
+    if (TResolution == "day") {
       terra::time(Final_rast) <- as.POSIXct(
         format(terra::time(CDS_rast)[!duplicated(AggrIndex)], "%Y-%m-%d"),
-        tz = TZone)
+        tz = TZone
+      )
     }
-    if(TResolution == "hour"){
+    if (TResolution == "hour") {
       terra::time(Final_rast) <- as.POSIXct(
         terra::time(CDS_rast)[!duplicated(AggrIndex)],
-        tz = TZone)
+        tz = TZone
+      )
     }
   }
   return(Final_rast)
@@ -300,22 +298,20 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
 #' @return Character - target resolution formatted steps in data.
 #'
 TemporalAggregation.Check <- function(
-    QuerySeries,
-    DateStart,
-    DateStop,
-    TResolution,
-    BaseTResolution,
-    TStep,
-    BaseTStep
-){
-
+  QuerySeries,
+  DateStart,
+  DateStop,
+  TResolution,
+  BaseTResolution,
+  TStep,
+  BaseTStep
+) {
   ## check clean division
-  if(BaseTResolution == TResolution){ ## this comes into play for hourly aggregates of ensemble data
-    if((TStep/BaseTStep) %%1!=0){
-      stop("Your specified time range does not allow for a clean integration of your selected time steps. You specified a time series of raw data with a length of ", length(QueryTargetFormat), " (", BaseTResolution, " intervals of length ", BaseTStep, "). Applying your desired temporal aggregation of ", TResolution, " intervals of length ", TStep, " works out to ", round(TStep/BaseTStep, 3), " intervals. Please fix this so the specified time range can be cleanly divided into aggregation intervals.")
+  if (BaseTResolution == TResolution) { ## this comes into play for hourly aggregates of ensemble data
+    if ((TStep / BaseTStep) %% 1 != 0) {
+      stop("Your specified time range does not allow for a clean integration of your selected time steps. You specified a time series of raw data with a length of ", length(QueryTargetFormat), " (", BaseTResolution, " intervals of length ", BaseTStep, "). Applying your desired temporal aggregation of ", TResolution, " intervals of length ", TStep, " works out to ", round(TStep / BaseTStep, 3), " intervals. Please fix this so the specified time range can be cleanly divided into aggregation intervals.")
     }
-    QueryTargetSteps <- paste("Ensembling at base resolution, Factor =", TStep/BaseTStep)
-    # print("ensemble detected")
+    QueryTargetSteps <- paste("Ensembling at base resolution, Factor =", TStep / BaseTStep)
     return(QueryTargetSteps)
   }
 
@@ -329,7 +325,7 @@ TemporalAggregation.Check <- function(
   QueryTargetFormat <- format(as.POSIXct(QuerySeries, tz = "UTC"), paste0("%", Form))
   QueryTargetSteps <- unique(QueryTargetFormat)
 
-  if((length(QueryTargetSteps) / TStep) %%1!=0){
+  if ((length(QueryTargetSteps) / TStep) %% 1 != 0) {
     stop("Your specified time range does not allow for a clean integration of your selected time steps. You specified a time series of raw data with a length of ", length(QueryTargetFormat), " (", BaseTResolution, " intervals of length ", BaseTStep, "). Applying your desired temporal aggregation of ", TResolution, " intervals of length ", TStep, " works out to ", round(length(QueryTargetSteps) / TStep, 3), " intervals. Please fix this so the specified time range can be cleanly divided into aggregation intervals.")
   }
   return(QueryTargetSteps)

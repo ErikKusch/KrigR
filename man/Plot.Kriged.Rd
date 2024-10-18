@@ -22,9 +22,9 @@ A ggplot2 object visualising a raster.
 Use the ggplot2 plotting engine to easily create visualisations of kriged raster data and associated uncertainties raster data - like the ones obtained using Kriging(...) - and overlay sf polygon data if desired.
 }
 \examples{
-CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
-Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
+CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package = "KrigR"))
+Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package = "KrigR"))
 names(Cov_train) <- names(Cov_target) <- "GMTED2010 [m]"
 
 ### kriging itself

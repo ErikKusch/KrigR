@@ -20,6 +20,7 @@ CDownloadS(
   Dir = getwd(),
   FileName,
   FileExtension = ".nc",
+  Compression = 9,
   API_User,
   API_Key,
   TryDown = 10,
@@ -61,6 +62,8 @@ CDownloadS(
 
 \item{FileExtension}{Character. A file extension for the produced file. Supported values are ".nc" (default) and ".tif" (better support for metadata).}
 
+\item{Compression}{Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".}
+
 \item{API_User}{Character; ECMWF cds user number.}
 
 \item{API_Key}{Character; ECMWF cds API key.}
@@ -95,44 +98,44 @@ This function is used to obtain data from the \href{https://cds.climate.copernic
 \dontrun{
 ## Raw data for one month of full globe
 RawGlobe_rast <- CDownloadS(
-	Variable = "2m_temperature",
-	DataSet = "reanalysis-era5-land-monthly-means",
-	Type = "monthly_averaged_reanalysis",
-	# time-window, default set to range of dataset-type
-	DateStart = "1995-01-01 00:00",
-	DateStop = "1995-01-01 23:00",
-	TZone = "CET",
-	# temporal aggregation
-	TResolution = "month",
-	TStep = 1,
-	# file storing
-	FileName = "RawGlobe",
-	# API credentials
-	API_User = API_User,
-	API_Key = API_Key
+  Variable = "2m_temperature",
+  DataSet = "reanalysis-era5-land-monthly-means",
+  Type = "monthly_averaged_reanalysis",
+  # time-window, default set to range of dataset-type
+  DateStart = "1995-01-01 00:00",
+  DateStop = "1995-01-01 23:00",
+  TZone = "CET",
+  # temporal aggregation
+  TResolution = "month",
+  TStep = 1,
+  # file storing
+  FileName = "RawGlobe",
+  # API credentials
+  API_User = API_User,
+  API_Key = API_Key
 )
 Plot.SpatRast(RawGlobe_rast)
 
 ## Monthly air temperature aggregated to bi-annual maximum by SpatRaster
-CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
+CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
 BiAnnAirTemp_rast <- CDownloadS(
-	Variable = "2m_temperature",
-	DataSet = "reanalysis-era5-land-monthly-means",
-	Type = "monthly_averaged_reanalysis",
-	# time-window, default set to range of dataset-type
-	DateStart = "1995-01-01 00:00",
-	DateStop = "1996-12-31 23:00",
-	TZone = "EET",
-	# temporal aggregation
-	TResolution = "year",
-	TStep = 2,
-	# spatial
-	Extent = CDS_rast,
-	# file storing
-	FileName = "BiAnnAirTemp",
-	# API credentials
-	API_User = API_User,
-	API_Key = API_Key
+  Variable = "2m_temperature",
+  DataSet = "reanalysis-era5-land-monthly-means",
+  Type = "monthly_averaged_reanalysis",
+  # time-window, default set to range of dataset-type
+  DateStart = "1995-01-01 00:00",
+  DateStop = "1996-12-31 23:00",
+  TZone = "EET",
+  # temporal aggregation
+  TResolution = "year",
+  TStep = 2,
+  # spatial
+  Extent = CDS_rast,
+  # file storing
+  FileName = "BiAnnAirTemp",
+  # API credentials
+  API_User = API_User,
+  API_Key = API_Key
 )
 Plot.SpatRast(BiAnnAirTemp_rast)
 
@@ -161,27 +164,27 @@ Plot.SpatRast(DailyBackCPrecip_rast, SF = Jotunheimen_poly, Legend = "Precipitat
 ## 6-hourly ensemble member spread sum for air temperature by buffered points
 data("Mountains_df")
 EnsembleSpreadSum6hour_rast <- CDownloadS(
-	Variable = "2m_temperature",
-	DataSet = "reanalysis-era5-single-levels",
-	Type = "ensemble_spread",
-	# time-window, default set to range of dataset-type
-	DateStart = "1995-01-01 00:00:00",
-	DateStop = "1995-01-01 21:00:00",
-	TZone = "UTC",
-	# temporal aggregation
-	TResolution = "hour",
-	TStep = 6,
-	FUN = sum,
-	# spatial
-	Extent = Mountains_df,
-	Buffer = 0.2,
-	# file storing
-	FileName = "EnsembleSpreadSum6hour",
-	FileExtension = ".tif",
-	# API credentials
-	API_User = API_User,
-	API_Key = API_Key,
-	Keep_Raw = TRUE
+  Variable = "2m_temperature",
+  DataSet = "reanalysis-era5-single-levels",
+  Type = "ensemble_spread",
+  # time-window, default set to range of dataset-type
+  DateStart = "1995-01-01 00:00:00",
+  DateStop = "1995-01-01 21:00:00",
+  TZone = "UTC",
+  # temporal aggregation
+  TResolution = "hour",
+  TStep = 6,
+  FUN = sum,
+  # spatial
+  Extent = Mountains_df,
+  Buffer = 0.2,
+  # file storing
+  FileName = "EnsembleSpreadSum6hour",
+  FileExtension = ".tif",
+  # API credentials
+  API_User = API_User,
+  API_Key = API_Key,
+  Keep_Raw = TRUE
 )
 Plot.SpatRast(EnsembleSpreadSum6hour_rast, Legend = "Air Temperature Uncertainty [K]")
 }
