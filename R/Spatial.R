@@ -144,6 +144,7 @@ Handle.Spatial <- function(BASE, Shape) {
       if (class(Shape)[1] == "sf") {
         ret_rast <- mask(ret_rast, Shape, touches = TRUE)
       }
+      ret_rast
     })
     ret_rast <- do.call(c, ret_ls)
     return(ret_rast)
