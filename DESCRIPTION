@@ -1,7 +1,7 @@
 Package: KrigR
 Type: Package
 Title: Downloading, Aggregating, and Kriging of ECMWF CDS-Data
-Version: 0.4.2
+Version: 0.5.0
 Authors@R: as.person(c(
     "Erik Kusch <erik@i-solution.de> [aut, cre]", 
     "Richard Davy <Richard.Davy@nersc.no> [aut]"
@@ -9,7 +9,7 @@ Authors@R: as.person(c(
 Description: An R Package for downloading, preprocessing, and statistical downscaling of data provided by the European Centre for Medium‐Range Weather Forecasts (ECMWF).
     KrigR contains functions for:
     - Downloading ECMWF data directly from within R
-    - Downloading USGS GMTED 2010 elevation data - Working towards also implementing support for HWSD data
+    - Downloading USGS GMTED 2010 and HWSD elevation data
     - Preparing covariate data for Kriging
     - Kriging spatial input to desired output using user-specified covariates
 License: MIT + file LICENSE

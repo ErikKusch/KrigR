@@ -204,3 +204,54 @@ Plot.Kriged <- function(Krigs, SF, Dates, Legend = "Air Temperature [K]") {
   ggPlot <- plot_grid(plotlist = Plots_ls, ncol = 1, labels = "AUTO") # fuse the plots into one big plot
   return(ggPlot)
 } # export the plot
+
+### Bioclimatic Data ==========================================================
+#' Visualise bioclimatic raster data and overlay sf polygons if desired.
+#'
+#' Use the ggplot2 plotting engine to easily create visualisations of biolcimatic raster data - like the ones obtained using BioClim(...) - and overlay sf polygon data if desired.
+#'
+#' @param BioClims SpatRast object to visualise.
+#' @param Which Numeric. Which bioclimatic variable(s) to visualise.
+#' @param SF Optional. SF object which to overlay.
+#' @param Water_Var Optional, character. Name of water availability variable in the bioclimatic variables.
+#' @param ncol Number of columns for panel arrangement of plots
+#'
+#' @importFrom terra nlyr
+#' @importFrom viridis inferno
+#' @importFrom viridis mako
+#' @importFrom cowplot plot_grid
+#'
+#' @return A ggplot2 object visualising a raster.
+#'
+#' @seealso \code{\link{BioClim}}.
+#'
+#' @examples
+#' BC_rast <- terra::rast(system.file("extdata", "CN_BC.nc", package = "KrigR"))
+#' Plot.BioClim(BioClims = BC_rast, Water_Var = "Soil Moisture (0-7cm)")
+#'
+#' @export
+Plot.BioClim <- function(BioClims, Which = 1:19, SF, Water_Var = "Water Availability", ncol = 3) {
+  if (nlyr(BioClims) != 19) {
+    stop("The raster data you supplied does not contain 19 layers. Please supply raster data containing 19 layers corresponding to the 19 bioclimatic variables.")
+  }
+  BC_names <- c("Annual Mean Temperature", "Mean Diurnal Range", "Isothermality", "Temperature Seasonality", "Max Temperature of Warmest Month", "Min Temperature of Coldest Month", "Temperature Annual Range (BIO5-BIO6)", "Mean Temperature of Wettest Quarter", "Mean Temperature of Driest Quarter", "Mean Temperature of Warmest Quarter", "Mean Temperature of Coldest Quarter", paste("Annual", Water_Var), paste(Water_Var, "of Wettest Month"), paste(Water_Var, "of Driest Month"), paste(Water_Var, "Seasonality"), paste(Water_Var, "of Wettest Quarter"), paste(Water_Var, "of Driest Quarter"), paste(Water_Var, "of Warmest Quarter"), paste(Water_Var, "of Coldest Quarter"))
+  BC_names <- paste0("BIO", 1:19, " - ", BC_names)
+  names(BioClims) <- BC_names
+
+  ToPlot <- BioClims[[Which]]
+  Colours <- list(
+    Temperature = inferno(1e3),
+    Water = mako(1e3)
+  )
+
+  Plots_ls <- lapply(1:nlyr(ToPlot), FUN = function(x) {
+    COL <- ifelse(grepl(Water_Var, names(ToPlot[[x]]), fixed = TRUE), "Water", "Temperature")
+    if (missing(SF)) {
+      Plot.SpatRast(SpatRast = ToPlot[[x]], Dates = names(ToPlot[[x]]), Legend = " ", COL = Colours[[COL]])
+    } else {
+      Plot.SpatRast(SpatRast = ToPlot[[x]], SF = SF, Dates = names(ToPlot[[x]]), Legend = "", COL = Colours[[COL]])
+    }
+  })
+
+  cowplot::plot_grid(plotlist = Plots_ls, ncol = ncol)
+} # export the plot

@@ -236,9 +236,7 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
   BaseStep <- BaseStep <- Meta.QuickFacts(dataset = DataSet)$TStep[
     na.omit(match(Type, Meta.QuickFacts(dataset = DataSet)$Type))
   ]
-  if (Meta.QuickFacts(dataset = DataSet)$TResolution != AggrCheck[[2]] ||
-        BaseStep != AggrCheck[[1]]) { # if this is TRUE, we need to check if aggregation works
-
+  if (Meta.QuickFacts(dataset = DataSet)$TResolution != AggrCheck[[2]] || BaseStep != AggrCheck[[1]]) { # if this is TRUE, we need to check if aggregation works
     ## specification of a temporal resolution finer than the data?
     if (which(SuppRes == AggrCheck[[2]]) < which(SuppRes == Meta.QuickFacts(dataset = DataSet)$TResolution)) {
       stop(
@@ -248,15 +246,12 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
     }
 
     ## specification of tsteps that cannot be achieved with the data?
-    if (Meta.QuickFacts(dataset = DataSet)$TResolution == AggrCheck[[2]] &&
-          ((AggrCheck[[1]] / BaseStep) %% 1 != 0)) {
+    if (Meta.QuickFacts(dataset = DataSet)$TResolution == AggrCheck[[2]] && ((AggrCheck[[1]] / BaseStep) %% 1 != 0)) {
       stop("You have specified a temporal aggregation that cannot be achieved with the data. When specifying the same temporal resolution as the data (you have specified TResolution = ", AggrCheck[[2]], "), the TStep must be a multiple of the base temporal resolution of the data (", BaseStep, " for DataSet = ", DataSet, " and Type = ", Type, ").")
     }
 
     ## specification of daily, monthly or annual aggregates but not setting tstart or tend to beginning or end of day/month/year?
-    if (AggrCheck[[2]] == "day" &&
-          (as.numeric(substr(QueryTimes[1], 0, 2)) != 0 ||
-             as.numeric(substr(QueryTimes[length(QueryTimes)], 0, 2)) != 23)) {
+    if (AggrCheck[[2]] == "day" && (as.numeric(substr(QueryTimes[1], 0, 2)) != 0 || as.numeric(substr(QueryTimes[length(QueryTimes)], 0, 2)) != 23)) {
       stop("You have specified (multi-)daily temporal aggregation but are querying a time window which does not start at 00:00 and/or does not terminate at 23:00. Please ensure that you set the argument DateStart and DateStop accordingly.")
     }
 
@@ -272,9 +267,7 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
       ),
       "24:00:00"
     ), tz = format(DateCheck$IN[2], "%Z"))
-    if (AggrCheck[[2]] == "month" &&
-          (DateCheck$IN[1] != MustStartMonth ||
-             DateCheck$IN[2] != MustEndMonth)) {
+    if (AggrCheck[[2]] == "month" && (DateCheck$IN[1] != MustStartMonth || DateCheck$IN[2] != MustEndMonth)) {
       stop("You have specified (multi-)monthly temporal aggregation but are querying a time window which does not start at the first day of a month at 00:00 and/or does not terminate on the last day of a month at 24:00. Please ensure that you set the argument DateStart and DateStop accordingly.")
     }
 
@@ -286,9 +279,7 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
       paste(format(DateCheck$IN[2], "%Y"), "12-31", sep = "-"),
       "23:00:00"
     ), tz = format(DateCheck$IN[2], "%Z"))
-    if (AggrCheck[[2]] == "year" &&
-          (DateCheck$IN[1] != MustStartYear ||
-             DateCheck$IN[2] != MustEndYear)) {
+    if (AggrCheck[[2]] == "year" && (DateCheck$IN[1] != MustStartYear || DateCheck$IN[2] != MustEndYear)) {
       stop("You have specified (multi-)yearly temporal aggregation but are querying a time window which does not start at the first of day of a year at 00:00 and/or does not terminate on the last day of a year at 23:00. Please ensure that you set the argument DateStart and DateStop accordingly.")
     }
   }
@@ -319,6 +310,7 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
 #' @param Compression Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".
 #'
 #' @importFrom terra writeCDF
+#' @importFrom terra rast
 #' @importFrom ncdf4 nc_open
 #' @importFrom ncdf4 ncatt_put
 #' @importFrom ncdf4 nc_close
@@ -330,7 +322,7 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
 Meta.NC <- function(NC, FName, Attrs, Write = FALSE, Read = TRUE, Compression = 9) {
   ## Writing metadata
   if (Write) {
-    NC <- writeCDF(x = NC, filename = FName)
+    NC <- writeCDF(x = NC, filename = FName, compression = Compression)
     nc <- nc_open(FName, write = TRUE)
     for (name in names(Attrs)) {
       ncatt_put(nc, 0, name, Attrs[[name]])

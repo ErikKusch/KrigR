@@ -160,6 +160,7 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
                        verbose = TRUE, # verbosity
                        Keep_Raw = FALSE) {
   ## Catching Most Frequent Issues ===============
+  on.exit(closeAllConnections())
   #--- API Credentials
   ### checking if API User and Key have been supplied
   if (exists("API_User") + exists("API_Key") != 2) {
@@ -282,10 +283,8 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   )
 
   ## File/Call metadata
-  KrigRCall <- match.call()
-  KrigRCall <- KrigRCall[!(names(KrigRCall) %in% c("API_Key", "API_User"))]
-  Meta_vec <- as.character(KrigRCall)
-  names(Meta_vec) <- names(KrigRCall)
+  Meta_vec <- c(Variable, CumulVar, DataSet, Type, DateStart, DateStop, TZone, TResolution, TStep, as.character(substitute(FUN)), as.character(quote(Extent)), Buffer, Dir, FileName)
+  names(Meta_vec) <- c("Variable", "CumulVar", "DataSet", "Type", "DateStart", "DateStop", "TZone", "TResolution", "TStep", "FUN", "Extent", "Buffer", "Dir", "FileName")
   Meta_vec <- c(
     "Citation" = paste0(MetaCheck_ls$QueryDataSet, " data (DOI:", Meta.DOI("reanalysis-era5-land-monthly-means"), ") obtained with KrigR (DOI:10.1088/1748-9326/ac48b3) on ", Sys.time()),
     "KrigRCall" = Meta_vec
@@ -357,6 +356,7 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
     Dates_df$IN[2] <- DateStopIn
   }
   CDS_rast <- CDS_rast[[which((terra::time(CDS_rast) < Dates_df$IN[1]) + (terra::time(CDS_rast) > Dates_df$IN[2]) == 0)]]
+  terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone
 
   #--- Temporal aggregation
   CDS_rast <- Temporal.Aggr(
@@ -382,9 +382,10 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   if (FileExtension == ".nc") {
     CDS_rast <- Meta.NC(
       NC = CDS_rast, FName = file.path(Dir, FileName),
-      Attrs = terra::metags(CDS_rast), Write = TRUE,
+      Attrs = Meta_vec, Write = TRUE,
       Compression = Compression
     )
+    terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign the correct time zone, when loading from disk, time zone is set to UTC
   }
 
   ### unlink temporary files
@@ -393,5 +394,6 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   }
 
   ### return object
+  closeAllConnections()
   return(CDS_rast)
 }

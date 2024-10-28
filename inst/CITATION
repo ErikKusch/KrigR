@@ -1,0 +1,11 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "KrigR-a tool for downloading and statistically downscaling climate reanalysis data",
+  author = "Erik Kusch and Richard Davy",
+  journal = "Environmental Research Letters",
+  year     = "2022",
+  volume   = "17",
+  number   = "2",
+  pages    = "",
+  doi = "10.1088/1748-9326/ac48b3"
+)
