@@ -2,12 +2,12 @@
 An R Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the [European Centre for Medium‐Range Weather Forecasts (ECMWF)](https://www.ecmwf.int/).The package interfaces with the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s) for retrieval of climate data.
 
 KrigR contains functions for:
-    - Downloading Era5(-Land) data directly from within `R` via a wrapper function for the [`ecmwfr` package](https://github.com/bluegreen-labs/ecmwfr)
-    - Downloading interpolation covaraite data: 
-      - [USGS GMTED 2010](https://www.usgs.gov/core-science-systems/eros/coastal-changes-and-impacts/gmted2010?qt-science_support_page_related_con=0#qt-science_support_page_related_con) elevation data  
-      - Downloading [soil hydraulic and thermal parameters](http://globalchange.bnu.edu.cn/research/soil4.jsp) data
-    - Preparing covariate data for use in statistical interpolation
-    - Kriging spatial input to desired output using user-specified covariates via a wrapper for the [`automap` package](https://github.com/cran/automap)
+- Downloading Era5(-Land) data directly from within `R` via a wrapper function for the [`ecmwfr` package](https://github.com/bluegreen-labs/ecmwfr)
+- Downloading interpolation covaraite data:
+    - [USGS GMTED 2010](https://www.usgs.gov/core-science-systems/eros/coastal-changes-and-impacts/gmted2010?qt-science_support_page_related_con=0#qt-science_support_page_related_con) elevation data  
+    - [soil hydraulic and thermal parameters](http://globalchange.bnu.edu.cn/research/soil4.jsp) data
+- Preparing covariate data for use in statistical interpolation
+- Kriging spatial input to desired output using user-specified covariates via a wrapper for the [`automap` package](https://github.com/cran/automap)
 
 **NOTE:** All kriging functionality can be parallelised for faster computing using the `Cores` argument.
 
