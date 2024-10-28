@@ -20,6 +20,8 @@ Plot.BioClim(
 \item{SF}{Optional. SF object which to overlay.}
 
 \item{Water_Var}{Optional, character. Name of water availability variable in the bioclimatic variables.}
+
+\item{ncol}{Number of columns for panel arrangement of plots}
 }
 \value{
 A ggplot2 object visualising a raster.

@@ -32,13 +32,17 @@ BioClim(
 )
 }
 \arguments{
-\item{Temperature_Var}{ERA5(Land)-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".}
+\item{Temperature_Var}{CDS-contained climate variable targeting temperature information. Recommended values: "2m_temperature".}
 
 \item{Temperature_DataSet}{Character. Which dataset to query data from. See currently supported datasets by calling \code{\link{Meta.List}}. For now, this function is conceptualised to support "reanalysis-era5-land".}
 
 \item{Temperature_Type}{Either NA or Character. Which kind of sub-type to query per data set. See \code{\link{Meta.QucikFacts}} for options per dataset.}
 
-\item{Water_Var}{ERA5(Land)-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".}
+\item{Water_Var}{CDS-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_X" (where X is an integer of either 1, 2, 3, 4), "total_precipitation".}
+
+\item{Water_DataSet}{Character. Which dataset to query water availability data from. See currently supported datasets by calling \code{\link{Meta.List}}. For now, this function is conceptualised to support "reanalysis-era5-land".}
+
+\item{Water_Type}{Either NA or Character. Which kind of sub-type to query per water availability data set. See \code{\link{Meta.QucikFacts}} for options per dataset.}
 
 \item{Y_start}{Year ('YYYY') at which to start time series of downloaded data.}
 

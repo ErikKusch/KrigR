@@ -2,10 +2,12 @@
 #'
 #' This function queries download of required essential climate variables from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s) for retrieval of climate data and subsequent calculation of bioclimatic variables for user-defined regions and time-frames.
 #'
-#' @param Temperature_Var ERA5(Land)-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".
+#' @param Temperature_Var CDS-contained climate variable targeting temperature information. Recommended values: "2m_temperature".
 #' @param Temperature_DataSet Character. Which dataset to query data from. See currently supported datasets by calling \code{\link{Meta.List}}. For now, this function is conceptualised to support "reanalysis-era5-land".
 #' @param Temperature_Type Either NA or Character. Which kind of sub-type to query per data set. See \code{\link{Meta.QucikFacts}} for options per dataset.
-#' @param Water_Var ERA5(Land)-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".
+#' @param Water_Var CDS-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_X" (where X is an integer of either 1, 2, 3, 4), "total_precipitation".
+#' @param Water_DataSet Character. Which dataset to query water availability data from. See currently supported datasets by calling \code{\link{Meta.List}}. For now, this function is conceptualised to support "reanalysis-era5-land".
+#' @param Water_Type Either NA or Character. Which kind of sub-type to query per water availability data set. See \code{\link{Meta.QucikFacts}} for options per dataset.
 #' @param Y_start Year ('YYYY') at which to start time series of downloaded data.
 #' @param Y_end Year ('YYYY') at which to stop time series of downloaded data.
 #' @param TZone Character. Time zone in which to represent and evaluate time dimension of data. See the output of OlsonNames() for a full overview of supported specifications. Default is UTC.
