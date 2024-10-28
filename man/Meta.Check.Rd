@@ -46,7 +46,7 @@ List. Contains:
 Read and return short overview of data set characteristics, supported types, extent, time frames and required arguments.
 }
 \examples{
-Meta.Check(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck = "2m_temperature", CumulativeCheck = FALSE, ExtentCheck = c(53.06, 9.87, 49.89, 15.03), DateCheck = data.frame(IN = c(as.POSIXct("1995-01-01 CET"), as.POSIXct("2005-01-01 23:00:00 CET")), UTC = c(as.POSIXct("1994-12-31 23:00:00 UTC"), as.POSIXct("2005-01-01 22:00:00 UTC"))), AggrCheck = list(1, "hour"), QueryTimes = c('00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'))
+Meta.Check(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck = "2m_temperature", CumulativeCheck = FALSE, ExtentCheck = c(53.06, 9.87, 49.89, 15.03), DateCheck = data.frame(IN = c(as.POSIXct("1995-01-01 CET"), as.POSIXct("2005-01-01 23:00:00 CET")), UTC = c(as.POSIXct("1994-12-31 23:00:00 UTC"), as.POSIXct("2005-01-01 22:00:00 UTC"))), AggrCheck = list(1, "hour"), QueryTimes = c("00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"))
 
 }
 \seealso{

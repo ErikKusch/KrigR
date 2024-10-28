@@ -20,6 +20,7 @@ CDownloadS(
   Dir = getwd(),
   FileName,
   FileExtension = ".nc",
+  Compression = 9,
   API_User,
   API_Key,
   TryDown = 10,
@@ -27,8 +28,7 @@ CDownloadS(
   TChunkSize = 6000,
   Cores = 1,
   verbose = TRUE,
-  Keep_Raw = FALSE,
-  Save_Final = TRUE
+  Keep_Raw = FALSE
 )
 }
 \arguments{
@@ -62,13 +62,15 @@ CDownloadS(
 
 \item{FileExtension}{Character. A file extension for the produced file. Supported values are ".nc" (default) and ".tif" (better support for metadata).}
 
+\item{Compression}{Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".}
+
 \item{API_User}{Character; ECMWF cds user number.}
 
 \item{API_Key}{Character; ECMWF cds API key.}
 
-\item{TryDown}{Optional, numeric. How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.}
+\item{TryDown}{Optional, numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.}
 
-\item{TimeOut}{Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).}
+\item{TimeOut}{Numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). The timeout for each download in seconds. Default 36000 seconds (10 hours).}
 
 \item{TChunkSize}{Numeric. Number of layers to bundle in each individual download. Default is 6000 to adhere to most restrictive CDS limits: https://cds.climate.copernicus.eu/live/limits.}
 
@@ -77,8 +79,6 @@ CDownloadS(
 \item{verbose}{Logical. Whether to print/message function progress in console or not.}
 
 \item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not. Default is FALSE.}
-
-\item{Save_Final}{Logical. Whether to write the final SpatRaster to the hard drive. Default is TRUE.}
 }
 \value{
 A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a file (either .nc or .tif) in the specified directory.
@@ -98,46 +98,46 @@ This function is used to obtain data from the \href{https://cds.climate.copernic
 \dontrun{
 ## Raw data for one month of full globe
 RawGlobe_rast <- CDownloadS(
-	Variable = "2m_temperature",
-	DataSet = "reanalysis-era5-land-monthly-means",
-	Type = "monthly_averaged_reanalysis",
-	# time-window, default set to range of dataset-type
-	DateStart = "1995-01-01 00:00",
-	DateStop = "1995-01-01 23:00",
-	TZone = "CET",
-	# temporal aggregation
-	TResolution = "month",
-	TStep = 1,
-	# file storing
-	FileName = "RawGlobe",
-	# API credentials
-	API_User = API_User,
-	API_Key = API_Key
+  Variable = "2m_temperature",
+  DataSet = "reanalysis-era5-land-monthly-means",
+  Type = "monthly_averaged_reanalysis",
+  # time-window, default set to range of dataset-type
+  DateStart = "1995-01-01 00:00",
+  DateStop = "1995-01-01 23:00",
+  TZone = "CET",
+  # temporal aggregation
+  TResolution = "month",
+  TStep = 1,
+  # file storing
+  FileName = "RawGlobe",
+  # API credentials
+  API_User = API_User,
+  API_Key = API_Key
 )
-terra::plot(RawGlobe_rast)
+Plot.SpatRast(RawGlobe_rast)
 
 ## Monthly air temperature aggregated to bi-annual maximum by SpatRaster
-CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
+CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
 BiAnnAirTemp_rast <- CDownloadS(
-	Variable = "2m_temperature",
-	DataSet = "reanalysis-era5-land-monthly-means",
-	Type = "monthly_averaged_reanalysis",
-	# time-window, default set to range of dataset-type
-	DateStart = "1995-01-01 00:00",
-	DateStop = "1996-12-31 23:00",
-	TZone = "EET",
-	# temporal aggregation
-	TResolution = "year",
-	TStep = 2,
-	# spatial
-	Extent = CDS_rast,
-	# file storing
-	FileName = "BiAnnAirTemp",
-	# API credentials
-	API_User = API_User,
-	API_Key = API_Key
+  Variable = "2m_temperature",
+  DataSet = "reanalysis-era5-land-monthly-means",
+  Type = "monthly_averaged_reanalysis",
+  # time-window, default set to range of dataset-type
+  DateStart = "1995-01-01 00:00",
+  DateStop = "1996-12-31 23:00",
+  TZone = "EET",
+  # temporal aggregation
+  TResolution = "year",
+  TStep = 2,
+  # spatial
+  Extent = CDS_rast,
+  # file storing
+  FileName = "BiAnnAirTemp",
+  # API credentials
+  API_User = API_User,
+  API_Key = API_Key
 )
-terra::plot(BiAnnAirTemp_rast)
+Plot.SpatRast(BiAnnAirTemp_rast)
 
 ## Hourly back-calculated precipitation aggregated to daily averages by shapefiles
 data("Jotunheimen_poly")
@@ -159,36 +159,36 @@ DailyBackCPrecip_rast <- CDownloadS(
   API_User = API_User,
   API_Key = API_Key
 )
-terra::plot(DailyBackCPrecip_rast)
+Plot.SpatRast(DailyBackCPrecip_rast, SF = Jotunheimen_poly, Legend = "Precipitation [m]", COL = rev(viridis::cividis(100)))
 
 ## 6-hourly ensemble member spread sum for air temperature by buffered points
 data("Mountains_df")
 EnsembleSpreadSum6hour_rast <- CDownloadS(
-	Variable = "2m_temperature",
-	DataSet = "reanalysis-era5-single-levels",
-	Type = "ensemble_spread",
-	# time-window, default set to range of dataset-type
-	DateStart = "1995-01-01 00:00:00",
-	DateStop = "1995-01-01 21:00:00",
-	TZone = "UTC",
-	# temporal aggregation
-	TResolution = "hour",
-	TStep = 6,
-	FUN = sum,
-	# spatial
-	Extent = Mountains_df,
-	Buffer = 0.2,
-	# file storing
-	FileName = "EnsembleSpreadSum6hour",
-	FileExtension = ".tif",
-	# API credentials
-	API_User = API_User,
-	API_Key = API_Key,
-	Keep_Raw = TRUE
+  Variable = "2m_temperature",
+  DataSet = "reanalysis-era5-single-levels",
+  Type = "ensemble_spread",
+  # time-window, default set to range of dataset-type
+  DateStart = "1995-01-01 00:00:00",
+  DateStop = "1995-01-01 21:00:00",
+  TZone = "UTC",
+  # temporal aggregation
+  TResolution = "hour",
+  TStep = 6,
+  FUN = sum,
+  # spatial
+  Extent = Mountains_df,
+  Buffer = 0.2,
+  # file storing
+  FileName = "EnsembleSpreadSum6hour",
+  FileExtension = ".tif",
+  # API credentials
+  API_User = API_User,
+  API_Key = API_Key,
+  Keep_Raw = TRUE
 )
-terra::plot(EnsembleSpreadSum6hour_rast)
+Plot.SpatRast(EnsembleSpreadSum6hour_rast, Legend = "Air Temperature Uncertainty [K]")
 }
 }
 \seealso{
-\code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.QuickFacts}}.
+\code{\link{Meta.List}}, \code{\link{Meta.Variables}}, \code{\link{Meta.QuickFacts}}, \code{\link{Plot.SpatRast}}.
 }

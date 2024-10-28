@@ -13,7 +13,8 @@ Temporal.Aggr(
   FUN,
   Cores,
   QueryTargetSteps,
-  TZone
+  TZone,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ Temporal.Aggr(
 \item{QueryTargetSteps}{Character. Target resolution steps}
 
 \item{TZone}{Character. Time zone for queried data.}
+
+\item{verbose}{Logical. Whether to print/message function progress in console or not.}
 }
 \value{
 A SpatRaster

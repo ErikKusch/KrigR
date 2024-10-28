@@ -9,11 +9,12 @@ Kriging(
   Covariates_training,
   Covariates_target,
   Equation = NULL,
-  Cores = detectCores(),
+  Cores = parallel::detectCores(),
   nmax = Inf,
   Dir = getwd(),
   FileName,
-  FileExtension,
+  FileExtension = ".nc",
+  Compression = 9,
   Keep_Temporary = FALSE,
   verbose = TRUE
 )
@@ -36,6 +37,8 @@ Kriging(
 \item{FileName}{Character. A file name for the produced files.}
 
 \item{FileExtension}{Character. A file extension for the produced file. Supported values are ".nc" (default) and ".tif" (better support for metadata).}
+
+\item{Compression}{Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".}
 
 \item{Keep_Temporary}{Logical, whether to delete individual kriging products of layers in Data after processing. Default is TRUE. These temporary files are stored in a newly created directory in Dir which is pre-pended with "TEMP-" and is deleted if Keep_Temporary = FALSE upon completion.}
 
@@ -60,10 +63,11 @@ Use optional arguments such as Dir, Keep_Temporary, KrigingEquation, nmax and Co
 \dontrun{
 ## Kriging using pre-fab data with a rectangular extent and a fives layers of data with parallel processing
 ### Loading data
-CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package="KrigR"))
-Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package="KrigR"))
-Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package="KrigR"))
-terra::varnames(Cov_train) <- terra::varnames(Cov_target) <- "GMTED2010" # we must ensure that the varnames in the Covariate file match
+CDS_rast <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+Cov_train <- terra::rast(system.file("extdata", "Covariates_Train.nc", package = "KrigR"))
+Cov_target <- terra::rast(system.file("extdata", "Covariates_Target.nc", package = "KrigR"))
+names(Cov_train) <- names(Cov_target) <- "GMTED2010"
+
 ### kriging itself
 ExtentKrig <- Kriging(
   Data = CDS_rast,
@@ -77,7 +81,7 @@ ExtentKrig <- Kriging(
   nmax = 40,
   verbose = TRUE
 )
-
+Plot.Kriged(Krigs = ExtentKrig)
 ## Kriging using full KrigR pipeline with shapefile data
 ### Shapefile loading
 data("Jotunheimen_poly")
@@ -100,19 +104,21 @@ Qsoil_rast <- CDownloadS(
 )
 
 ### Covariate preparations
-Covariates_ls <- CovariateSetup(Training = Qsoil_rast,
-                                       #' Target = 0.03,
-                                       Covariates = "GMTED2010", # this shiuld really be HWSD
-                                       Extent = Jotunheimen_poly,
-                                       Keep_Global = TRUE)
-terra::varnames(Covariates_ls[[1]]) <- terra::varnames(Covariates_ls[[2]]) <- "GMTED2010" # we must ensure that the varnames in the Covariate file match
+Covariates_ls <- CovariateSetup(
+  Training = Qsoil_rast,
+  Target = 0.03,
+  Covariates = c("tksat", "tkdry", "csol", "k_s", "lambda", "psi", "theta_s"),
+  Source = "Drive",
+  Extent = Jotunheimen_poly,
+  Keep_Global = TRUE
+)
 
 ### kriging itself
 ShapeKrig <- Kriging(
   Data = Qsoil_rast,
   Covariates_training = Covariates_ls[[1]],
   Covariates_target = Covariates_ls[[2]],
-  Equation = "GMTED2010",
+  Equation = "tksat + tkdry + csol + k_s + lambda + psi + theta_s",
   Cores = 1,
   FileName = "KrigTest2",
   FileExtension = ".nc",
@@ -120,8 +126,9 @@ ShapeKrig <- Kriging(
   nmax = 40,
   verbose = TRUE
 )
+Plot.Kriged(Krigs = ShapeKrig, SF = Jotunheimen_poly)
 }
 }
 \seealso{
-\code{\link{CovariateSetup}}.
+\code{\link{CovariateSetup}}, \code{\link{Plot.Kriged}}.
 }

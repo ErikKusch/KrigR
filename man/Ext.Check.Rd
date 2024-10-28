@@ -16,7 +16,7 @@ A list containg (1) a terra/sf object and (2) the corresponding SpatExtent objec
 Try to convert user input into (1) a terra or sf object and also read out the corresponding (2) SpatExtent object. Supports inputs of classes belonging to the packages raster, terra, sf, and sp
 }
 \examples{
- ## raster
+## raster
 Check.Ext(raster::extent(c(9.87, 15.03, 49.89, 53.06)))
 ## terra
 Check.Ext(terra::ext(c(9.87, 15.03, 49.89, 53.06)))
@@ -24,7 +24,7 @@ Check.Ext(terra::ext(c(9.87, 15.03, 49.89, 53.06)))
 set.seed(42)
 nb_pt <- 10
 dd <- data.frame(x = runif(nb_pt, 9.87, 15.03), y = runif(nb_pt, 49.89, 53.06), val = rnorm(nb_pt))
-sf <- sf::st_as_sf(dd, coords = c("x","y"))
+sf <- sf::st_as_sf(dd, coords = c("x", "y"))
 Check.Ext(sf)
 ## sp
 Check.Ext(as(sf, "Spatial"))

@@ -25,8 +25,8 @@ If a file already exists in a given place, load that file
 }
 \examples{
 KrigR::Check.File(
-          FName = basename(system.file("extdata", "CentralNorway.nc", package="KrigR")),
-          Dir = dirname(system.file("extdata", "CentralNorway.nc", package="KrigR")),
-          loadFun = terra::rast
-          )
+  FName = basename(system.file("extdata", "CentralNorway.nc", package = "KrigR")),
+  Dir = dirname(system.file("extdata", "CentralNorway.nc", package = "KrigR")),
+  loadFun = terra::rast
+)
 }

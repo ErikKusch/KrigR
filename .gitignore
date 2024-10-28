@@ -15,3 +15,5 @@ packrat/
 .Trashes
 ehthumbs.db
 Thumbs.db
+packrat/lib*/
+.lintr

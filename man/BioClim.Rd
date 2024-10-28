@@ -5,87 +5,118 @@
 \title{Computation of Bioclimatic Variables}
 \usage{
 BioClim(
+  Temperature_Var = "2m_temperature",
+  Temperature_DataSet = "reanalysis-era5-land",
+  Temperature_Type = NA,
   Water_Var = "volumetric_soil_water_layer_1",
-  Y_start = 1981,
-  Y_end = 2015,
-  T_res = "day",
-  Extent = extent(-180, 180, -90, 90),
-  DataSet = "era5-land",
-  Dir = getwd(),
-  verbose = TRUE,
-  FileName = "NULL",
-  Keep_Raw = FALSE,
-  Keep_Monthly = FALSE,
+  Water_DataSet = "reanalysis-era5-land-monthly-means",
+  Water_Type = "monthly_averaged_reanalysis",
+  Y_start,
+  Y_end,
+  TZone = "UTC",
+  Extent,
   Buffer = 0.5,
-  ID = "ID",
-  API_User = API_User,
-  API_Key = API_Key,
-  Cores = 1,
+  Dir = getwd(),
+  FileName,
+  FileExtension = ".nc",
+  Compression = 9,
+  API_User,
+  API_Key,
+  TChunkSize = 6000,
   TryDown = 10,
   TimeOut = 36000,
-  SingularDL = FALSE
+  Cores = 1,
+  verbose = TRUE,
+  Keep_Raw = FALSE,
+  Keep_Monthly = FALSE
 )
 }
 \arguments{
-\item{Water_Var}{ERA5(Land)-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_1", "total_precipitation".}
+\item{Temperature_Var}{CDS-contained climate variable targeting temperature information. Recommended values: "2m_temperature".}
+
+\item{Temperature_DataSet}{Character. Which dataset to query data from. See currently supported datasets by calling \code{\link{Meta.List}}. For now, this function is conceptualised to support "reanalysis-era5-land".}
+
+\item{Temperature_Type}{Either NA or Character. Which kind of sub-type to query per data set. See \code{\link{Meta.QucikFacts}} for options per dataset.}
+
+\item{Water_Var}{CDS-contained climate variable targeting water availability information. Recommended values: "volumetric_soil_water_layer_X" (where X is an integer of either 1, 2, 3, 4), "total_precipitation".}
+
+\item{Water_DataSet}{Character. Which dataset to query water availability data from. See currently supported datasets by calling \code{\link{Meta.List}}. For now, this function is conceptualised to support "reanalysis-era5-land".}
+
+\item{Water_Type}{Either NA or Character. Which kind of sub-type to query per water availability data set. See \code{\link{Meta.QucikFacts}} for options per dataset.}
 
 \item{Y_start}{Year ('YYYY') at which to start time series of downloaded data.}
 
 \item{Y_end}{Year ('YYYY') at which to stop time series of downloaded data.}
 
-\item{T_res}{Temporal resolution from which to obtain minimum and maximum values of temperature. 'hour' or 'day'}
+\item{TZone}{Character. Time zone in which to represent and evaluate time dimension of data. See the output of OlsonNames() for a full overview of supported specifications. Default is UTC.}
 
-\item{Extent}{Optional, download data according to rectangular bounding box. specify as extent() object or as a raster, a SpatialPolygonsDataFrame object, or a data.frame opbject. If Extent is a SpatialPolygonsDataFrame, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns as well as a non-repeating ID-column.}
+\item{Extent}{Optional, download data according to desired spatial specification. If missing/unspecified, total area of queried data set is used. Can be specified either as a raster object, an sf object, a terra object, or a data.frame. If Extent is a raster or terra object, data will be queried according to rectangular extent thereof. If Extent is an sf (MULTI-)POLYGON object, this will be treated as a shapefile and the output will be cropped and masked to this shapefile. If Extent is a data.frame of geo-referenced point records, it needs to contain Lat and Lon columns around which a buffered shapefile will be created using the Buffer argument.}
 
-\item{DataSet}{Which ERA5 data set to download data from. 'era5' or 'era5-land'.}
+\item{Buffer}{Optional, Numeric. Identifies how big a circular buffer to draw around points if Extent is a data.frame of points. Buffer is expressed as centessimal degrees.}
 
-\item{Dir}{Directory specifying where to download data to.}
+\item{Dir}{Character/Directory Pointer. Directory specifying where to download data to.}
 
-\item{verbose}{Optional, logical. Whether to report progress of the function in the console or not.}
+\item{FileName}{Character. A file name for the produced file.}
 
-\item{FileName}{A file name for the netcdf produced.}
+\item{FileExtension}{Character. A file extension for the produced file. Supported values are ".nc" (default) and ".tif" (better support for metadata).}
 
-\item{Keep_Raw}{Logical. Whether to keep monthly netcdf files of raw data aggregated to temporal resolution of `T_res`. Default FALSE.}
-
-\item{Keep_Monthly}{Logical. Whether to keep monthly netcdf files of raw data aggregated to temporal resolution of months. Default FALSE.}
-
-\item{Buffer}{Optional. Identifies how big a rectangular buffer to draw around points if Extent is a data frame of points. Buffer is expressed as centessimal degrees.}
-
-\item{ID}{Optional. Identifies which column in Extent to use for creation of individual buffers if Extent is a data.frame.}
+\item{Compression}{Integer between 1 to 9. Applied to final .nc file that the function writes to hard drive. Same as compression argument in terra::writeCDF(). Ignored if FileExtension = ".tif".}
 
 \item{API_User}{Character; ECMWF cds user number.}
 
 \item{API_Key}{Character; ECMWF cds API key.}
 
-\item{Cores}{Numeric. How many cores to use.^This can speed up downloads of long time-series. If you want output to your console during the process, use Cores = 1. Parallel processing is carried out when Cores is bigger than 1. Default is 1.}
+\item{TChunkSize}{Numeric. Number of layers to bundle in each individual download. Default is 6000 to adhere to most restrictive CDS limits: https://cds.climate.copernicus.eu/live/limits.}
 
-\item{TryDown}{Optional, numeric. How often to attempt the download of each individual file that the function queries from the server. This is to circumvent having to restart the entire function when encountering connectivity issues.}
+\item{TryDown}{Optional, numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.}
 
-\item{TimeOut}{Numeric. The timeout for each download in seconds. Default 36000 seconds (10 hours).}
+\item{TimeOut}{Numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). The timeout for each download in seconds. Default 36000 seconds (10 hours).}
 
-\item{SingularDL}{Logical. Whether to force download of data in one call to CDS or automatically break download requests into individual monthly downloads. Default is FALSE.}
+\item{Cores}{Numeric. How many cores to use when carrying out temporal aggregation. Default is 1.}
+
+\item{verbose}{Logical. Whether to print/message function progress in console or not.}
+
+\item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not. Default is FALSE.}
+
+\item{Keep_Monthly}{Logical. Whether to keep monthly netcdf files of raw data aggregated to temporal resolution of months. Default FALSE.}
 }
 \value{
-A raster object containing the downloaded ERA5(-Land) data, and a NETCDF (.nc) file in the specified directory.
+A SpatRaster object containing the queried bioclimatic data, and a NETCDF (.nc) file in the specified directory.
+
+The SpatRaster contains metadata/attributes as a named vector that can be retrieved with terra::metags(...):
+\itemize{
+\item{Citation}{ - A string which to use for in-line citation of the data product obtained with BioClim}.
+\item{KrigRCall.X}{ - Arguments passed to the BioClim function that produced the file (API credentials are omitted from these metadata)}.
+}
 }
 \description{
 This function queries download of required essential climate variables from the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s) for retrieval of climate data and subsequent calculation of bioclimatic variables for user-defined regions and time-frames.
 }
 \examples{
 \dontrun{
-BioClim (Water_Var = "volumetric_soil_water_layer_1", # could also be total_precipitation
-Y_start = 1981,
-Y_end = 2015,
-T_res = "day",
-Extent = extent(11.8,15.1,50.1,51.7),
-DataSet = "era5-land",
-Dir = getwd(),
-verbose = TRUE,
-FileName = "NULL",
-Keep_Raw = FALSE,
-Keep_Monthly = FALSE,
-API_User = API_User,
-API_Key = API_Key)
+CN_ext <- terra::rast(system.file("extdata", "CentralNorway.nc", package = "KrigR"))
+CN_BC <- BioClim(
+  Temperature_Var = "2m_temperature",
+  Temperature_DataSet = "reanalysis-era5-land",
+  Temperature_Type = NA,
+  Water_Var = "volumetric_soil_water_layer_1",
+  Water_DataSet = "reanalysis-era5-land-monthly-means",
+  Water_Type = "monthly_averaged_reanalysis",
+  Y_start = 1970,
+  Y_end = 1979,
+  TZone = "CET",
+  Extent = CN_ext,
+  Dir = getwd(),
+  FileName = "CN_BC",
+  FileExtension = ".nc",
+  Compression = 9,
+  API_User = API_User,
+  API_Key = API_Key,
+  TChunkSize = 6000, TryDown = 10, TimeOut = 36000,
+  Cores = parallel::detectCores(),
+  verbose = TRUE,
+  Keep_Raw = FALSE, Keep_Monthly = FALSE
+)
 }
 
 }
