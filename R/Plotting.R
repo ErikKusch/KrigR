@@ -231,6 +231,9 @@ Plot.Kriged <- function(Krigs, SF, Dates, Legend = "Air Temperature [K]") {
 #'
 #' @export
 Plot.BioClim <- function(BioClims, Which = 1:19, SF, Water_Var = "Water Availability", ncol = 3) {
+  if (missing(SF)) {
+    SF <- NULL
+  }
   if (nlyr(BioClims) != 19) {
     stop("The raster data you supplied does not contain 19 layers. Please supply raster data containing 19 layers corresponding to the 19 bioclimatic variables.")
   }
@@ -246,10 +249,10 @@ Plot.BioClim <- function(BioClims, Which = 1:19, SF, Water_Var = "Water Availabi
 
   Plots_ls <- lapply(1:nlyr(ToPlot), FUN = function(x) {
     COL <- ifelse(grepl(Water_Var, names(ToPlot[[x]]), fixed = TRUE), "Water", "Temperature")
-    if (missing(SF)) {
-      Plot.SpatRast(SpatRast = ToPlot[[x]], Dates = names(ToPlot[[x]]), Legend = " ", COL = Colours[[COL]])
-    } else {
+    if (!is.null(SF)) {
       Plot.SpatRast(SpatRast = ToPlot[[x]], SF = SF, Dates = names(ToPlot[[x]]), Legend = "", COL = Colours[[COL]])
+    } else {
+      Plot.SpatRast(SpatRast = ToPlot[[x]], Dates = names(ToPlot[[x]]), Legend = " ", COL = Colours[[COL]])
     }
   })
 
