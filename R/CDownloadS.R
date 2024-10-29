@@ -322,7 +322,12 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
 
   QuerieExec <- lapply(1:length(QueryCheck), FUN = function(x) {
     #--- Make list of CDS Requests
-    Requests_ls <- Make.Request(QueryCheck[[x]],
+    if (length(QueryCheck) == 1) {
+      Request <- QueryCheck
+    } else {
+      Request <- QueryCheck[[x]]
+    }
+    Requests_ls <- Make.Request(Request,
       MetaCheck_ls$QueryDataSet, MetaCheck_ls$QueryType, MetaCheck_ls$QueryVariable,
       QueryTimes, QueryExtent, MetaCheck_ls$QueryFormat,
       Dir,
