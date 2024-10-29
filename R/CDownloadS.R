@@ -341,7 +341,11 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
     #---- Return of request list for further tracking
     Requests_ls
   })
-  Requests_ls <- length(unlist(QuerieExec, recursive = FALSE))
+  # if (length(QueryCheck) > 1) { # unlist only if there is just one chunk of requests?
+  Requests_ls <- unlist(QuerieExec, recursive = FALSE)
+  # } else {
+  # Requests_ls <- QuerieExec
+  # }
 
   ## The Data =================================
   if (verbose) {
