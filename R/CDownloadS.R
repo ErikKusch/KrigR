@@ -253,6 +253,11 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   )
   QueryTimes <- QueryTimeWindows$QueryTimes
   QueryTimeWindows <- QueryTimeWindows$QueryTimeWindows
+  if (length(QueryTimeWindows) > 20) {
+    QueryCheck <- base::split(QueryTimeWindows, ceiling(1:length(QueryTimeWindows) / 20))
+  } else {
+    QueryCheck <- QueryTimeWindows
+  }
 
   #--- Aggregation Check
   QueryTargetSteps <- TemporalAggregation.Check(
@@ -306,17 +311,32 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   }
   #--- API credentials
   Register.Credentials(API_User, API_Key)
-  #--- Make list of CDS Requests
-  Requests_ls <- Make.Request(QueryTimeWindows,
-    MetaCheck_ls$QueryDataSet, MetaCheck_ls$QueryType, MetaCheck_ls$QueryVariable,
-    QueryTimes, QueryExtent, MetaCheck_ls$QueryFormat,
-    Dir,
-    verbose = TRUE, API_User, API_Key,
-    TimeOut = TimeOut
-  )
-  ## work an on.exit in here to allow restarting downloads themselves without new queries
-  #--- Execution of requests
-  Execute.Requests(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE)
+
+  if (verbose && length(QueryCheck) > 1) {
+    message(
+      paste(
+        "The query you have made requires staging more than 20 individual queries at CDS. The necessary queries are made and then executed in chunks of up to 20 each. This may take some time and you will see console output in R that flips between staging and executing requests. This switch will happen", length(QueryCheck), "times."
+      )
+    )
+  }
+
+  QuerieExec <- lapply(1:length(QueryCheck), FUN = function(x) {
+    #--- Make list of CDS Requests
+    Requests_ls <- Make.Request(QueryCheck[[x]],
+      MetaCheck_ls$QueryDataSet, MetaCheck_ls$QueryType, MetaCheck_ls$QueryVariable,
+      QueryTimes, QueryExtent, MetaCheck_ls$QueryFormat,
+      Dir,
+      verbose = TRUE, API_User, API_Key,
+      TimeOut = TimeOut, FIterStart = (x - 1) * 20 + 1
+    )
+    ## work an on.exit in here to allow restarting downloads themselves without new queries
+    #--- Execution of requests
+    Execute.Requests(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE)
+
+    #---- Return of request list for further tracking
+    Requests_ls
+  })
+  Requests_ls <- length(unlist(QuerieExec, recursive = FALSE))
 
   ## The Data =================================
   if (verbose) {

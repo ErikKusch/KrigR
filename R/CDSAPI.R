@@ -63,6 +63,7 @@ Register.Credentials <- function(API_User, API_Key) {
 #' @param API_User Character. CDS API User
 #' @param API_Key Character. CDS API Key
 #' @param TimeOut Numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). The timeout for each download in seconds. Default 36000 seconds (10 hours).
+#' @param FIterStart Numeric. Meant for consistent file numbering in multi-chunk requesting.
 #'
 #' @importFrom ecmwfr wf_request
 #'
@@ -72,10 +73,10 @@ Register.Credentials <- function(API_User, API_Key) {
 #'
 Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariable,
                          QueryTimes, QueryExtent, QueryFormat, Dir = getwd(), verbose = TRUE,
-                         API_User, API_Key, TimeOut = 36000) {
+                         API_User, API_Key, TimeOut = 36000, FIterStart = 1) {
   #' Make list of CDS Requests
   Requests_ls <- lapply(1:length(QueryTimeWindows), FUN = function(requestID) {
-    FName <- paste("TEMP", QueryVariable, stringr::str_pad(requestID, 5, "left", "0"), sep = "_")
+    FName <- paste("TEMP", QueryVariable, stringr::str_pad(FIterStart + requestID - 1, 5, "left", "0"), sep = "_")
     if (grepl("month", QueryType)) { # monthly data needs to be specified with year, month fields
       list(
         "dataset_short_name" = QueryDataSet,
@@ -106,7 +107,7 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
     }
   })
   ## making list names useful for request execution updates to console
-  Iterators <- paste0("[", 1:length(Requests_ls), "/", length(Requests_ls), "] ")
+  Iterators <- paste0("[", 1:length(Requests_ls), "/", length(Requests_ls) + FIterStart, "] ")
   FNames <- unlist(lapply(Requests_ls, "[[", "target"))
   Dates <- unlist(lapply(lapply(Requests_ls, "[[", "date"), gsub, pattern = "/", replacement = " - "))
   if (length(Dates) == 0) { # this happens for monthly data queries
@@ -123,7 +124,6 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
   if (length(names(unlist(FCheck))) > 0) {
     Requests_ls[match(names(unlist(FCheck)), FNames)] <- NA
   }
-  Requests_ls
 
   if (verbose) {
     print("## Staging CDS Requests")
