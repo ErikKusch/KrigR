@@ -107,7 +107,7 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
     }
   })
   ## making list names useful for request execution updates to console
-  Iterators <- paste0("[", 1:length(Requests_ls), "/", length(Requests_ls) + (FIterStart - 1), "] ")
+  Iterators <- paste0("[", (1:length(Requests_ls)) + (FIterStart - 1), "/", length(Requests_ls) + (FIterStart - 1), "] ")
   FNames <- unlist(lapply(Requests_ls, "[[", "target"))
   Dates <- unlist(lapply(lapply(Requests_ls, "[[", "date"), gsub, pattern = "/", replacement = " - "))
   if (length(Dates) == 0) { # this happens for monthly data queries
