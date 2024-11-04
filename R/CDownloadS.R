@@ -253,11 +253,11 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   )
   QueryTimes <- QueryTimeWindows$QueryTimes
   QueryTimeWindows <- QueryTimeWindows$QueryTimeWindows
-  if (length(QueryTimeWindows) > 20) {
-    QueryCheck <- base::split(QueryTimeWindows, ceiling(1:length(QueryTimeWindows) / 20))
-  } else {
-    QueryCheck <- QueryTimeWindows
-  }
+  # if (length(QueryTimeWindows) > 20) {
+  QueryCheck <- base::split(QueryTimeWindows, ceiling(1:length(QueryTimeWindows) / 20))
+  # } else {
+  # QueryCheck <- list(QueryTimeWindows)
+  # }
 
   #--- Aggregation Check
   QueryTargetSteps <- TemporalAggregation.Check(
@@ -322,11 +322,11 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
 
   QuerieExec <- lapply(1:length(QueryCheck), FUN = function(x) {
     #--- Make list of CDS Requests
-    if (length(QueryCheck) == 1) {
-      Request <- QueryCheck
-    } else {
-      Request <- QueryCheck[[x]]
-    }
+    # if (length(QueryCheck) == 1) {
+    #   Request <- QueryCheck
+    # } else {
+    Request <- QueryCheck[[x]]
+    # }
     Requests_ls <- Make.Request(Request,
       MetaCheck_ls$QueryDataSet, MetaCheck_ls$QueryType, MetaCheck_ls$QueryVariable,
       QueryTimes, QueryExtent, MetaCheck_ls$QueryFormat,
