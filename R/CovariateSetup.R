@@ -299,8 +299,8 @@ CovariateSetup <- function(Training, # nolint: cyclocomp_linter.
     terra::writeRaster(x = Cov_target, filename = TargetName, overwrite = TRUE)
   }
   if (FileExtension == ".nc") {
-    terra::writeCDF(x = Cov_train, filename = TrainName, overwrite = TRUE, Compression = Compression)
-    terra::writeCDF(x = Cov_target, filename = TargetName, overwrite = TRUE, Compression = Compression)
+    terra::writeCDF(x = Cov_train, filename = TrainName, overwrite = TRUE, compression = Compression)
+    terra::writeCDF(x = Cov_target, filename = TargetName, overwrite = TRUE, compression = Compression)
   }
 
   ## Cleaning up files ===============
