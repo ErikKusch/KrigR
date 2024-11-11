@@ -213,8 +213,10 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   QueryVariable <- Meta.Variables(dataset = DataSet)[VarPos, "CDSname"]
 
   #--- Extent resolving; formatting as SpatExtent object
+  NoSpatialFlag <- FALSE
   if (missing(Extent)) {
     Extent <- ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area)
+    NoSpatialFlag <- TRUE
   } ## assign maximum extent for dataset if not specified
   if (class(Extent)[1] == "data.frame") {
     Extent <- Buffer.pts(
@@ -373,11 +375,13 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   if (verbose) {
     print("Spatial Limiting")
   }
-  CDS_rast <- Handle.Spatial(CDS_rast, Extent)
+  if (!NoSpatialFlag) {
+    CDS_rast <- Handle.Spatial(CDS_rast, Extent)
+  }
 
   ## Temporal =====
   #--- Cumulative Fix
-  CDS_rast <- Temporal.Cumul(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone, verbose)
+  CDS_rast <- Temporal.Cumul(CDS_rast, CumulVar, BaseResolution, BaseStep, Type, TZone, verbose)
 
   #--- Subset to desired time, happens here to allow for correct disaggregation of cumulative variables in previous step
   terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone
