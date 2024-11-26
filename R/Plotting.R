@@ -258,9 +258,9 @@ Plot.BioClim <- function(BioClims, Which = 1:19, SF, Water_Var = "Water Availabi
   Plots_ls <- lapply(1:nlyr(ToPlot), FUN = function(x) {
     COL <- ifelse(grepl(Water_Var, names(ToPlot[[x]]), fixed = TRUE), "Water", "Temperature")
     if (!is.null(SF)) {
-      Plot.SpatRast(SpatRast = ToPlot[[x]], SF = SF, Dates = names(ToPlot[[x]]), Legend = "", COL = Colours[[COL]], Size = Size, SHape = Shape)
+      Plot.SpatRast(SpatRast = ToPlot[[x]], SF = SF, Dates = names(ToPlot[[x]]), Legend = "", COL = Colours[[COL]], Size = Size, Shape = Shape)
     } else {
-      Plot.SpatRast(SpatRast = ToPlot[[x]], Dates = names(ToPlot[[x]]), Legend = " ", COL = Colours[[COL]], Size = Size, SHape = Shape)
+      Plot.SpatRast(SpatRast = ToPlot[[x]], Dates = names(ToPlot[[x]]), Legend = " ", COL = Colours[[COL]], Size = Size, Shape = Shape)
     }
   })
 
