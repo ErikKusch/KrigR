@@ -213,8 +213,10 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   QueryVariable <- Meta.Variables(dataset = DataSet)[VarPos, "CDSname"]
 
   #--- Extent resolving; formatting as SpatExtent object
+  NoSpatialFlag <- FALSE
   if (missing(Extent)) {
     Extent <- ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area)
+    NoSpatialFlag <- TRUE
   } ## assign maximum extent for dataset if not specified
   if (class(Extent)[1] == "data.frame") {
     Extent <- Buffer.pts(
@@ -253,6 +255,11 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   )
   QueryTimes <- QueryTimeWindows$QueryTimes
   QueryTimeWindows <- QueryTimeWindows$QueryTimeWindows
+  # if (length(QueryTimeWindows) > 20) {
+  QueryCheck <- base::split(QueryTimeWindows, ceiling(1:length(QueryTimeWindows) / 20))
+  # } else {
+  # QueryCheck <- list(QueryTimeWindows)
+  # }
 
   #--- Aggregation Check
   QueryTargetSteps <- TemporalAggregation.Check(
@@ -306,17 +313,41 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   }
   #--- API credentials
   Register.Credentials(API_User, API_Key)
-  #--- Make list of CDS Requests
-  Requests_ls <- Make.Request(QueryTimeWindows,
-    MetaCheck_ls$QueryDataSet, MetaCheck_ls$QueryType, MetaCheck_ls$QueryVariable,
-    QueryTimes, QueryExtent, MetaCheck_ls$QueryFormat,
-    Dir,
-    verbose = TRUE, API_User, API_Key,
-    TimeOut = TimeOut
-  )
-  ## work an on.exit in here to allow restarting downloads themselves without new queries
-  #--- Execution of requests
-  Execute.Requests(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE)
+
+  if (verbose && length(QueryCheck) > 1) {
+    message(
+      paste(
+        "The query you have made requires staging more than 20 individual queries at CDS. The necessary queries are made and then executed in chunks of up to 20 each. This may take some time and you will see console output in R that flips between staging and executing requests. This switch will happen", length(QueryCheck), "times."
+      )
+    )
+  }
+
+  QuerieExec <- lapply(1:length(QueryCheck), FUN = function(x) {
+    #--- Make list of CDS Requests
+    # if (length(QueryCheck) == 1) {
+    #   Request <- QueryCheck
+    # } else {
+    Request <- QueryCheck[[x]]
+    # }
+    Requests_ls <- Make.Request(Request,
+      MetaCheck_ls$QueryDataSet, MetaCheck_ls$QueryType, MetaCheck_ls$QueryVariable,
+      QueryTimes, QueryExtent, MetaCheck_ls$QueryFormat,
+      Dir,
+      verbose = TRUE, API_User, API_Key,
+      TimeOut = TimeOut, FIterStart = (x - 1) * 20 + 1
+    )
+    ## work an on.exit in here to allow restarting downloads themselves without new queries
+    #--- Execution of requests
+    Execute.Requests(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE)
+
+    #---- Return of request list for further tracking
+    Requests_ls
+  })
+  # if (length(QueryCheck) > 1) { # unlist only if there is just one chunk of requests?
+  Requests_ls <- unlist(QuerieExec, recursive = FALSE)
+  # } else {
+  # Requests_ls <- QuerieExec
+  # }
 
   ## The Data =================================
   if (verbose) {
@@ -344,11 +375,13 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   if (verbose) {
     print("Spatial Limiting")
   }
-  CDS_rast <- Handle.Spatial(CDS_rast, Extent)
+  if (!NoSpatialFlag) {
+    CDS_rast <- Handle.Spatial(CDS_rast, Extent)
+  }
 
   ## Temporal =====
   #--- Cumulative Fix
-  CDS_rast <- Temporal.Cumul(CDS_rast, CumulVar, BaseResolution, BaseStep, TZone, verbose)
+  CDS_rast <- Temporal.Cumul(CDS_rast, CumulVar, BaseResolution, BaseStep, Type, TZone, verbose)
 
   #--- Subset to desired time, happens here to allow for correct disaggregation of cumulative variables in previous step
   terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone

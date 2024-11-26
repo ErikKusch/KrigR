@@ -9,6 +9,7 @@ Temporal.Cumul(
   CumulVar,
   BaseResolution,
   BaseStep,
+  Type,
   TZone,
   verbose = TRUE
 )
@@ -21,6 +22,8 @@ Temporal.Cumul(
 \item{BaseResolution}{Character. Base temporal resolution of data set}
 
 \item{BaseStep}{Numeric. Base time step of data set}
+
+\item{Type}{CDS Dataset type}
 
 \item{TZone}{Character. Time zone for queried data.}
 
