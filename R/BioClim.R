@@ -98,7 +98,9 @@ BioClim <- function(
     Keep_Raw = FALSE, Keep_Monthly = FALSE, # continued file storage
     closeConnections = TRUE) {
   ## Catching Most Frequent Issues ===============
-  on.exit(closeAllConnections())
+  if (closeConnections) {
+    on.exit(closeAllConnections())
+  }
   #--- File Name and Extension
   ### check if file name has been specified
   if (!exists("FileName")) {
