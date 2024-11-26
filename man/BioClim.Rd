@@ -28,7 +28,8 @@ BioClim(
   Cores = 1,
   verbose = TRUE,
   Keep_Raw = FALSE,
-  Keep_Monthly = FALSE
+  Keep_Monthly = FALSE,
+  closeConnections = TRUE
 )
 }
 \arguments{
@@ -79,6 +80,8 @@ BioClim(
 \item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not. Default is FALSE.}
 
 \item{Keep_Monthly}{Logical. Whether to keep monthly netcdf files of raw data aggregated to temporal resolution of months. Default FALSE.}
+
+\item{closeConnections}{Logical. Whether to close all connections at the end of function execution. When executing this function often after another, this can be very useful to avoid errors.}
 }
 \value{
 A SpatRaster object containing the queried bioclimatic data, and a NETCDF (.nc) file in the specified directory.

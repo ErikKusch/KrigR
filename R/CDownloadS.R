@@ -26,6 +26,7 @@
 #' @param Keep_Raw Logical. Whether to retain raw downloaded data or not. Default is FALSE.
 #' @param TryDown Optional, numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.
 #' @param TimeOut Numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). The timeout for each download in seconds. Default 36000 seconds (10 hours).
+#' @param closeConnections Logical. Whether to close all connections at the end of function execution. When executing this function often after another, this can be very useful to avoid errors.
 #'
 #' @importFrom tools file_path_sans_ext
 #' @importFrom terra rast
@@ -158,9 +159,12 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
                        TChunkSize = 6000,
                        Cores = 1, # parallelisation
                        verbose = TRUE, # verbosity
-                       Keep_Raw = FALSE) {
+                       Keep_Raw = FALSE,
+                       closeConnections = TRUE) {
   ## Catching Most Frequent Issues ===============
-  on.exit(closeAllConnections())
+  if (closeConnections) {
+    on.exit(closeAllConnections())
+  }
   #--- API Credentials
   ### checking if API User and Key have been supplied
   if (exists("API_User") + exists("API_Key") != 2) {
@@ -427,6 +431,8 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   }
 
   ### return object
-  closeAllConnections()
+  if (closeConnections) {
+    closeAllConnections()
+  }
   return(CDS_rast)
 }
