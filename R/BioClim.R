@@ -26,6 +26,7 @@
 #' @param Keep_Monthly Logical. Whether to keep monthly netcdf files of raw data aggregated to temporal resolution of months. Default FALSE.
 #' @param TryDown Optional, numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). How often to attempt the download of each individual file that the function queries from the CDS. This is to circumvent having to restart the entire function when encountering connectivity issues.
 #' @param TimeOut Numeric. Legacy, ignored when querying data from new CDS (https://cds-beta.climate.copernicus.eu/; this happens when the package version of ecmwfr is >= 2.0.0). The timeout for each download in seconds. Default 36000 seconds (10 hours).
+#' @param closeConnections Logical. Whether to close all connections at the end of function execution. When executing this function often after another, this can be very useful to avoid errors.
 #'
 #' @return A SpatRaster object containing the queried bioclimatic data, and a NETCDF (.nc) file in the specified directory.
 #'
@@ -94,8 +95,8 @@ BioClim <- function(
     TChunkSize = 6000, TryDown = 10, TimeOut = 36000, # Calls to CDS
     Cores = 1, # parallelisation
     verbose = TRUE, # verbosity
-    Keep_Raw = FALSE, Keep_Monthly = FALSE # continued file storage
-    ) {
+    Keep_Raw = FALSE, Keep_Monthly = FALSE, # continued file storage
+    closeConnections = TRUE) {
   ## Catching Most Frequent Issues ===============
   on.exit(closeAllConnections())
   #--- File Name and Extension
@@ -231,7 +232,8 @@ BioClim <- function(
       TChunkSize = TChunkSize,
       Cores = Cores,
       verbose = verbose,
-      Keep_Raw = FALSE
+      Keep_Raw = FALSE,
+      closeConnections = closeConnections
     )
     Raw_rast
   })

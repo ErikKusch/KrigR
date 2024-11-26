@@ -28,7 +28,8 @@ CDownloadS(
   TChunkSize = 6000,
   Cores = 1,
   verbose = TRUE,
-  Keep_Raw = FALSE
+  Keep_Raw = FALSE,
+  closeConnections = TRUE
 )
 }
 \arguments{
@@ -79,6 +80,8 @@ CDownloadS(
 \item{verbose}{Logical. Whether to print/message function progress in console or not.}
 
 \item{Keep_Raw}{Logical. Whether to retain raw downloaded data or not. Default is FALSE.}
+
+\item{closeConnections}{Logical. Whether to close all connections at the end of function execution. When executing this function often after another, this can be very useful to avoid errors.}
 }
 \value{
 A SpatRaster object containing the downloaded, cropped/masked, and subsequently temporally aggregated data, and a file (either .nc or .tif) in the specified directory.
