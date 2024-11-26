@@ -5,6 +5,8 @@
 #'
 #' @param SpatRast SpatRast object to visualise.
 #' @param SF Optional. SF object which to overlay.
+#' @param Size Optional. Size of SF overlay.
+#' @param Shape Optional. Shape of SF overlay if points.
 #' @param Dates Optional. Character vector of labels to apply to each layer of the SpatRast. By default, the content of the terra::time() field of the supplied SpatRast object.
 #' @param Legend Colour label legend.
 #' @param COL Colour palette.
@@ -34,7 +36,7 @@
 #' Plot.SpatRast(SpatRast = SpatRast, SF = SF)
 #'
 #' @export
-Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", COL = viridis::inferno(100)) {
+Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", COL = viridis::inferno(100), Size = 1, Shape = 1) {
   if (missing(Dates)) {
     Dates <- as.character(terra::time(SpatRast))
   }
@@ -50,7 +52,7 @@ Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", C
     theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) + # reduce margins (for fusing of plots)
     theme(legend.key.size = unit(1.5, "cm"))
   if (!missing(SF)) { # if a shape has been designated
-    Raw_plot <- Raw_plot + geom_sf(data = SF, colour = "black", fill = "NA") # add shape
+    Raw_plot <- Raw_plot + geom_sf(data = SF, colour = "black", fill = "NA", size = Size, shape = Shape) # add shape
   }
   return(Raw_plot)
 } # export the plot
@@ -62,6 +64,8 @@ Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", C
 #'
 #' @param Covariates List of length 2. Containing training resolution covariate SpatRast in slot 1 and target resolution covariate SpatRast in slot 2.
 #' @param SF Optional. SF object which to overlay.
+#' @param Size Optional. Size of SF overlay.
+#' @param Shape Optional. Shape of SF overlay if points.
 #' @param COL Colour palette.
 #'
 #' @importFrom viridis cividis
@@ -93,7 +97,7 @@ Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", C
 #' Plot.Covariates(Covariates = Covariates, SF = SF)
 #'
 #' @export
-Plot.Covariates <- function(Covariates, SF, COL = viridis::cividis(100)) {
+Plot.Covariates <- function(Covariates, SF, COL = viridis::cividis(100), Size = 1, Shape = 1) {
   Plots_ls <- as.list(rep(NA, nlyr(Covariates[[1]]))) # create as many plots as there are covariates variables
   for (Variable in 1:nlyr(Covariates[[1]])) { # loop over all covariate variables
     Covariates_Iter <- list(Covariates[[1]][[Variable]], Covariates[[2]][[Variable]]) # extract the data for this variable
@@ -113,7 +117,7 @@ Plot.Covariates <- function(Covariates, SF, COL = viridis::cividis(100)) {
       theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) + # reduce margins (for fusing of plots)
       theme(legend.key.size = unit(1.5, "cm"))
     if (!missing(SF)) { # if a shape has been designated
-      Plots_ls[[Variable]] <- Plots_ls[[Variable]] + geom_sf(data = SF, colour = "black", fill = "NA") # add shape
+      Plots_ls[[Variable]] <- Plots_ls[[Variable]] + geom_sf(data = SF, colour = "black", fill = "NA", size = Size, shape = Shape) # add shape
     }
     # } # end of resolution loop
   } # end of variable loop
@@ -132,6 +136,8 @@ Plot.Covariates <- function(Covariates, SF, COL = viridis::cividis(100)) {
 #'
 #' @param Krigs List of length 2. Containing kriging prediction SpatRast in slot 1 and kriging standard error SpatRast in slot 2.
 #' @param SF Optional. SF object which to overlay.
+#' @param Size Optional. Size of SF overlay.
+#' @param Shape Optional. Shape of SF overlay if points.
 #' @param Dates Optional. Character vector of labels to apply to each layer of the SpatRast. By default, the content of the terra::time() field of the supplied SpatRast objects in list.
 #' @param Legend Colour label legend.
 #'
@@ -178,7 +184,7 @@ Plot.Covariates <- function(Covariates, SF, COL = viridis::cividis(100)) {
 #' Plot.Kriged(Krigs = ExtentKrig)
 #'
 #' @export
-Plot.Kriged <- function(Krigs, SF, Dates, Legend = "Air Temperature [K]") {
+Plot.Kriged <- function(Krigs, SF, Dates, Legend = "Air Temperature [K]", Size = 1, Shape = 1) {
   if (missing(Dates)) {
     Dates <- as.character(terra::time(Krigs[[1]]))
   }
@@ -198,7 +204,7 @@ Plot.Kriged <- function(Krigs, SF, Dates, Legend = "Air Temperature [K]") {
       theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) + # reduce margins (for fusing of plots)
       theme(legend.key.size = unit(1, "cm"))
     if (!missing(SF)) { # if a shape has been designated
-      Plots_ls[[Plot]] <- Plots_ls[[Plot]] + geom_sf(data = SF, colour = "black", fill = "NA") # add shape
+      Plots_ls[[Plot]] <- Plots_ls[[Plot]] + geom_sf(data = SF, colour = "black", fill = "NA", size = Size, shape = Shape) # add shape
     }
   } # end of type-loop
   ggPlot <- plot_grid(plotlist = Plots_ls, ncol = 1, labels = "AUTO") # fuse the plots into one big plot
@@ -213,6 +219,8 @@ Plot.Kriged <- function(Krigs, SF, Dates, Legend = "Air Temperature [K]") {
 #' @param BioClims SpatRast object to visualise.
 #' @param Which Numeric. Which bioclimatic variable(s) to visualise.
 #' @param SF Optional. SF object which to overlay.
+#' @param Size Optional. Size of SF overlay.
+#' @param Shape Optional. Shape of SF overlay if points.
 #' @param Water_Var Optional, character. Name of water availability variable in the bioclimatic variables.
 #' @param ncol Number of columns for panel arrangement of plots
 #'
@@ -230,7 +238,7 @@ Plot.Kriged <- function(Krigs, SF, Dates, Legend = "Air Temperature [K]") {
 #' Plot.BioClim(BioClims = BC_rast, Water_Var = "Soil Moisture (0-7cm)")
 #'
 #' @export
-Plot.BioClim <- function(BioClims, Which = 1:19, SF, Water_Var = "Water Availability", ncol = 3) {
+Plot.BioClim <- function(BioClims, Which = 1:19, SF, Water_Var = "Water Availability", ncol = 3, Size = 1, Shape = 1) {
   if (missing(SF)) {
     SF <- NULL
   }
@@ -250,9 +258,9 @@ Plot.BioClim <- function(BioClims, Which = 1:19, SF, Water_Var = "Water Availabi
   Plots_ls <- lapply(1:nlyr(ToPlot), FUN = function(x) {
     COL <- ifelse(grepl(Water_Var, names(ToPlot[[x]]), fixed = TRUE), "Water", "Temperature")
     if (!is.null(SF)) {
-      Plot.SpatRast(SpatRast = ToPlot[[x]], SF = SF, Dates = names(ToPlot[[x]]), Legend = "", COL = Colours[[COL]])
+      Plot.SpatRast(SpatRast = ToPlot[[x]], SF = SF, Dates = names(ToPlot[[x]]), Legend = "", COL = Colours[[COL]], Size = Size, Shape = Shape)
     } else {
-      Plot.SpatRast(SpatRast = ToPlot[[x]], Dates = names(ToPlot[[x]]), Legend = " ", COL = Colours[[COL]])
+      Plot.SpatRast(SpatRast = ToPlot[[x]], Dates = names(ToPlot[[x]]), Legend = " ", COL = Colours[[COL]], Size = Size, Shape = Shape)
     }
   })
 
