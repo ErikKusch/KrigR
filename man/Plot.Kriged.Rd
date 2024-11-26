@@ -4,7 +4,14 @@
 \alias{Plot.Kriged}
 \title{Visualise kriged raster data and associated uncertainties and overlay sf polygons if desired.}
 \usage{
-Plot.Kriged(Krigs, SF, Dates, Legend = "Air Temperature [K]")
+Plot.Kriged(
+  Krigs,
+  SF,
+  Dates,
+  Legend = "Air Temperature [K]",
+  Size = 1,
+  Shape = 1
+)
 }
 \arguments{
 \item{Krigs}{List of length 2. Containing kriging prediction SpatRast in slot 1 and kriging standard error SpatRast in slot 2.}
@@ -14,6 +21,10 @@ Plot.Kriged(Krigs, SF, Dates, Legend = "Air Temperature [K]")
 \item{Dates}{Optional. Character vector of labels to apply to each layer of the SpatRast. By default, the content of the terra::time() field of the supplied SpatRast objects in list.}
 
 \item{Legend}{Colour label legend.}
+
+\item{Size}{Optional. Size of SF overlay.}
+
+\item{Shape}{Optional. Shape of SF overlay if points.}
 }
 \value{
 A ggplot2 object visualising a raster.

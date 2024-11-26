@@ -9,7 +9,9 @@ Plot.BioClim(
   Which = 1:19,
   SF,
   Water_Var = "Water Availability",
-  ncol = 3
+  ncol = 3,
+  Size = 1,
+  Shape = 1
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ Plot.BioClim(
 \item{Water_Var}{Optional, character. Name of water availability variable in the bioclimatic variables.}
 
 \item{ncol}{Number of columns for panel arrangement of plots}
+
+\item{Size}{Optional. Size of SF overlay.}
+
+\item{Shape}{Optional. Shape of SF overlay if points.}
 }
 \value{
 A ggplot2 object visualising a raster.

@@ -4,7 +4,13 @@
 \alias{Plot.Covariates}
 \title{Visualise covariate raster data and overlay sf polygons if desired.}
 \usage{
-Plot.Covariates(Covariates, SF, COL = viridis::cividis(100))
+Plot.Covariates(
+  Covariates,
+  SF,
+  COL = viridis::cividis(100),
+  Size = 1,
+  Shape = 1
+)
 }
 \arguments{
 \item{Covariates}{List of length 2. Containing training resolution covariate SpatRast in slot 1 and target resolution covariate SpatRast in slot 2.}
@@ -12,6 +18,10 @@ Plot.Covariates(Covariates, SF, COL = viridis::cividis(100))
 \item{SF}{Optional. SF object which to overlay.}
 
 \item{COL}{Colour palette.}
+
+\item{Size}{Optional. Size of SF overlay.}
+
+\item{Shape}{Optional. Shape of SF overlay if points.}
 }
 \value{
 A ggplot2 object visualising a raster.
