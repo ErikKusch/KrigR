@@ -298,7 +298,27 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
             ),
             type = "message"
           )
+          print(Download_CDS)
           rm(Download_CDS)
+
+          ## check if file can be loaded
+          LoadTry <- tryCatch(rast(API_request$get_request()$target),
+            error = function(e) {
+              e
+            }
+          )
+          if (class(LoadTry)[1] == "simpleError") {
+            FNAME <- API_request$get_request()$target
+            file.rename(FNAME, paste0(FNAME, ".zip")) # make into zip
+            extrazip <- unzip(paste0(FNAME, ".zip"), list = TRUE)$Name # find name of file in zip
+            unzip(paste0(FNAME, ".zip"), exdir = dirname(FNAME))
+            file.rename(
+              file.path(dirname(FNAME), extrazip),
+              file.path(dirname(FNAME), basename(FNAME))
+            ) # make into zip
+            unlink(paste0(FNAME, ".zip"))
+            warning("CDS download seems to have produced a .zip file. KrigR has automatically extracted data from this file. This is currently an experimental fix.")
+          }
 
           ## purge request and check succes of doing so
           checkdeletion <- capture.output(

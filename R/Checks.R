@@ -78,7 +78,20 @@ Check.Krig <- function(Data, CovariatesCoarse, CovariatesFine, KrigingEquation) 
 
   ## Data Availability ===============
   DataSkips <- NULL # data layers without enough data to be skipped in kriging
-  Data_vals <- base::colSums(matrix(!is.na(terra::values(Data)), ncol = terra::nlyr(Data))) # a value of 0 indicates a layer only made of NAs
+  vals <- terra::values(Data)
+  Datavars <- apply(vals, 2, FUN = function(x) {
+    length(unique(na.omit(x)))
+  })
+  if (length(which(Datavars < 2)) > 0) {
+    if (length(which(Datavars < 2)) != terra::nlyr(Data)) {
+      stop(paste0("Layer(s) ", paste(which(Datavars == 0), collapse = ", "), " of your data do(es) not contain enough variation. Kriging cannot be performed. Usually, increasing the extent of kriging can fix this issue."))
+      DataSkips <- which(Datavars < 2)
+    } else {
+      stop("Your Data does not contain enough variation. Kriging cannot be performed. Usually, increasing the extent of kriging can fix this issue.")
+    }
+  }
+
+  Data_vals <- base::colSums(matrix(!is.na(vals), ncol = terra::nlyr(Data))) # a value of 0 indicates a layer only made of NAs
   if (length(which(Data_vals < 2)) > 0) {
     if (length(which(Data_vals < 2)) != terra::nlyr(Data)) {
       stop(paste0("Layer(s) ", paste(which(Data_vals == 0), collapse = ", "), " of your data do(es) not contain enough data. Kriging cannot be performed. Usually, increasing the extent of kriging can fix this issue."))
