@@ -301,13 +301,13 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
           rm(Download_CDS)
 
           ## check if file can be loaded
-          LoadTry <- tryCatch(rast(API_request$get_request()$target),
+          FNAME <- file.path(Dir, API_request$get_request()$target)
+          LoadTry <- tryCatch(rast(FNAME),
             error = function(e) {
               e
             }
           )
           if (class(LoadTry)[1] == "simpleError") {
-            FNAME <- file.path(Dir, API_request$get_request()$target)
             file.rename(FNAME, paste0(FNAME, ".zip")) # make into zip
             extrazip <- unzip(paste0(FNAME, ".zip"), list = TRUE)$Name # find name of file in zip
             unzip(paste0(FNAME, ".zip"), exdir = dirname(FNAME))
