@@ -11,7 +11,8 @@ Plot.SpatRast(
   Legend = "Air Temperature [K]",
   COL = viridis::inferno(100),
   Size = 1,
-  Shape = 1
+  Shape = 1,
+  ncol = 1
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ Plot.SpatRast(
 \item{Size}{Optional. Size of SF overlay.}
 
 \item{Shape}{Optional. Shape of SF overlay if points.}
+
+\item{ncol}{Number of columns for panel arrangement of plots}
 }
 \value{
 A ggplot2 object visualising a raster.

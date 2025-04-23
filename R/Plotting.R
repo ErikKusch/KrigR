@@ -10,6 +10,7 @@
 #' @param Dates Optional. Character vector of labels to apply to each layer of the SpatRast. By default, the content of the terra::time() field of the supplied SpatRast object.
 #' @param Legend Colour label legend.
 #' @param COL Colour palette.
+#' @param ncol Number of columns for panel arrangement of plots
 #'
 #' @importFrom viridis inferno
 #' @importFrom terra time
@@ -36,7 +37,7 @@
 #' Plot.SpatRast(SpatRast = SpatRast, SF = SF)
 #'
 #' @export
-Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", COL = viridis::inferno(100), Size = 1, Shape = 1) {
+Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", COL = viridis::inferno(100), Size = 1, Shape = 1, ncol = 1) {
   if (missing(Dates)) {
     Dates <- as.character(terra::time(SpatRast))
   }
@@ -46,7 +47,7 @@ Plot.SpatRast <- function(SpatRast, SF, Dates, Legend = "Air Temperature [K]", C
   Raw_plot <- ggplot() + # create plot
     geom_raster(data = Raw_df, aes(x = x, y = y, fill = value)) + # plot the covariate data
     theme_bw() +
-    facet_wrap(~Values) +
+    facet_wrap(~ factor(Values, levels = Dates), ncol = ncol) +
     labs(x = "Longitude", y = "Latitude") + # make plot more readable
     scale_fill_gradientn(name = Legend, colours = COL, na.value = "transparent") + # add colour and legend
     theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) + # reduce margins (for fusing of plots)
