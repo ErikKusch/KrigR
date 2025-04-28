@@ -41,9 +41,9 @@ CDownloadS(
 
 \item{Type}{Either NA or Character. Which kind of sub-type to query per data set. See \code{\link{Meta.QucikFacts}} for options per dataset.}
 
-\item{DateStart}{Character. Date ('YYYY-MM-DD HH:SS') at which to start time series of downloaded data.}
+\item{DateStart}{Character. Date ('YYYY-MM-DD HH:MM') at which to start time series of downloaded data.}
 
-\item{DateStop}{Character. Date ('YYYY-MM-DD HH:SS') at which to stop time series of downloaded data.}
+\item{DateStop}{Character. Date ('YYYY-MM-DD HH:MM') at which to stop time series of downloaded data.}
 
 \item{TZone}{Character. Time zone in which to represent and evaluate time dimension of data. See the output of OlsonNames() for a full overview of supported specifications. Default is UTC.}
 
