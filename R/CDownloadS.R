@@ -273,7 +273,8 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
     TResolution = TResolution,
     BaseTResolution = BaseResolution,
     TStep = TStep,
-    BaseTStep = BaseStep
+    BaseTStep = BaseStep,
+    tz = TZone
   )
 
   ### Checking =====

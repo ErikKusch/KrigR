@@ -295,6 +295,7 @@ Temporal.Aggr <- function(CDS_rast, BaseResolution, BaseStep,
 #' @param BaseTResolution Dataset-specific native temporal resolution.
 #' @param TStep User-specified time step for aggregation.
 #' @param BaseTStep Dataset-specific native time step.
+#' @param tz Character. Timezone of data
 
 #' @return Character - target resolution formatted steps in data.
 #'
@@ -305,7 +306,8 @@ TemporalAggregation.Check <- function(
     TResolution,
     BaseTResolution,
     TStep,
-    BaseTStep
+    BaseTStep,
+    tz
 ) {
   ## check clean division
   if (BaseTResolution == TResolution) { ## this comes into play for hourly aggregates of ensemble data
@@ -317,13 +319,13 @@ TemporalAggregation.Check <- function(
   }
   
   # limit query series to what will be retained
-  QuerySeries <- QuerySeries[as.POSIXct(QuerySeries, tz = "UTC") >= DateStart & as.POSIXct(QuerySeries, tz = "UTC") <= DateStop]
+  QuerySeries <- QuerySeries[as.POSIXct(QuerySeries, tz = tz) >= DateStart & as.POSIXct(QuerySeries, tz = tz) <= DateStop]
   ## extract format of interest
   Form <- substr(TResolution, 1, 1)
   Form <- ifelse(Form %in% c("h", "y"), toupper(Form), Form)
   
   ## extract desired format
-  QueryTargetFormat <- format(as.POSIXct(QuerySeries, tz = "UTC"), paste0("%", Form))
+  QueryTargetFormat <- format(as.POSIXct(QuerySeries, tz = tz), paste0("%", Form))
   QueryTargetSteps <- unique(QueryTargetFormat)
   
   if ((length(QueryTargetSteps) / TStep) %% 1 != 0) {
