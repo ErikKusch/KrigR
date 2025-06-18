@@ -11,7 +11,8 @@ TemporalAggregation.Check(
   TResolution,
   BaseTResolution,
   TStep,
-  BaseTStep
+  BaseTStep,
+  tz
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ TemporalAggregation.Check(
 \item{TStep}{User-specified time step for aggregation.}
 
 \item{BaseTStep}{Dataset-specific native time step.}
+
+\item{tz}{Character. Timezone of data}
 }
 \value{
 Character - target resolution formatted steps in data.
