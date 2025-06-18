@@ -267,7 +267,7 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
       ),
       "23:00:00"
     ), tz = format(DateCheck$IN[2], "%Z"))
-    if (AggrCheck[[2]] == "month" && (DateCheck$IN[1] != MustStartMonth || DateCheck$IN[2] != MustEndMonth)) {
+    if (AggrCheck[[2]] == "month" && (substr(DateCheck$IN[1], 1, 19) != substr(MustStartMonth, 1, 19) || substr(DateCheck$IN[2], 1, 19) != substr(MustEndMonth, 1, 19))) {
       stop("You have specified (multi-)monthly temporal aggregation but are querying a time window which does not start at the first day of a month at 00:00 and/or does not terminate on the last day of a month at 23:00. Please ensure that you set the argument DateStart and DateStop accordingly.")
     }
 
