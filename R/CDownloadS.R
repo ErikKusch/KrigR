@@ -6,8 +6,8 @@
 #' @param CumulVar Logical. Some ECMWF CDS data is recorded in cumulative steps per hour/month from the 00:00 time mark per day. Setting CumulVar to TRUE converts these into records which represent the total records per hour using the \code{\link{Temporal.Cumul}} function. Monthly cumulative records express the average daily total value. Setting this argument to TRUE multiplies monthly records by the number of days per the respective month(s) to get to total records instead of average. Default is FALSE. This argument can only be set to TRUE for cumulatively recorded variables. See \code{\link{Meta.Variables}} for an overview of which variables at recorded cumulatively per dataset.
 #' @param DataSet Character. Which dataset to query data from. See currently supported datasets by calling \code{\link{Meta.List}}.
 #' @param Type Either NA or Character. Which kind of sub-type to query per data set. See \code{\link{Meta.QucikFacts}} for options per dataset.
-#' @param DateStart Character. Date ('YYYY-MM-DD HH:SS') at which to start time series of downloaded data.
-#' @param DateStop Character. Date ('YYYY-MM-DD HH:SS') at which to stop time series of downloaded data.
+#' @param DateStart Character. Date ('YYYY-MM-DD HH:MM') at which to start time series of downloaded data.
+#' @param DateStop Character. Date ('YYYY-MM-DD HH:MM') at which to stop time series of downloaded data.
 #' @param TZone Character. Time zone in which to represent and evaluate time dimension of data. See the output of OlsonNames() for a full overview of supported specifications. Default is UTC.
 #' @param TResolution Character. Temporal resolution of final product. 'hour', 'day', 'month', or 'year'.
 #' @param TStep Numeric. Which time steps to consider for temporal resolution. For example, specify bi-monthly data records by setting TResolution to 'month' and TStep to 2.
@@ -273,7 +273,8 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
     TResolution = TResolution,
     BaseTResolution = BaseResolution,
     TStep = TStep,
-    BaseTStep = BaseStep
+    BaseTStep = BaseStep,
+    tz = TZone
   )
 
   ### Checking =====
