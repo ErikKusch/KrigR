@@ -252,7 +252,7 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
   QueryTimeWindows <- Make.RequestWindows(
     Dates_df = Dates_df,
     BaseTResolution = BaseResolution,
-    BaseTStep = 24 / BaseStep,
+    BaseTStep = ifelse(BaseResolution == "hour", 24 / BaseStep, BaseStep),
     BaseTStart = BaseStart,
     TChunkSize = TChunkSize,
     DataSet = DataSet
