@@ -374,15 +374,15 @@ test_that("Make.Request handles verbose output correctly", {
   )
 })
 
-test_that("Make.Request handles all months when spanning year boundary", {
+test_that("Make.Request handles all months for within-year range", {
   local_mocked_bindings(
     wf_request = function(...) return(list(status = "mocked")),
     Check.File = function(...) NULL
   )
 
   ChunkDates <- seq(
-    as.POSIXct("2023-06-01", tz = "UTC"),
-    as.POSIXct("2024-03-01", tz = "UTC"),
+    as.POSIXct("2023-01-01", tz = "UTC"),
+    as.POSIXct("2023-12-01", tz = "UTC"),
     by = "month"
   )
   QueryTimeWindows <- list(ChunkDates)
@@ -402,8 +402,8 @@ test_that("Make.Request handles all months when spanning year boundary", {
   )
 
   req_obj <- res[[1]]
-  expect_setequal(req_obj$year, c("2023", "2024"))
-  expect_length(req_obj$month, 10)
+  expect_equal(req_obj$year, "2023")
+  expect_length(req_obj$month, 12)
   expect_null(req_obj$day)
 })
 

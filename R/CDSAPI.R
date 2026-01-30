@@ -80,7 +80,7 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
     ChunkDates <- QueryTimeWindows[[requestID]]
     
     # Generate Date String for logging/naming
-    if (grepl("month", QueryType)) {
+    if (!is.na(QueryType) && grepl("month", QueryType)) {
         # Monthly data: use year-month only
         d_start <- format(min(ChunkDates), "%Y-%m")
         d_end <- format(max(ChunkDates), "%Y-%m")
@@ -95,12 +95,12 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
         DateStr <- paste(d_start, d_end, sep = " - ")
     }
 
-    if (grepl("month", QueryType)) { # monthly data needs to be specified with year, month fields
+    if (!is.na(QueryType) && grepl("month", QueryType)) { # monthly data needs to be specified with year, month fields
       req <- list(
         "dataset_short_name" = QueryDataSet,
         "product_type" = QueryType,
         "variable" = QueryVariable,
-        "year" = unique(format(as.POSIXct(ChunkDates), "%Y")), # Character, zero-padded
+        "year" = unique(format(ChunkDates, "%Y")), # Character, zero-padded
         "month" = unique(format(ChunkDates, "%m")), # Character, zero-padded
         "time" = QueryTimes,
         "area" = QueryExtent,
