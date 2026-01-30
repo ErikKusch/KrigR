@@ -77,27 +77,44 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
   #' Make list of CDS Requests
   Requests_ls <- lapply(1:length(QueryTimeWindows), FUN = function(requestID) {
     FName <- paste("TEMP", QueryVariable, stringr::str_pad(FIterStart + requestID - 1, 5, "left", "0"), sep = "_")
+    ChunkDates <- QueryTimeWindows[[requestID]]
+    
+    # Generate Date String for logging/naming
+    if (grepl("month", QueryType)) {
+        # Monthly data: use year-month only
+        d_start <- format(min(ChunkDates), "%Y-%m")
+        d_end <- format(max(ChunkDates), "%Y-%m")
+    } else {
+        d_start <- format(min(ChunkDates), "%Y-%m-%d")
+        d_end <- format(max(ChunkDates), "%Y-%m-%d")
+    }
+    
+    if (d_start == d_end) {
+        DateStr <- d_start
+    } else {
+        DateStr <- paste(d_start, d_end, sep = " - ")
+    }
+
     if (grepl("month", QueryType)) { # monthly data needs to be specified with year, month fields
-      list(
+      req <- list(
         "dataset_short_name" = QueryDataSet,
         "product_type" = QueryType,
         "variable" = QueryVariable,
-        "year" = unique(as.numeric(format(as.POSIXct(QueryTimeWindows[[requestID]]), "%Y"))),
-        "month" = unique(as.numeric(format(QueryTimeWindows[[requestID]], "%m"))),
+        "year" = unique(format(as.POSIXct(ChunkDates), "%Y")), # Character, zero-padded
+        "month" = unique(format(ChunkDates, "%m")), # Character, zero-padded
         "time" = QueryTimes,
         "area" = QueryExtent,
         "format" = QueryFormat,
         "target" = FName
       )
     } else {
-      ChunkDates <- QueryTimeWindows[[requestID]]
       
       req_list <- list(
         "dataset_short_name" = QueryDataSet,
         "variable" = QueryVariable,
-        "year" = unique(format(ChunkDates, "%Y")),
-        "month" = unique(format(ChunkDates, "%m")),
-        "day" = unique(format(ChunkDates, "%d")),
+        "year" = unique(format(ChunkDates, "%Y")), # Character, zero-padded
+        "month" = unique(format(ChunkDates, "%m")), # Character, zero-padded
+        "day" = unique(format(ChunkDates, "%d")), # Character, zero-padded
         "time" = QueryTimes,
         "area" = QueryExtent,
         "format" = QueryFormat,
@@ -108,25 +125,19 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
         req_list$product_type <- QueryType
       }
       
-      req_list
+      req <- req_list
     }
+    
+    list(request = req, date_str = DateStr)
   })
   ## making list names useful for request execution updates to console
   Iterators <- paste0("[", (1:length(Requests_ls)) + (FIterStart - 1), "/", length(Requests_ls) + (FIterStart - 1), "] ")
-  FNames <- unlist(lapply(Requests_ls, "[[", "target"))
   
-  # Reconstruct date range for logging since 'date' field is no longer in request
-  Dates <- unlist(lapply(Requests_ls, function(x) {
-      if (!is.null(x$date)) {
-          return(gsub("/", " - ", x$date))
-      }
-      # Construct from year/month/day
-      # We assume the lists are sorted, so we take first of first and last of last
-      d_start <- paste(head(x$year,1), head(x$month,1), head(x$day,1), sep="-")
-      d_end <- paste(tail(x$year,1), tail(x$month,1), tail(x$day,1), sep="-")
-      if (d_start == d_end) return(d_start)
-      paste(d_start, d_end, sep=" - ")
-  }))
+  # Extract components
+  Dates <- unlist(lapply(Requests_ls, "[[", "date_str"))
+  Requests_ls <- lapply(Requests_ls, "[[", "request")
+  
+  FNames <- unlist(lapply(Requests_ls, "[[", "target"))
   
   names(Requests_ls) <- paste0(Iterators, FNames, " (UTC: ", Dates, ")")
   ## check if files are already present
@@ -148,7 +159,7 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
     if (class(Requests_ls[[requestID]]) == "logical") {
       next()
     }
-    API_request <- ecmwfr::wf_request(
+    API_request <- wf_request(
       user = API_User,
       request = Requests_ls[[requestID]],
       transfer = FALSE,

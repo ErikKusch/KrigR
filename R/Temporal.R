@@ -119,8 +119,8 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
   T_RequestDates <- as.Date(rep(unique(format(T_RequestRange, "%Y-%m-%d")), each = BaseTStep))
   
   ## NEW LOGIC: Split by Month FIRST, then by ChunkSize
-  # This prevents chunks from crossing month boundaries (e.g. Jan 31 + Feb 01)
-  # which causes Cartesian product errors in CDS API (Jan 01, Jan 31, Feb 01, Feb 31).
+  # This prevents chunks from crossing month boundaries (e.g. dates ["Jan 31", "Feb 01"])
+  # which causes Cartesian product errors in CDS API (combines day "31" with month "02" -> "Feb 31").
   
   # 1. Create a grouping key for Year-Month
   MonthKey <- format(T_RequestDates, "%Y-%m")
