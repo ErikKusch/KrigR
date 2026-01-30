@@ -90,21 +90,27 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
         "target" = FName
       )
     } else {
-      list(
+      ChunkDates <- QueryTimeWindows[[requestID]]
+      
+      req_list <- list(
         "dataset_short_name" = QueryDataSet,
-        "product_type" = QueryType,
         "variable" = QueryVariable,
-        "date" = paste0(
-          head(QueryTimeWindows[[requestID]], n = 1),
-          "/",
-          tail(QueryTimeWindows[[requestID]], n = 1)
-        ),
+        "year" = unique(format(ChunkDates, "%Y")),
+        "month" = unique(format(ChunkDates, "%m")),
+        "day" = unique(format(ChunkDates, "%d")),
         "time" = QueryTimes,
         "area" = QueryExtent,
         "format" = QueryFormat,
         "target" = FName
       )
+      
+      if (!is.na(QueryType)) {
+        req_list$product_type <- QueryType
+      }
+      
+      req_list
     }
+
   })
   ## making list names useful for request execution updates to console
   Iterators <- paste0("[", (1:length(Requests_ls)) + (FIterStart - 1), "/", length(Requests_ls) + (FIterStart - 1), "] ")
