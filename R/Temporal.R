@@ -117,10 +117,30 @@ Make.RequestWindows <- function(Dates_df, BaseTResolution, BaseTStep, BaseTStart
   }
   T_RequestRange <- seq(from = DateStart, to = DateStop, by = BaseTResolution)
   T_RequestDates <- as.Date(rep(unique(format(T_RequestRange, "%Y-%m-%d")), each = BaseTStep))
+  
+  ## NEW LOGIC: Split by Month FIRST, then by ChunkSize
+  # This prevents chunks from crossing month boundaries (e.g. Jan 31 + Feb 01)
+  # which causes Cartesian product errors in CDS API (Jan 01, Jan 31, Feb 01, Feb 31).
+  
+  # 1. Create a grouping key for Year-Month
+  MonthKey <- format(T_RequestDates, "%Y-%m")
+  
+  # 2. Split dates by month
+  DatesByMonth <- split(T_RequestDates, MonthKey)
+  
+  # 3. Within each month, split by TChunkSize and combine into a single flat list
+  QueryTimeWindows <- unlist(lapply(DatesByMonth, function(m_dates) {
+    split(m_dates, ceiling(seq_along(m_dates) / TChunkSize))
+  }), recursive = FALSE)
+  
+  # Remove names to keep list clean (optional but good for consistency)
+  names(QueryTimeWindows) <- NULL
+  
   list(
-    QueryTimeWindows = split(T_RequestDates, ceiling(seq_along(T_RequestDates) / TChunkSize)),
+    QueryTimeWindows = QueryTimeWindows,
     QueryTimes = QueryTimes
   )
+
 }
 
 ### BACK-CALCULATION OF CUMULATIVE VARIABLES ===================================

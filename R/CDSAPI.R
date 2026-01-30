@@ -110,17 +110,24 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
       
       req_list
     }
-
   })
   ## making list names useful for request execution updates to console
   Iterators <- paste0("[", (1:length(Requests_ls)) + (FIterStart - 1), "/", length(Requests_ls) + (FIterStart - 1), "] ")
   FNames <- unlist(lapply(Requests_ls, "[[", "target"))
-  Dates <- unlist(lapply(lapply(Requests_ls, "[[", "date"), gsub, pattern = "/", replacement = " - "))
-  if (length(Dates) == 0) { # this happens for monthly data queries
-    Dates <- unlist(lapply(lapply(Requests_ls, "[[", "year"), FUN = function(x) {
-      paste0(head(x, 1), " - ", tail(x, 1))
-    }))
-  }
+  
+  # Reconstruct date range for logging since 'date' field is no longer in request
+  Dates <- unlist(lapply(Requests_ls, function(x) {
+      if (!is.null(x$date)) {
+          return(gsub("/", " - ", x$date))
+      }
+      # Construct from year/month/day
+      # We assume the lists are sorted, so we take first of first and last of last
+      d_start <- paste(head(x$year,1), head(x$month,1), head(x$day,1), sep="-")
+      d_end <- paste(tail(x$year,1), tail(x$month,1), tail(x$day,1), sep="-")
+      if (d_start == d_end) return(d_start)
+      paste(d_start, d_end, sep=" - ")
+  }))
+  
   names(Requests_ls) <- paste0(Iterators, FNames, " (UTC: ", Dates, ")")
   ## check if files are already present
   FCheck <- sapply(FNames, Check.File,
