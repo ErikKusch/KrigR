@@ -15,9 +15,12 @@
 #'
 Register.Credentials <- function(API_User, API_Key) {
   if (packageVersion("ecmwfr") < "2.0.0") {
-    warning("You are using an ecmwfr (a KrigR dependency) of version < 2.0.0. This causes queries to be directed to the old CDS service (https://cds.climate.copernicus.eu) instead of the new CDS (https://cds-beta.climate.copernicus.eu/). You may want to update ecmwfr to the latest version to ensure reliable downloads of CDS data going forward.")
+    warning(
+      "You are using an ecmwfr (a KrigR dependency) of version < 2.0.0. This causes queries to be directed to the old CDS service (https://cds.climate.copernicus.eu) instead of the new CDS (https://cds-beta.climate.copernicus.eu/). You may want to update ecmwfr to the latest version to ensure reliable downloads of CDS data going forward."
+    )
     API_Service <- "cds"
-    KeyRegisterCheck <- tryCatch(ecmwfr::wf_get_key(user = API_User, service = API_Service),
+    KeyRegisterCheck <- tryCatch(
+      ecmwfr::wf_get_key(user = API_User, service = API_Service),
       error = function(e) {
         e
       }
@@ -31,9 +34,12 @@ Register.Credentials <- function(API_User, API_Key) {
     }
   } else {
     if (!grepl("@", API_User)) {
-      stop("With the adoption of the new CDS (https://cds-beta.climate.copernicus.eu/), API_User must be you E-mail registered with the new CDS.")
+      stop(
+        "With the adoption of the new CDS (https://cds-beta.climate.copernicus.eu/), API_User must be you E-mail registered with the new CDS."
+      )
     }
-    KeyRegisterCheck <- tryCatch(ecmwfr::wf_get_key(user = API_User),
+    KeyRegisterCheck <- tryCatch(
+      ecmwfr::wf_get_key(user = API_User),
       error = function(e) {
         e
       }
@@ -71,54 +77,100 @@ Register.Credentials <- function(API_User, API_Key) {
 #'
 #' @seealso \code{\link{Make.RequestWindows}}, \code{\link{Register.Credentials}}, \code{\link{Execute.Requests}}.
 #'
-Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariable,
-                         QueryTimes, QueryExtent, QueryFormat, Dir = getwd(), verbose = TRUE,
-                         API_User, API_Key, TimeOut = 36000, FIterStart = 1) {
+Make.Request <- function(
+  QueryTimeWindows,
+  QueryDataSet,
+  QueryType,
+  QueryVariable,
+  QueryTimes,
+  QueryExtent,
+  QueryFormat,
+  Dir = getwd(),
+  verbose = TRUE,
+  API_User,
+  API_Key,
+  TimeOut = 36000,
+  FIterStart = 1
+) {
+  # Ensure CDS-compliant area: unnamed numeric in N,W,S,E
+  area_nwse <- as.numeric(QueryExtent)
+
   #' Make list of CDS Requests
   Requests_ls <- lapply(1:length(QueryTimeWindows), FUN = function(requestID) {
-    FName <- paste("TEMP", QueryVariable, stringr::str_pad(FIterStart + requestID - 1, 5, "left", "0"), sep = "_")
-    if (grepl("month", QueryType)) { # monthly data needs to be specified with year, month fields
-      list(
-        "dataset_short_name" = QueryDataSet,
-        "product_type" = QueryType,
-        "variable" = QueryVariable,
-        "year" = unique(as.numeric(format(as.POSIXct(QueryTimeWindows[[requestID]]), "%Y"))),
-        "month" = unique(as.numeric(format(QueryTimeWindows[[requestID]], "%m"))),
-        "time" = QueryTimes,
-        "area" = QueryExtent,
-        "format" = QueryFormat,
-        "target" = FName
-      )
-    } else {
-      list(
-        "dataset_short_name" = QueryDataSet,
-        "product_type" = QueryType,
-        "variable" = QueryVariable,
-        "date" = paste0(
-          head(QueryTimeWindows[[requestID]], n = 1),
-          "/",
-          tail(QueryTimeWindows[[requestID]], n = 1)
-        ),
-        "time" = QueryTimes,
-        "area" = QueryExtent,
-        "format" = QueryFormat,
-        "target" = FName
-      )
+    FName <- paste(
+      "TEMP",
+      QueryVariable,
+      stringr::str_pad(FIterStart + requestID - 1, 5, "left", "0"),
+      sep = "_"
+    )
+
+    req <- list(
+      "dataset_short_name" = QueryDataSet,
+      "variable" = QueryVariable,
+      "time" = QueryTimes,
+      "area" = area_nwse,
+      "format" = QueryFormat,
+      "target" = FName
+    )
+
+    if (!is.na(QueryType)) {
+      req$product_type <- QueryType
     }
+
+    #Monthly branch
+    if (!is.na(QueryType) && grepl("month", QueryType)) {
+      # Monthly requests: year + month fields (no "date" range)
+      # QueryTimeWindows[[requestID]] is a vector of Dates (or POSIXct)
+      dt <- as.Date(QueryTimeWindows[[requestID]])
+
+      req$year <- sort(unique(as.integer(format(dt, "%Y"))))
+      req$month <- sort(unique(as.integer(format(dt, "%m"))))
+
+      # NOTE: do not add req$date in monthly branch
+    } else {
+      # -------------------------
+      # Branch: NON-MONTHLY
+      # -------------------------
+      # Daily-range requests: single "date" field formatted as "YYYY-MM-DD/YYYY-MM-DD"
+      dt <- as.Date(QueryTimeWindows[[requestID]])
+      req$date <- paste0(head(dt, 1), "/", tail(dt, 1))
+    }
+
+    req
   })
+
   ## making list names useful for request execution updates to console
-  Iterators <- paste0("[", (1:length(Requests_ls)) + (FIterStart - 1), "/", length(Requests_ls) + (FIterStart - 1), "] ")
+  Iterators <- paste0(
+    "[",
+    (1:length(Requests_ls)) + (FIterStart - 1),
+    "/",
+    length(Requests_ls) + (FIterStart - 1),
+    "] "
+  )
   FNames <- unlist(lapply(Requests_ls, "[[", "target"))
-  Dates <- unlist(lapply(lapply(Requests_ls, "[[", "date"), gsub, pattern = "/", replacement = " - "))
-  if (length(Dates) == 0) { # this happens for monthly data queries
-    Dates <- unlist(lapply(lapply(Requests_ls, "[[", "year"), FUN = function(x) {
-      paste0(head(x, 1), " - ", tail(x, 1))
-    }))
+  Dates <- unlist(lapply(
+    lapply(Requests_ls, "[[", "date"),
+    gsub,
+    pattern = "/",
+    replacement = " - "
+  ))
+  if (length(Dates) == 0) {
+    # this happens for monthly data queries
+    Dates <- unlist(lapply(
+      lapply(Requests_ls, "[[", "year"),
+      FUN = function(x) {
+        paste0(head(x, 1), " - ", tail(x, 1))
+      }
+    ))
   }
   names(Requests_ls) <- paste0(Iterators, FNames, " (UTC: ", Dates, ")")
   ## check if files are already present
-  FCheck <- sapply(FNames, Check.File,
-    Dir = Dir, loadFun = "terra::rast", load = FALSE,
+  FCheck <- sapply(
+    FNames,
+    Check.File,
+    Dir = Dir,
+    loadFun = "terra::rast",
+    load = FALSE,
     verbose = FALSE
   )
   if (length(names(unlist(FCheck))) > 0) {
@@ -128,7 +180,8 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
   if (verbose) {
     print("## Staging CDS Requests")
   }
-  for (requestID in 1:length(Requests_ls)) { ## looping over CDS requests
+  for (requestID in 1:length(Requests_ls)) {
+    ## looping over CDS requests
     if (verbose) {
       print(names(Requests_ls)[requestID])
     }
@@ -169,12 +222,21 @@ Make.Request <- function(QueryTimeWindows, QueryDataSet, QueryType, QueryVariabl
 #'
 #' @seealso \code{\link{Register.Credentials}}, \code{\link{Make.Request}}.
 #'
-Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbose = TRUE) { # nolint: cyclocomp_linter.
+Execute.Requests <- function(
+  Requests_ls,
+  Dir,
+  API_User,
+  API_Key,
+  TryDown,
+  verbose = TRUE
+) {
+  # nolint: cyclocomp_linter.
   if (verbose) {
     print("## Listening for CDS Requests")
   }
 
-  for (requestID in 1:length(Requests_ls)) { ## looping over CDS requests
+  for (requestID in 1:length(Requests_ls)) {
+    ## looping over CDS requests
     if (verbose) {
       print(names(Requests_ls)[requestID])
     }
@@ -198,7 +260,11 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
             for (rep_iter in 1:10) {
               cat(rep(" ", 100))
               flush.console()
-              cat("\r", "Waiting for CDS to start processing the query", rep(".", rep_iter))
+              cat(
+                "\r",
+                "Waiting for CDS to start processing the query",
+                rep(".", rep_iter)
+              )
               flush.console()
               Sys.sleep(0.25)
             }
@@ -228,7 +294,13 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
           }
         )
         if (Down_try == TryDown) {
-          stop("Download of CDS query result continues to fail after ", Down_try, " trys. The most recent error message is: \n", FileDown, "Assess issues at https://cds.climate.copernicus.eu/cdsapp#!/yourrequests.")
+          stop(
+            "Download of CDS query result continues to fail after ",
+            Down_try,
+            " trys. The most recent error message is: \n",
+            FileDown,
+            "Assess issues at https://cds.climate.copernicus.eu/cdsapp#!/yourrequests."
+          )
         }
         if (any(class(FileDown) == "simpleError")) {
           FileDown <- list(state = "queued")
@@ -246,7 +318,8 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
         )
         rm(delete)
       }
-    } else { ## new CDS!!!
+    } else {
+      ## new CDS!!!
       FileDown <- list(state = "accepted")
       API_request <- API_request$update_status(verbose = FALSE)
 
@@ -257,7 +330,11 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
             for (rep_iter in 1:10) {
               cat(rep(" ", 100))
               flush.console()
-              cat("\r", "Waiting for CDS to start processing the query", rep(".", rep_iter))
+              cat(
+                "\r",
+                "Waiting for CDS to start processing the query",
+                rep(".", rep_iter)
+              )
               flush.console()
               Sys.sleep(0.25)
             }
@@ -277,14 +354,20 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
         FileDown$state <- API_request$get_status()
 
         if (API_request$is_failed()) {
-          stop("Query failed on CDS. Assess issues at https://cds.climate.copernicus.eu/cdsapp#!/yourrequests.")
+          stop(
+            "Query failed on CDS. Assess issues at https://cds.climate.copernicus.eu/cdsapp#!/yourrequests."
+          )
         }
 
         if (FileDown$state == "successful") {
           for (rep_iter in 1:10) {
             cat(rep(" ", 100))
             flush.console()
-            cat("\r", "CDS finished processing the query. Download starting soon.", rep(".", rep_iter))
+            cat(
+              "\r",
+              "CDS finished processing the query. Download starting soon.",
+              rep(".", rep_iter)
+            )
             flush.console()
             Sys.sleep(0.25)
           }
@@ -302,11 +385,9 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
 
           ## check if file can be loaded
           FNAME <- file.path(Dir, API_request$get_request()$target)
-          LoadTry <- tryCatch(rast(FNAME),
-            error = function(e) {
-              e
-            }
-          )
+          LoadTry <- tryCatch(rast(FNAME), error = function(e) {
+            e
+          })
           if (class(LoadTry)[1] == "simpleError") {
             file.rename(FNAME, paste0(FNAME, ".zip")) # make into zip
             extrazip <- unzip(paste0(FNAME, ".zip"), list = TRUE)$Name # find name of file in zip
@@ -316,7 +397,9 @@ Execute.Requests <- function(Requests_ls, Dir, API_User, API_Key, TryDown, verbo
               file.path(dirname(FNAME), basename(FNAME))
             ) # make into zip
             unlink(paste0(FNAME, ".zip"))
-            warning("CDS download seems to have produced a .zip file. KrigR has automatically extracted data from this file. This is currently an experimental fix.")
+            warning(
+              "CDS download seems to have produced a .zip file. KrigR has automatically extracted data from this file. This is currently an experimental fix."
+            )
           }
 
           ## purge request and check succes of doing so
