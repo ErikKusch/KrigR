@@ -32,7 +32,9 @@ Meta.Register <- function(Dir = file.path(getwd(), "metadata")) {
 #' Meta.List()
 #'
 #' @export
-Meta.List <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/Development/metadata") {
+Meta.List <- function(
+  URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/Development/metadata"
+) {
   file_path_sans_ext(read.table(file.path(URL, "metadata.txt"))[, 1])
 }
 
@@ -52,16 +54,26 @@ Meta.List <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/D
 #' Meta.Read()
 #'
 #' @export
-Meta.Read <- function(URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/Development/metadata", ## change this to github repo for these data once ready
-                      dataset = "reanalysis-era5-land") {
-  load(url(
-    paste0(
-      "https://github.com/ErikKusch/KrigR/blob/Development/metadata/",
-      dataset,
-      ".RData?raw=true"
-    )
-  ))
-  get(ls()[ls() == gsub(dataset, pattern = "-", replacement = "_")])
+Meta.Read <- function(
+  URL = "https://raw.githubusercontent.com/ErikKusch/KrigR/Development/metadata",
+  dataset = "reanalysis-era5-land"
+) {
+  meta_url <- paste0(URL, "/", dataset, ".RData")
+
+  tf <- tempfile(fileext = ".RData")
+
+  # Robust download (works well on Windows/macOS/Linux)
+  if (requireNamespace("curl", quietly = TRUE)) {
+    curl::curl_download(meta_url, destfile = tf, quiet = TRUE)
+  } else {
+    # Fallback: ensure binary mode for Windows
+    utils::download.file(meta_url, destfile = tf, mode = "wb", quiet = TRUE)
+  }
+
+  load(tf, environment())
+
+  obj_name <- gsub(dataset, pattern = "-", replacement = "_")
+  get(obj_name, envir = environment())
 }
 
 ### DATASET VARIABLES ==========================================================
@@ -139,9 +151,16 @@ Meta.DOI <- function(dataset = "reanalysis-era5-land") {
 #' @export
 Meta.QuickFacts <- function(dataset = "reanalysis-era5-land") {
   Meta.Read(dataset = dataset)[c(
-    "DataSet", "Type", "URL", "Description",
-    "TResolution", "TStep", "TStart", "TEnd",
-    "Projection", "SpatialResolution",
+    "DataSet",
+    "Type",
+    "URL",
+    "Description",
+    "TResolution",
+    "TStep",
+    "TStart",
+    "TEnd",
+    "Projection",
+    "SpatialResolution",
     "CDSArguments"
   )]
 }
@@ -177,24 +196,60 @@ Meta.QuickFacts <- function(dataset = "reanalysis-era5-land") {
 #' @examples
 #' Meta.Check(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck = "2m_temperature", CumulativeCheck = FALSE, ExtentCheck = c(53.06, 9.87, 49.89, 15.03), DateCheck = data.frame(IN = c(as.POSIXct("1995-01-01 CET"), as.POSIXct("2005-01-01 23:00:00 CET")), UTC = c(as.POSIXct("1994-12-31 23:00:00 UTC"), as.POSIXct("2005-01-01 22:00:00 UTC"))), AggrCheck = list(1, "hour"), QueryTimes = c("00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"))
 #'
-Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableCheck, CumulativeCheck, ExtentCheck, DateCheck, AggrCheck, QueryTimes) { # nolint: cyclocomp_linter.
+Meta.Check <- function(
+  DataSet = "reanalysis-era5-land",
+  Type = NA,
+  VariableCheck,
+  CumulativeCheck,
+  ExtentCheck,
+  DateCheck,
+  AggrCheck,
+  QueryTimes
+) {
+  # nolint: cyclocomp_linter.
   #--- Variable
   ### if a variable not in the data set has been specified
   if (length(VariableCheck) == 0) {
-    stop("Please specify a variable provided by the data set. Your can be retrieved with the function call: ", "\n", "Meta.Variables(dataset = '", DataSet, "')")
+    stop(
+      "Please specify a variable provided by the data set. Your can be retrieved with the function call: ",
+      "\n",
+      "Meta.Variables(dataset = '",
+      DataSet,
+      "')"
+    )
   }
   #--- Cumulative
   ### if the cumulative back-calculation is attempting to be applied to a non-cumulative variable
-  CumVar <- Meta.Variables(dataset = DataSet)$Cumulative[which(Meta.Variables(dataset = DataSet)$CDSname == VariableCheck)]
+  CumVar <- Meta.Variables(dataset = DataSet)$Cumulative[which(
+    Meta.Variables(dataset = DataSet)$CDSname == VariableCheck
+  )]
   if (CumulativeCheck && !CumVar) {
-    stop("You have specified to back-calculation of cumulative data for a non-cumulatively recorded variable. This would produce nonsense data. Please specify CumulVar = FALSE instead. For an overview of which variables are recorded cumulatively for the data set you are querying, please consider the function call:", "\n", "Meta.Variables(dataset = '", DataSet, "')")
+    stop(
+      "You have specified to back-calculation of cumulative data for a non-cumulatively recorded variable. This would produce nonsense data. Please specify CumulVar = FALSE instead. For an overview of which variables are recorded cumulatively for the data set you are querying, please consider the function call:",
+      "\n",
+      "Meta.Variables(dataset = '",
+      DataSet,
+      "')"
+    )
   }
-  if (!CumulativeCheck && CumVar && Meta.QuickFacts(dataset = DataSet)$TResolution == "hour" && attr(DateCheck$IN[1], "tzone") != "UTC") {
-    warning("You have selected to download data recorded cumulatively in hourly intervals for a different timezone than UTC while not applying back-calculation/disaggregation of these cumulative records. Be aware that the resulting data will likely not be useful as the cumulative window resets at each new day in UTC.")
+  if (
+    !CumulativeCheck &&
+      CumVar &&
+      Meta.QuickFacts(dataset = DataSet)$TResolution == "hour" &&
+      attr(DateCheck$IN[1], "tzone") != "UTC"
+  ) {
+    warning(
+      "You have selected to download data recorded cumulatively in hourly intervals for a different timezone than UTC while not applying back-calculation/disaggregation of these cumulative records. Be aware that the resulting data will likely not be useful as the cumulative window resets at each new day in UTC."
+    )
   }
   #--- Extent
   ### if an extent outside the data product has been specified
-  DataExt <- ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area)[c(4, 1, 3, 2)] # N,W,S,E
+  DataExt <- ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area)[c(
+    4,
+    1,
+    3,
+    2
+  )] # N,W,S,E
   if (
     (
       # ymax
@@ -205,11 +260,15 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
         (ExtentCheck[3] < DataExt[3]) +
         # ymax
         (ExtentCheck[4] > DataExt[4])
-    ) != 0
+    ) !=
+      0
   ) {
     stop(
       "Please specify an area using the Extent argument that is contained within the data set. The data set covers the area defined by the following extent:",
-      "\n", ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area), " in ", Meta.QuickFacts(dataset = DataSet)$Projection
+      "\n",
+      ext(Meta.QuickFacts(dataset = DataSet)$CDSArguments$area),
+      " in ",
+      Meta.QuickFacts(dataset = DataSet)$Projection
     )
   }
   #---  Time Window
@@ -221,13 +280,16 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
     CheckEnd <- FALSE
     warning(
       "Cannot validate user-specified end date (DateStop) because specified data set is being updated regularly (",
-      strsplit(Meta.QuickFacts(dataset = DataSet)$TEnd, split = "; ")[[1]][2], "). User-specification may lead to an error."
+      strsplit(Meta.QuickFacts(dataset = DataSet)$TEnd, split = "; ")[[1]][2],
+      "). User-specification may lead to an error."
     )
   }
   if (CheckStart + CheckEnd != 0) {
     stop(
       "The time window you have specified is not supported by the data set. The data set makes data available from ",
-      Meta.QuickFacts(dataset = DataSet)$TStart, " until ", Meta.QuickFacts(dataset = DataSet)$TEnd
+      Meta.QuickFacts(dataset = DataSet)$TStart,
+      " until ",
+      Meta.QuickFacts(dataset = DataSet)$TEnd
     )
   }
   #---  Aggregation Match
@@ -236,51 +298,110 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
   BaseStep <- BaseStep <- Meta.QuickFacts(dataset = DataSet)$TStep[
     na.omit(match(Type, Meta.QuickFacts(dataset = DataSet)$Type))
   ]
-  if (Meta.QuickFacts(dataset = DataSet)$TResolution != AggrCheck[[2]] || BaseStep != AggrCheck[[1]]) { # if this is TRUE, we need to check if aggregation works
+  if (
+    Meta.QuickFacts(dataset = DataSet)$TResolution != AggrCheck[[2]] ||
+      BaseStep != AggrCheck[[1]]
+  ) {
+    # if this is TRUE, we need to check if aggregation works
     ## specification of a temporal resolution finer than the data?
-    if (which(SuppRes == AggrCheck[[2]]) < which(SuppRes == Meta.QuickFacts(dataset = DataSet)$TResolution)) {
+    if (
+      which(SuppRes == AggrCheck[[2]]) <
+        which(SuppRes == Meta.QuickFacts(dataset = DataSet)$TResolution)
+    ) {
       stop(
         "You have specified a temporal aggregation at a scale finer than what the data set reports natively (",
-        Meta.QuickFacts(dataset = DataSet)$TResolution, "). Please specify the same or a coarser temporal resolution for the TResolution argument. Supported options are '", paste(SuppRes, collapse = "', '"), "'."
+        Meta.QuickFacts(dataset = DataSet)$TResolution,
+        "). Please specify the same or a coarser temporal resolution for the TResolution argument. Supported options are '",
+        paste(SuppRes, collapse = "', '"),
+        "'."
       )
     }
 
     ## specification of tsteps that cannot be achieved with the data?
-    if (Meta.QuickFacts(dataset = DataSet)$TResolution == AggrCheck[[2]] && ((AggrCheck[[1]] / BaseStep) %% 1 != 0)) {
-      stop("You have specified a temporal aggregation that cannot be achieved with the data. When specifying the same temporal resolution as the data (you have specified TResolution = ", AggrCheck[[2]], "), the TStep must be a multiple of the base temporal resolution of the data (", BaseStep, " for DataSet = ", DataSet, " and Type = ", Type, ").")
+    if (
+      Meta.QuickFacts(dataset = DataSet)$TResolution == AggrCheck[[2]] &&
+        ((AggrCheck[[1]] / BaseStep) %% 1 != 0)
+    ) {
+      stop(
+        "You have specified a temporal aggregation that cannot be achieved with the data. When specifying the same temporal resolution as the data (you have specified TResolution = ",
+        AggrCheck[[2]],
+        "), the TStep must be a multiple of the base temporal resolution of the data (",
+        BaseStep,
+        " for DataSet = ",
+        DataSet,
+        " and Type = ",
+        Type,
+        ")."
+      )
     }
 
     ## specification of daily, monthly or annual aggregates but not setting tstart or tend to beginning or end of day/month/year?
-    if (AggrCheck[[2]] == "day" && (as.numeric(substr(QueryTimes[1], 0, 2)) != 0 || as.numeric(substr(QueryTimes[length(QueryTimes)], 0, 2)) != 23)) {
-      stop("You have specified (multi-)daily temporal aggregation but are querying a time window which does not start at 00:00 and/or does not terminate at 23:00. Please ensure that you set the argument DateStart and DateStop accordingly.")
+    if (
+      AggrCheck[[2]] == "day" &&
+        (as.numeric(substr(QueryTimes[1], 0, 2)) != 0 ||
+          as.numeric(substr(QueryTimes[length(QueryTimes)], 0, 2)) != 23)
+    ) {
+      stop(
+        "You have specified (multi-)daily temporal aggregation but are querying a time window which does not start at 00:00 and/or does not terminate at 23:00. Please ensure that you set the argument DateStart and DateStop accordingly."
+      )
     }
 
     ## these may fail when querying  monthly raw data
-    MustStartMonth <- as.POSIXct(paste(
-      paste(format(DateCheck$IN[1], "%Y"), format(DateCheck$IN[1], "%m"), "01", sep = "-"),
-      "00:00:00"
-    ), tz = format(DateCheck$IN[2], "%Z"))
-    MustEndMonth <- as.POSIXct(paste(
-      paste(format(DateCheck$IN[2], "%Y"), format(DateCheck$IN[2], "%m"),
-        days_in_month(DateCheck$IN[2]),
-        sep = "-"
+    MustStartMonth <- as.POSIXct(
+      paste(
+        paste(
+          format(DateCheck$IN[1], "%Y"),
+          format(DateCheck$IN[1], "%m"),
+          "01",
+          sep = "-"
+        ),
+        "00:00:00"
       ),
-      "23:00:00"
-    ), tz = format(DateCheck$IN[2], "%Z"))
-    if (AggrCheck[[2]] == "month" && (substr(DateCheck$IN[1], 1, 19) != substr(MustStartMonth, 1, 19) || substr(DateCheck$IN[2], 1, 19) != substr(MustEndMonth, 1, 19))) {
-      stop("You have specified (multi-)monthly temporal aggregation but are querying a time window which does not start at the first day of a month at 00:00 and/or does not terminate on the last day of a month at 23:00. Please ensure that you set the argument DateStart and DateStop accordingly.")
+      tz = format(DateCheck$IN[2], "%Z")
+    )
+    MustEndMonth <- as.POSIXct(
+      paste(
+        paste(
+          format(DateCheck$IN[2], "%Y"),
+          format(DateCheck$IN[2], "%m"),
+          days_in_month(DateCheck$IN[2]),
+          sep = "-"
+        ),
+        "23:00:00"
+      ),
+      tz = format(DateCheck$IN[2], "%Z")
+    )
+    if (
+      AggrCheck[[2]] == "month" &&
+        (substr(DateCheck$IN[1], 1, 19) != substr(MustStartMonth, 1, 19) ||
+          substr(DateCheck$IN[2], 1, 19) != substr(MustEndMonth, 1, 19))
+    ) {
+      stop(
+        "You have specified (multi-)monthly temporal aggregation but are querying a time window which does not start at the first day of a month at 00:00 and/or does not terminate on the last day of a month at 23:00. Please ensure that you set the argument DateStart and DateStop accordingly."
+      )
     }
 
-    MustStartYear <- as.POSIXct(paste(
-      paste(format(DateCheck$IN[1], "%Y"), "01-01", sep = "-"),
-      "00:00:00"
-    ), tz = format(DateCheck$IN[2], "%Z"))
-    MustEndYear <- as.POSIXct(paste(
-      paste(format(DateCheck$IN[2], "%Y"), "12-31", sep = "-"),
-      "23:00:00"
-    ), tz = format(DateCheck$IN[2], "%Z"))
-    if (AggrCheck[[2]] == "year" && (DateCheck$IN[1] != MustStartYear || DateCheck$IN[2] != MustEndYear)) {
-      stop("You have specified (multi-)yearly temporal aggregation but are querying a time window which does not start at the first of day of a year at 00:00 and/or does not terminate on the last day of a year at 23:00. Please ensure that you set the argument DateStart and DateStop accordingly.")
+    MustStartYear <- as.POSIXct(
+      paste(
+        paste(format(DateCheck$IN[1], "%Y"), "01-01", sep = "-"),
+        "00:00:00"
+      ),
+      tz = format(DateCheck$IN[2], "%Z")
+    )
+    MustEndYear <- as.POSIXct(
+      paste(
+        paste(format(DateCheck$IN[2], "%Y"), "12-31", sep = "-"),
+        "23:00:00"
+      ),
+      tz = format(DateCheck$IN[2], "%Z")
+    )
+    if (
+      AggrCheck[[2]] == "year" &&
+        (DateCheck$IN[1] != MustStartYear || DateCheck$IN[2] != MustEndYear)
+    ) {
+      stop(
+        "You have specified (multi-)yearly temporal aggregation but are querying a time window which does not start at the first of day of a year at 00:00 and/or does not terminate on the last day of a year at 23:00. Please ensure that you set the argument DateStart and DateStop accordingly."
+      )
     }
   }
 
@@ -293,7 +414,9 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
     QueryType = Type,
     QueryVariable = VariableCheck,
     QueryFormat = QueryFormat,
-    QueryUnit = Meta.Variables(dataset = DataSet)$Unit[which(Meta.Variables(dataset = DataSet)$CDSname == VariableCheck)]
+    QueryUnit = Meta.Variables(dataset = DataSet)$Unit[which(
+      Meta.Variables(dataset = DataSet)$CDSname == VariableCheck
+    )]
   )
 }
 
@@ -319,7 +442,14 @@ Meta.Check <- function(DataSet = "reanalysis-era5-land", Type = NA, VariableChec
 #'
 #' @return A SpatRaster with metadata
 #'
-Meta.NC <- function(NC, FName, Attrs, Write = FALSE, Read = TRUE, Compression = 9) {
+Meta.NC <- function(
+  NC,
+  FName,
+  Attrs,
+  Write = FALSE,
+  Read = TRUE,
+  Compression = 9
+) {
   ## Writing metadata
   if (Write) {
     NC <- writeCDF(x = NC, filename = FName, compression = Compression)
