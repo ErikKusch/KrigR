@@ -188,7 +188,7 @@ Make.Request <- function(
     if (class(Requests_ls[[requestID]]) == "logical") {
       next()
     }
-    API_request <- ecmwfr::wf_request(
+    API_request <- wf_request(
       user = API_User,
       request = Requests_ls[[requestID]],
       transfer = FALSE,
