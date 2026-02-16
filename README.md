@@ -1,5 +1,5 @@
 > [!CAUTION]
-> # ECMWF CDS has changed its API which is breaking the download capabilities of `KrigR`. We are working on a fix but contributions are welcome.
+> # ECMWF CDS keeps changing its API and things break downstream in applications like `KrigR`. Please alert me to such issues as soon as you find them. Help resolving them is more than welcome.
 
 # KrigR
 An R Package for downloading, preprocessing, and statistical downscaling of the European Centre for Medium-range Weather Forecasts ReAnalysis 5 (ERA5) family provided by the [European Centre for Medium‐Range Weather Forecasts (ECMWF)](https://www.ecmwf.int/).The package interfaces with the [Climate Data Store](https://cds.climate.copernicus.eu/#!/home) hosted by the [Copernicus Climate Change Service (C3S)](https://cds.climate.copernicus.eu/about-c3s) for retrieval of climate data.
