@@ -1,7 +1,7 @@
 Package: KrigR
 Type: Package
 Title: Downloading, Aggregating, and Kriging of ECMWF CDS-Data
-Version: 0.9.6.6
+Version: 0.9.6.6-1
 Authors@R: as.person(c(
     "Erik Kusch <erik@i-solution.de> [aut, cre]", 
     "Richard Davy <Richard.Davy@nersc.no> [aut]"
@@ -34,4 +34,6 @@ Imports:
     ggplot2,
     viridis,
     cowplot
-Depends: R (>= 4.0.0) 
+Suggests:
+    testthat (>= 3.2.0)
+Depends: R (>= 4.0.0)
