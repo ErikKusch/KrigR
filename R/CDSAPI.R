@@ -78,20 +78,19 @@ Register.Credentials <- function(API_User, API_Key) {
 #' @seealso \code{\link{Make.RequestWindows}}, \code{\link{Register.Credentials}}, \code{\link{Execute.Requests}}.
 #'
 Make.Request <- function(
-  QueryTimeWindows,
-  QueryDataSet,
-  QueryType,
-  QueryVariable,
-  QueryTimes,
-  QueryExtent,
-  QueryFormat,
-  Dir = getwd(),
-  verbose = TRUE,
-  API_User,
-  API_Key,
-  TimeOut = 36000,
-  FIterStart = 1
-) {
+    QueryTimeWindows,
+    QueryDataSet,
+    QueryType,
+    QueryVariable,
+    QueryTimes,
+    QueryExtent,
+    QueryFormat,
+    Dir = getwd(),
+    verbose = TRUE,
+    API_User,
+    API_Key,
+    TimeOut = 36000,
+    FIterStart = 1) {
   # Ensure CDS-compliant area: unnamed numeric in N,W,S,E
   area_nwse <- as.numeric(QueryExtent)
 
@@ -117,7 +116,7 @@ Make.Request <- function(
       req$product_type <- QueryType
     }
 
-    #Monthly branch
+    # Monthly branch
     if (!is.na(QueryType) && grepl("month", QueryType)) {
       # Monthly requests: year + month fields (no "date" range)
       # QueryTimeWindows[[requestID]] is a vector of Dates (or POSIXct)
@@ -188,7 +187,7 @@ Make.Request <- function(
     if (class(Requests_ls[[requestID]]) == "logical") {
       next()
     }
-    API_request <- wf_request(
+    API_request <- ecmwfr::wf_request(
       user = API_User,
       request = Requests_ls[[requestID]],
       transfer = FALSE,
@@ -223,13 +222,12 @@ Make.Request <- function(
 #' @seealso \code{\link{Register.Credentials}}, \code{\link{Make.Request}}.
 #'
 Execute.Requests <- function(
-  Requests_ls,
-  Dir,
-  API_User,
-  API_Key,
-  TryDown,
-  verbose = TRUE
-) {
+    Requests_ls,
+    Dir,
+    API_User,
+    API_Key,
+    TryDown,
+    verbose = TRUE) {
   # nolint: cyclocomp_linter.
   if (verbose) {
     print("## Listening for CDS Requests")
