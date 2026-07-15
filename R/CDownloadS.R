@@ -374,6 +374,15 @@ CDownloadS <- function(Variable = NULL, # which variable # nolint: cyclocomp_lin
 
   #--- Loading data
   CDS_rast <- rast(TempFs)
+  if (packageVersion("terra") >= "1.9-34") { # with this version, terra does not load the time axis properly anymore; https://github.com/ErikKusch/KrigR/issues/118
+    ## need to assign time axis manually, otherwise terra::time(CDS_rast) will be NA
+    terra::time(CDS_rast) <- as.POSIXct(
+      paste(
+        unlist(lapply(QueryTimeWindows, as.character)),
+        QueryTimes
+      )
+    )
+  }
   terra::time(CDS_rast) <- as.POSIXct(terra::time(CDS_rast), tz = TZone) # assign time in queried timezone
 
   ## Spatial =====
